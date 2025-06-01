@@ -7,7 +7,7 @@ export default async function Home() {
   const posts = await getAllPosts();
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-16">
+    <div className="max-w-xl mx-auto px-6 py-24">
       <header className="mb-16 mt-20">
         <h1 className="text-3xl font-medium mb-1 font-serif">Fred Zaw</h1>
         <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export default async function Home() {
               className="block group"
             >
               <div>
-                <h3 className="text-lg font-medium mb-1 group-hover:text-gray-600 transition-colors">
+                <h3 className="text-md font-medium mb-1 group-hover:text-gray-600 transition-colors">
                   {project.metadata.title}
                 </h3>
                 <p>{project.metadata.description}</p>
@@ -75,7 +75,7 @@ export default async function Home() {
               className="block group"
             >
               <div>
-                <h3 className="text-lg font-medium mb-1 group-hover:text-gray-600 transition-colors">
+                <h3 className="text-md font-medium mb-1 group-hover:text-gray-600 transition-colors">
                   {post.metadata.title}
                 </h3>
                 <p>{post.metadata.description}</p>
@@ -86,8 +86,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="mt-16 pt-8 border-t border-gray-200">
-        <h2 className="text-2xl font-medium font-serif mb-4">Elsewhere</h2>
+      <footer className="mt-16 pt-8 border-t">
+        <h2 className="text-2xl font-medium font-serif mb-4 mt-6">Elsewhere</h2>
         <div className="flex space-x-6">
           <Link href="https://twitter.com" className="text-gray-700 hover:text-gray-900">Twitter</Link>
           <Link href="https://read.cv" className="text-gray-700 hover:text-gray-900">Read.cv</Link>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ThemeProvider, ThemeToggle } from "../components";
 
 const untitledSans = localFont({
   src: [
@@ -76,7 +77,10 @@ export default function RootLayout({
       <body
         className={`${untitledSans.variable} ${family.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+          <ThemeToggle />
+        </ThemeProvider>
       </body>
     </html>
   );
