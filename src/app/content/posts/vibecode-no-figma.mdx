@@ -1,0 +1,95 @@
+I’ve been getting into vibecoding and talking about it incessantly as many have. I wanted to put my money where my mouth is and give a shot to bringing two small features through a full development lifecycle without touching Figma. 
+
+Spoiler: it didn’t work (fully). I’ll share a bit about the process, why it didn’t work and what it might take.
+
+*Edit (5.12.25): we figured it out. I wrote about our approach here ["Vibecoding at scale for the code-curious"](/posts/vibecoding-at-scale)*
+
+But first off, maybe I should share why I wanted to do this. As many Figma connoisseurs probably have, I’d found that prototyping certain interfaces that require a lot of responsive design considerations (e.g. tables), were data-rich, or had nuanced interaction/animation, Figma could be a pain and being closer to the metal could be a more optimal way of designing - cutting out unnecessary specs and abstraction. 
+
+And if I could design entirely in code, then why bother with Figma at all? With these small features we were working on, I felt they were a good opportunity to experiment.
+
+{/* Video with caption */}
+<div className="video-container">
+  <video 
+    src="/posts/dynamic-swap-web.mp4" 
+    playsInline
+    autoPlay
+    muted
+    loop
+  ></video>
+  <p className="video-caption">My lil vibecoded proto for a small-ish swap improvement</p>
+</div>
+
+## A lil prototyping environment
+
+I’d found myself wrestling with our production environment quite a bit and didn’t find it to be optimal for prototyping in. Dealing with errors and navigating the codebase was not the business.
+
+I needed a low-overhead environment where I didn’t have to worry so much about breaking anything and I could just vibe. So I made a little vanilla React environment, copied and pasted our themes (typography + color), and for any components I needed, I just recreated with a big helping hand from Cursor.
+
+For the app structure, there’s a homepage with a list of prototypes and each prototype is on a different page. 
+
+For data, I often find myself generating mock data to start and when needed, using an external, publicly available API. This is lower overhead than integrating proprietary APIs, there are comprehensive docs, and LLMs are better at using them.
+
+## Designing and vibecoding
+
+My Cursor setup is pretty basic. My rules just include [Rauno’s Web Interface Guidelines](https://github.com/raunofreiberg/interfaces) to get nice typography, motion, and more “for free”. 
+
+I was rebuilding our components as needed. First on each prototype page, but will “graduate” to a more shareable component if being used across different prototypes. However, foolishly, I didn’t set up isolated styles within components. So as my project grew with more and more prototypes, I had more and more conflicting classes I had to mitigate with more and more specific classnames. More on this later…
+{/* Image with caption */}
+<div className="image-container">
+  <img 
+    src="/posts/proto-env.png" 
+    alt="Prototype Environment" 
+    className="project-image"
+  />
+  <p className="image-caption">Homepage of my prototype environment app</p>
+</div>
+
+## Handoff
+
+When it came time for handoff, I sent Vercel builds and my repo to my engineering partners. “Where is the Figma?” they asked. “I’m trying something new. Let’s see how this goes and please provide feedback as we go” I replied.
+
+Well friends, it didn’t go well. The primary pieces of feedback were:
+
+1. The devx in Figma was already quite good in regards to using our design system. They could easily inspect, see component names, and specific styles. Reading through a css file or using the Chrome inspector was much less efficient.
+2. We use [Tamagui](https://tamagui.dev/) in our production environment. My proto environment did not. Which meant conflicting methods of implementing aspects like animations.
+3. With our use of Tamagui, we develop components cross-platform across Web, Chrome Extension, and our React Native mobile app. The prototype didn’t cover custom UI treatments across all three platforms for every aspect.
+
+And lastly, there was a design team issue that we should still have designs living in Figma so that myself or other designers could reference, copy, and draw on top of them without having to use *my* method of design here. So regardless if the handoff worked, the coded designs would have to be drawn in Figma anyway.
+
+So I doubled back and drew the screens in Figma. 
+
+## Lessons learned and what’s next
+
+The vibecoded prototypes proved to be a really helpful part of the process. Helping me consider more nuanced details, honing responsive details on tables, and animation values with more precision.
+
+I notice while designing that it feels like a different part of the brain being used. When you know you can’t just copy and paste frames next to each other and compare, I sometimes feel more focused and intentional about choices on small details.
+
+So while I don’t think I’ll be removing Figma from my process entirely for the reasons stated above, I see myself using these methods to compliment one another, significantly cutting down on my time spent in Figma.
+
+For next steps, I’m not sure how feasible the following will be in the short to medium term, but it’s what I’m thinking about:
+
+**Working with developers**
+
+Not using 1:1 matched components is an issue. I think this could be mitigated by:
+
+1. Just investing in building prototypes in the production environment
+2. Setting up something like a [shadcn component registry](https://ui.shadcn.com/docs/registry) so production components, hooks, pages, and other files can be distributed to prototype projects. 
+
+
+**For design**
+
+1. Figma remains powerful for speed and the primary advantage is viewing designs side-by-side, copy and pasting components and frames as you go. For some projects, this is more necessary.
+2. For getting a feel for interaction and flow, Figma prototypes are still powerful. But for those nuanced interactions, I’ll probably continue vibecoding these a lot more.
+3. For integrating data, I do like using the [Google Sheets Sync](https://www.figma.com/community/plugin/735770583268406934/google-sheets-sync) plugin in Figma. But the data is static and often requires cleanup and formatting to put into a Google Sheet. After the initial setup of an API when vibecoding, it can be pretty smooth sailing in comparison.
+4. Bringing Figma into code is pretty good right now. I primarily use screenshots pasted into Cursor. There’s also this [Figma MCP](https://github.com/GLips/Figma-Context-MCP) which it seems some folks have had success with it. I’ve had less success, but I think between better prompting, rules, and getting better at referencing styles/components, this could be improved.
+5. However, the issue remains of going in the other direction: code back to figma in cases where the design process begins in code. For this, I look forward to trying this [Talk to Figma MCP](https://github.com/sonnylazuardi/cursor-talk-to-figma-mcp)
+6. My single environment for spinning up prototypes has been nice for smaller projects without many integrations. But the maintenance has been a pain as I’ve been adding more prototype pages. Going forward, I think it’s most important to set up isolated styles for components using [css modules](https://nextjs.org/docs/13/pages/building-your-application/styling/css-modules). And since I won’t be using these prototypes for handoffs without a Figma accompaniment, also using Tailwind for even faster styling and less overhead of managing styles.
+
+So while for now, I dont think 100% vibecode, 0% Figma is in the cards. As these learnings are applied to environment setup, MCPs improve, models improve, and strategies for prompting improve (better Cursor rule utilization), I could see a 50% vibecode and 50% Figma distribution being feasible going forward. 
+
+If you, dear reader, have your own strategies or interesting rebuttals to anything mentioned here, I’d love to hear you out on Twitter [@fredzaw](https://x.com/fredzaw).
+
+---
+
+See my followup post here where we resolved most of these issues: ["Vibecoding at scale for the code-curious"](/posts/vibecoding-at-scale)*

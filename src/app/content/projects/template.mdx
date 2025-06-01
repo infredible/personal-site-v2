@@ -1,0 +1,103 @@
+---
+
+## Introduction
+
+Blah blah blah
+
+## Image classes
+
+{/* Hero image with standard markdown */}
+![Uniswap Swap Interface](/images/projects/swap-hero.png)
+
+{/* Hero image with custom class */}
+<img src="/images/projects/swap-hero.png" alt="Uniswap Swap Interface" className="hero-image" />
+
+{/* Image with caption */}
+<div className="image-container">
+  <img 
+    src="/images/projects/swap-hero.png" 
+    alt="Uniswap Swap Interface" 
+    className="project-image"
+  />
+  <p className="image-caption">An example of an early DEX interface from 2018</p>
+</div>
+
+{/* Image with border */}
+<div className="image-container with-border">
+  <img 
+    src="/images/projects/swap-hero.png" 
+    alt="Uniswap Swap Interface" 
+    className="project-image"
+  />
+  <p className="image-caption">The same image with a border</p>
+</div>
+
+{/* Grid layout for side-by-side images */}
+<div className="image-grid">
+  <div>
+    <img src="/images/projects/modern-swap-1.png" alt="Modern swap feature: price charts" className="project-image" />
+    <p>Price charts integration</p>
+  </div>
+  <div>
+    <img src="/images/projects/modern-swap-2.png" alt="Modern swap feature: gas optimization" className="project-image" />
+    <p>Gas optimization controls</p>
+  </div>
+</div>
+
+
+
+## Video classes
+
+{/* Basic video embedding */}
+<video 
+  src="/videos/projects/permit2-demo.mp4" 
+  autoPlay 
+  loop 
+  muted 
+  playsInline
+></video>
+
+{/* Video with caption */}
+<div className="video-container">
+  <video 
+    src="/videos/projects/permit2-demo.mp4" 
+    playsInline
+  ></video>
+  <p className="video-caption">A demo of the Permit2 interface</p>
+</div>
+
+{/* Video with border */}
+<div className="video-container with-border">
+  <video 
+    src="/videos/projects/amm-explanation.mp4" 
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+  ></video>
+  <p className="video-caption">Animation explaining how automated market makers work</p>
+</div>
+
+{/* Side-by-side videos in a grid */}
+<div className="video-grid">
+  <div>
+    <video 
+      src="/videos/projects/price-chart.mp4" 
+      autoPlay 
+      loop 
+      muted 
+      playsInline
+    ></video>
+    <p>Interactive price chart demo</p>
+  </div>
+  <div>
+    <video 
+      src="/videos/projects/gas-optimization.mp4" 
+      autoPlay 
+      loop 
+      muted 
+      playsInline
+    ></video>
+    <p>Gas optimization interface</p>
+  </div>
+</div>

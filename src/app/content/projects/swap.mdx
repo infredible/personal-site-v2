@@ -1,0 +1,134 @@
+The core interface of Uniswap's products is Swap. It's a deceivingly complex interface that 
+abstracts the complexities of blockchains, liquidity provisioning, and token mechanics. It enables
+one simple task that's at the heart of DeFi: exchanging one token for another.
+
+<div className="image-container">
+  <img 
+    src="/projects/swap/swap-hero.png" 
+    alt="Swap Hero" 
+    className="hero-image"
+  />
+</div>
+
+After inheriting the Swap interface as one of my core responsibilities, the team has advanced 
+the UI to support multiple different chains, advanced trade types, and improved functionality 
+while remaining accessible to new users.
+
+The following is a condensed history of the Swap interface throughout my tenure.
+
+
+## Streamlining transactions throughout DeFi with Permit2 (2022)
+
+We had an opportunity to address one major pain-point of the Ethereum ecosystem when it came to 
+interacting between dApps and wallets: token approvals. While "signing" a transaction in 
+a wallet may be an intuitive security feature, token approvals can add one or two steps to a transaction, 
+also adding network fees in the process.
+
+Permit2 was a protocol introduced to allow approvals to be shared and managed across different dApps.
+
+The interface design challenge was to create an approval process that was both easy to use and clear in its messaging about transaction steps. The solution needed to be unobtrusive and intuitive as users switched between dApp and wallet interfaces.
+
+Permit2 was a protocol introduced to allow approvals to be shared and managed across different dApps.
+
+The interface design challenge was to create an approval process that was both easy to use and 
+clear in its messaging about transaction steps. The solution needed to be unobtrusive and intuitive 
+as users switched between dApp and wallet interfaces.
+
+{/* Basic video embedding */}
+<div className="video-container">
+<video 
+  src="/projects/swap/Permit2.mp4" 
+  autoPlay 
+  loop 
+  muted 
+  playsInline
+></video>
+</div>
+
+## Enhancing price discovery and trade execution with UniswapX (2023)
+
+UniswapX was a significant evolution in DEX trading, introducing a new routing system combining 
+on and off-chain execution. In addition to improved price discovery, it addresses key pain points 
+like MEV protection, gas optimization, and failed transactions.
+
+The designs below show solutions to some of our core challenges: providing traders with 
+transparency and articulating the benefits of this new approach.
+
+<div className="image-container">
+  <img 
+    src="/projects/swap/uniswapx.png" 
+    alt="UniswapX" 
+    className="project-image"
+  />
+</div>
+
+
+{/* Video with border */}
+<div className="video-container">
+  <video 
+    src="/projects/swap/uniswapx-prototype.mp4" 
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+  ></video>
+</div>
+
+## Limit orders (2024)
+
+Limit orders are the second most common trade type after market orders, providing traders 
+more control over their entry and exit points. By setting specific price levels for execution, 
+traders can automate their strategy and avoid constantly monitoring the market for optimal 
+trading opportunities.
+
+It was a natural next step in extending the functionality of Uniswap's core swap interface. 
+The implementation required careful consideration of the user experience to maintain Uniswap's 
+signature simplicity while adding sophisticated trading capabilities.
+
+<div className="image-container">
+  <img 
+    src="/projects/swap/limits.png" 
+    alt="Limit orders" 
+    className="project-image"
+  />
+</div>
+
+{/* Basic video embedding with controls */}
+<div className="video-container">
+  <video 
+    src="/projects/swap/limits.mp4" 
+    controls
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+  ></video>
+</div>
+
+## Simplified token selection and crosschain interoperability (2024 - 2025)
+
+As Uniswap expanded to support multiple chains, the token selection experience needed to evolve. 
+We redesigned the token selector to provide a unified interface that seamlessly handles tokens 
+across different networks. 
+
+Under the hood, this was also our first component designed and built to be shared across our 
+entire product suite: web, mobile wallet, and extension. A practice we now have with most major 
+components we build, ensuring consistency and efficiency in our development process while 
+maintaining the high standards of user experience across all platforms.
+
+{/* Basic video embedding */}
+<div className="video-container">
+  <video 
+    src="/projects/swap/bridging.mp4" 
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+  ></video>
+</div>
+
+## Beyond
+
+As Ethereum evolves with enhanced cross-chain interoperability and improved onboarding and transaction experiences, we continue making the trading experience more accessible and user-friendly.
+
+At the same time, we're exploring new ways of trading that will serve both newcomers and experienced users - always balancing functionality with streamlined ease-of-use.

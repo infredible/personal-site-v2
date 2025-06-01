@@ -1,0 +1,163 @@
+Can vibecoding and prototype environments yield production ready code? Maybe...
+
+Recently, I wrote about experimenting with ways of working at Uniswap Labs between design and engineering. I’d been interested in leveraging vibecoding and AI tools to close the gap between the two disciplines. 
+
+During an internal hackathon, staff engineer [Thomas Osmonson](https://x.com/aulneau_) and I built a proof of concept for how this might be possible. Our process involved leveraging Claude, Cursor, MCPs, and the Shadcn library to create a language model-optimized component library and a distribution system for those components that would enable sharing across a production app and prototype projects in separate repos or in Vercel v0.
+
+Read the previous post here: [An attempt to only vibecode, no Figma](/posts/vibecode-no-figma)
+
+{/* Hero image with custom class */}
+<div className="image-container">
+  <img src="/posts/vibecoding-2.png" alt="Vibecoding" className="hero-image" />
+</div>
+
+## Problems and opportunities
+
+In my previous post, I mentioned some of the issues with my approach of spinning up quick prototype repos that don’t match style classifications and component structures with our production environment 1:1.
+
+Since writing it, I’ve heard from other teams and designers that they’d taken similar approaches trying to leverage vibecoding. It’s led to the following problems and observations:
+
+1. Language models perform best when using well-used libraries and frameworks.
+2. When vibecoding in your own prototype environment, you’re likely not using the same stack as a production environment. Unless you invest significant time in setup (eg copying styles, variables, and components) your prototype code may not be close at all to what production code might look like.
+3. However when prototyping in a large production repo, it can be unwieldy, slow, and error-prone.
+4. When handing off prototypes without Figma, the devx sucks. Developers have to grok unfamiliar code and translate it to production code. This can be a lot more friction than just inspecting in Figma Dev Mode.
+
+Given these challenges, Thomas and I saw an opportunity to address them by using modern and emerging methods of building. Let’s get into the weeds…
+
+## Our stack
+
+**Tech**
+
+1. [Tailwind](https://tailwindcss.com/) - well used and understood by models, simple styling for those of us that are bad at coding (aka me)
+2. [Shadcn](https://ui.shadcn.com/) - used not for off-the-shelf components, but for distribution of custom components (much more on this later)
+
+**Tools**
+
+1. [Framelink Figma MCP](https://www.framelink.ai/) - the best Figma to code translation MCP we’ve found
+2. [Vercel v0](https://v0.dev/) - provides fast iteration capabilities for non-coders, allows for easily downloadable code and components without the need to touch Github or a CLI.
+3. Claude desktop client - hooked up to the Framelink MCP, we used this to generate rules from Figma files and occasionally pre-format prompts prior to bringing to Cursor
+4. Cursor - also hooked up to the Framelink MCP, using Claude 3.7 Max
+
+## Shadcn is not just a component library
+
+No, it’s also a method of distribution. If you’ve used Shadcn before, you’d know that getting relevant components is dead simple using their CLI. You’re able to install components into your project and at the same time, have full editing capabilities of those components in your file structure (unlike a standard, opaque, npm package).
+
+Recently, Shadcn extended this capability to custom components using a [“component registry” system](https://ui.shadcn.com/docs/registry).
+
+> Running your own registry allows you to distribute your custom components, hooks, pages, and other files to any React project.
+
+{/* Image with caption */}
+<div className="image-container">
+  <img 
+    src="/posts/shadcn-registry-diagram.png" 
+    alt="Shadcn Registry Diagram" 
+    className="project-image"
+  />
+</div>
+
+tl;dr: our components as part of a Shadcn registry can be used in the production environment and be easily imported and edited in v0 or any new prototyping environment.
+
+## Building the registry
+
+In two days we rebuilt many of our UI components from (mostly) scratch. Here’s how we did it:
+
+First to make quick work of this process, we needed to teach Cursor the rules of our design system using Cursor rules in markdown format [(learn about rules here)](https://docs.cursor.com/context/rules). However, as a small team, we hadn’t had much of a need for documentation outside of a few Figma frames. To get this into proper markdown format for Cursor, we used the Framelink MCP via Claude to read our Figma frames and generate the documentation.
+
+{/* Video with border */}
+<div className="video-container">
+  <video 
+    src="/posts/spore-generation-compressed.mp4" 
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+  controls
+  ></video>
+  <p className="video-caption">Design system rule generation using Claude and a Figma MCP</p>
+</div>
+
+Next, for use of these design system styles in Shadcn and Tailwind we need to generate our tailwind.config.js file.
+
+{/* Video with border */}
+<div className="video-container">
+  <video 
+    src="/posts/config-generation.mp4" 
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+    controls
+  ></video>
+  <p className="video-caption">Converting rules to styles</p>
+</div>
+
+And now we have the two foundational pieces to begin building components. The rules help Cursor refer to and use the right styles and the styles are kept in the config file.
+
+At this point, the setup was mostly complete. Then came grind-time, vibecoding in Cursor with the assistance of the Framelink MCP to recreate our component system. We spun up a viewable component directory using this starting point: [Shadcn Registry Template](https://github.com/shadcn-ui/registry-template-v4).
+
+## Using the registry
+
+As the components are built, adding them to the registry requires a couple steps: adding them to a json file and running a build script. [Check the documentation here](https://ui.shadcn.com/docs/registry/getting-started).
+
+In our setup we chose to build from base level components like buttons to more complex blocks and key app pages. It's important to note that as more components are built, the more language models can refer to for consistency, and will often yield higher quality results.
+
+The template includes a “Open in v0” button for every component. This is a key piece of this project for not the code-pros but the code-curious. In the example below you can see me scrolling through our registry examples and popping a full page component into v0 to start riffing.
+
+{/* Video with border */}
+<div className="video-container">
+  <video 
+    src="/posts/mycelium-demo.mp4" 
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+    controls
+  ></video>
+  <p className="video-caption">Demoing the registry and component iteration with "Open in v0"</p>
+</div>
+
+For those not comfortable in an IDE, they can stick to iterating in v0. But for me, after a couple turns in v0, I’ll typically download the project locally and bring it in to Cursor for the remainder of my work. This is because I prefer the ability to select different models and you can get faster generations in Cursor.
+
+But in any case, everyone is starting from these shared registry components. When used and built upon in production or prototypes, they can be seamlessly shared across projects.
+
+## What’s next
+
+**Code to Figma**
+
+This proof of concept solves a “Figma to code”, “production to prototype”, and “prototype to production” problem. But it doesn’t solve the “code to Figma” problem.
+
+Solving that would mean a true loop between all options and that anyone could design in the medium of their choosing - totally agnostic. Do you want to design in code and hand off to a designer that prefers Figma? No problem. Do you need to keep sources of truth in Figma for a new feature that was designed entirely in code? Yes.
+
+I haven’t figured this part out myself, but in my previous post I guessed there would be a path using the Figma Plugin API. And lo and behold, the legend Meng To has proven this to be the case.
+
+{/* Image with caption */}
+<div className="image-container" style={{ maxWidth: '480px' }}>
+  <img 
+    src="/posts/tweet-mengto.png" 
+    alt="Meng To Tweet" 
+    className="project-image"
+  />
+  <p className="image-caption">https://x.com/MengTo/status/1916806096196415788</p>
+</div>
+
+
+
+**An MCP makes registry use waaaay easier**
+
+Since working on this hackathon project Shad has released an MCP that has a lot of bells and whistles to make the use of registries much easier. It can help set up registry components in vanilla next.js projects, assist the model in pulling and merging changes of remote registries, and much more.
+
+{/* Image with caption */}
+<div className="image-container" style={{ maxWidth: '480px' }}>
+  <img 
+    src="/posts/tweet-shadcn.png" 
+    alt="Shadcn Tweet" 
+    className="project-image"
+  />
+  <p className="image-caption">https://x.com/shadcn/status/1917597228513853603</p>
+</div>
+
+---
+
+As always, I welcome any feedback or would love to hear about similar things you've been trying. Holler at me [@fredzaw](https://x.com/fredzaw) on Twitter.
+
+I also encourage reading through Thomas' post about our project from [his perspective](https://ineffable.co/writing/vibecoding-for-fun-and-profit).
