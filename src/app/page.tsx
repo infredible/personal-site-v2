@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <PageTransition>
       <div className="max-w-xl mx-auto px-6 py-24">
-        <header className="mb-16 mt-20">
+        <header className="mb-24 mt-20">
           <h1 className="text-3xl font-medium mb-1 font-serif">Fred Zaw</h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground mb-6">Oakland, CA</p>
@@ -34,7 +34,7 @@ export default async function Home() {
           />
         </div> */}
 
-        <section className="mb-16">
+        <section className="mb-24">
           <h2 className="text-2xl font-medium font-serif mb-10">Projects</h2>
           
           <div className="space-y-12">
@@ -67,7 +67,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="mb-16">
+        <section className="mb-24">
           <h2 className="text-2xl font-medium font-serif mb-10">Thoughts</h2>
           
           <div className="space-y-8">
@@ -89,7 +89,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <footer className="mt-16 pt-8 border-t">
+        <footer className="pt-14 border-t">
           <h2 className="text-2xl font-medium font-serif mb-4 mt-6">Elsewhere</h2>
           <div className="flex space-x-6">
             <Link href="https://twitter.com" className="text-muted-foreground flex items-center gap-1 group">
