@@ -151,11 +151,11 @@
   }
   
   .back-link a {
-    @apply text-gray-500 hover:text-gray-900 transition-colors;
+    @apply text-muted-foreground hover:opacity-70 transition-opacity;
   }
   
   .time-period {
-    @apply text-gray-500 text-sm mb-2;
+    @apply text-muted-foreground text-sm mb-2;
   }
   
   .prose {
@@ -188,15 +188,15 @@
   }
   
   .prose blockquote {
-    @apply border-l-4 border-gray-200 pl-6 italic my-6;
+    @apply border-l-4 border-border pl-6 italic my-6;
   }
   
   .prose code {
-    @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+    @apply bg-muted px-1 py-0.5 rounded text-sm;
   }
   
   .prose pre {
-    @apply bg-gray-50 p-4 rounded-lg overflow-x-auto mb-6;
+    @apply bg-muted p-4 rounded-lg overflow-x-auto mb-6;
   }
   
   .prose pre code {
@@ -208,7 +208,7 @@
   }
   
   .prose a {
-    @apply text-gray-900 underline underline-offset-2 hover:text-gray-600 transition-colors;
+    @apply text-foreground underline underline-offset-2 hover:opacity-70 transition-opacity;
   }
 
   .prose hr {
@@ -216,29 +216,29 @@
   }
   
   .dark .prose {
-    @apply text-white;
+    @apply text-foreground;
   }
   
   .dark .prose h1,
   .dark .prose h2,
   .dark .prose h3 {
-    @apply text-white;
+    @apply text-foreground;
   }
   
   .dark .prose code {
-    @apply bg-gray-800 text-gray-100;
+    @apply bg-muted text-foreground;
   }
   
   .dark .prose pre {
-    @apply bg-gray-800;
+    @apply bg-muted;
   }
   
   .dark .prose blockquote {
-    @apply border-gray-700;
+    @apply border-border;
   }
   
   .dark .prose a {
-    @apply text-gray-100 hover:text-gray-300;
+    @apply text-foreground hover:opacity-70;
   }
 
   /* Project-specific image and video styles */
@@ -260,11 +260,11 @@
   }
   
   .image-container.with-border {
-    @apply border border-gray-200 rounded-lg p-4;
+    @apply border border-border rounded-lg p-4;
   }
   
   .image-caption {
-    @apply text-gray-500 text-sm mt-3 text-center italic;
+    @apply text-muted-foreground text-sm mt-3 text-center italic;
   }
   
   .image-grid {
@@ -272,7 +272,7 @@
   }
   
   .image-grid p {
-    @apply text-sm text-gray-600 mt-2 text-center;
+    @apply text-sm text-muted-foreground mt-2 text-center;
   }
   
   .video-container video {
@@ -280,11 +280,11 @@
   }
   
   .video-container.with-border {
-    @apply border border-gray-200 rounded-lg p-4;
+    @apply border border-border rounded-lg p-4;
   }
   
   .video-caption {
-    @apply text-gray-500 text-sm mt-3 text-center italic;
+    @apply text-muted-foreground text-sm mt-3 text-center italic;
   }
   
   .video-grid {
@@ -296,22 +296,22 @@
   }
   
   .video-grid p {
-    @apply text-sm text-gray-600 mt-2 text-center;
+    @apply text-sm text-muted-foreground mt-2 text-center;
   }
   
   .dark .image-container.with-border,
   .dark .video-container.with-border {
-    @apply border-gray-700;
+    @apply border-border;
   }
   
   .dark .image-caption,
   .dark .video-caption {
-    @apply text-gray-400;
+    @apply text-muted-foreground;
   }
   
   .dark .image-grid p,
   .dark .video-grid p {
-    @apply text-gray-400;
+    @apply text-muted-foreground;
   }
 
   /* Theme Toggle Styles */
@@ -325,7 +325,7 @@
     }
     
     .theme-toggle-button:not(.active):hover {
-      @apply text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700/50;
+      @apply opacity-70 bg-muted;
     }
   }
 }
