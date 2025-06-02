@@ -4,7 +4,7 @@ import { getAllPosts, Post, formatDate } from '@/app/lib/posts'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { ArrowLeft } from 'lucide-react'
-import { PageTransition, BackToTop } from '@/components'
+import { PageTransition, BackToTop, CopyMarkdown } from '@/components'
 
 // Helper function to get other posts
 async function getOtherPosts(currentSlug: string): Promise<Post[]> {
@@ -86,13 +86,22 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               Back
             </Link>
           </div>
+
+
           
           <article>
             <div className="prose dark:prose-invert max-w-none">
               <div className="prose time-period text-muted-foreground mb-4">
                 {formatDate(metadata.date)}
               </div>
-              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
+              <h1 className="text-5xl mb-8 leading-14">{metadata.title}</h1>
+              <div className="mb-8">
+                <CopyMarkdown 
+                  slug={slug} 
+                  type="post" 
+                  title={metadata.title}
+                />
+              </div>
               <Content.default />
             </div>
           </article>

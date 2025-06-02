@@ -328,4 +328,33 @@
       @apply opacity-70 bg-muted;
     }
   }
+
+  /* Copy Markdown Button Styles */
+  .copy-markdown-button {
+    @apply inline-flex items-center gap-2 text-xs text-muted-foreground;
+    @apply border border-border rounded-md pl-3 pr-1 py-2;
+    @apply transition-all duration-200 ease-out;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+  }
+  
+  @media (hover: hover) {
+    .copy-markdown-button:hover:not(:disabled) {
+      @apply text-foreground bg-muted/50;
+      transform: scale(0.99);
+    }
+  }
+  
+  .copy-markdown-button:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  
+  .copy-markdown-button.copied {
+    @apply text-green-600 border-green-600 opacity-90;
+  }
+  
+  .dark .copy-markdown-button.copied {
+    @apply text-green-400 border-green-800;
+  }
 }

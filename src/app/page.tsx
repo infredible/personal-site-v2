@@ -100,8 +100,9 @@ export default async function Home() {
           </div>
         </section>
 
-        <footer className="pt-14 border-t">
-          <h2 className="text-2xl font-medium font-serif mb-4 mt-6">Elsewhere</h2>
+        <section className="mb-24">
+        {/* <footer className="pt-14 border-t"> */}
+          <h2 className="text-2xl font-medium font-serif mb-10">Elsewhere</h2>
           <div className="flex space-x-6">
             <Link href="https://x.com/fredzaw" className="text-muted-foreground flex items-center gap-1 group">
               Twitter
@@ -116,7 +117,8 @@ export default async function Home() {
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </div>
-        </footer>
+        {/* </footer> */}
+        </section>
       </div>
     </PageTransition>
   );

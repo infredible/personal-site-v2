@@ -4,7 +4,7 @@ import { getAllProjects, Project } from '@/app/lib/projects'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { ArrowLeft } from 'lucide-react'
-import { PageTransition, BackToTop } from '@/components'
+import { PageTransition, BackToTop, CopyMarkdown } from '@/components'
 
 // Helper function to get other projects
 async function getOtherProjects(currentSlug: string): Promise<Project[]> {
@@ -90,6 +90,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               Back
             </Link>
           </div>
+
+
           
           <article>
             <div className="prose dark:prose-invert max-w-none">
@@ -98,7 +100,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 <div>•</div>
                 <div>{metadata.date}</div>
               </div>
-              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
+              <h1 className="text-5xl mb-8 leading-14">{metadata.title}</h1>
+              <div className="mb-8">
+                <CopyMarkdown 
+                  slug={slug} 
+                  type="project" 
+                  title={metadata.title}
+                />
+              </div>
               <Content.default />
             </div>
           </article>
