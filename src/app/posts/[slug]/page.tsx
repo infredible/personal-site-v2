@@ -4,6 +4,7 @@ import { getAllPosts } from '@/app/lib/posts'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { ArrowLeft } from 'lucide-react'
+import { PageTransition } from '@/components'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
@@ -70,24 +71,26 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     const Content = await import(`@/app/content/posts/${slug}.mdx`)
 
     return (
-      <div className="page-content blog-content">
-        <div className="back-link">
-          <Link href="/" className="flex items-center gap-2">
-            <ArrowLeft size={16} />
-            Back
-          </Link>
-        </div>
-        
-        <article>
-          <div className="prose dark:prose-invert max-w-none">
-            <div className="prose time-period">
-              {metadata.date}
-            </div>
-            <h1>{metadata.title}</h1>
-            <Content.default />
+      <PageTransition>
+        <div className="page-content blog-content">
+          <div className="back-link">
+            <Link href="/" className="flex items-center gap-2">
+              <ArrowLeft size={16} />
+              Back
+            </Link>
           </div>
-        </article>
-      </div>
+          
+          <article>
+            <div className="prose dark:prose-invert max-w-none">
+              <div className="prose time-period">
+                {metadata.date}
+              </div>
+              <h1>{metadata.title}</h1>
+              <Content.default />
+            </div>
+          </article>
+        </div>
+      </PageTransition>
     )
   } catch {
     notFound()

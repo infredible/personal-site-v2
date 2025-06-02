@@ -1,2 +1,4 @@
 export { ThemeProvider, useTheme } from "./theme-provider";
-export { ThemeToggle } from "./theme-toggle"; 
+export { ThemeToggle } from "./theme-toggle";
+export { PageTransition } from "./page-transition";
+export { PageTransitionWrapper } from "./page-transition-wrapper"; 
