@@ -2,11 +2,22 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
+import { getWeather, formatTemperature } from "@/app/lib/weather";
 import { PageTransition } from "@/components";
 
 export default async function Home() {
   const projects = await getAllProjects();
   const posts = await getAllPosts();
+  
+  // Fetch weather data, with fallback for errors
+  let weatherDisplay = "70°F"; // Fallback temperature
+  try {
+    const weather = await getWeather();
+    weatherDisplay = formatTemperature(weather.current.temperature_2m);
+  } catch (error) {
+    console.error('Failed to fetch weather data:', error);
+    // Keep the fallback value
+  }
 
   return (
     <PageTransition>
@@ -16,7 +27,7 @@ export default async function Home() {
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground mb-6">Oakland, CA</p>
             <p className="text-muted-foreground mb-6">•</p>
-            <p className="text-muted-foreground mb-6">70°F</p>
+            <p className="text-muted-foreground mb-6">{weatherDisplay}</p>
           </div>
           
           <p className="text-base">
