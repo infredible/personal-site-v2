@@ -30,29 +30,26 @@ export function CopyMarkdown({ slug, type, title }: CopyMarkdownProps) {
       setTimeout(() => setIsCopied(false), 2000)
     } catch (error) {
       console.error('Failed to copy markdown:', error)
-      // You could add error state handling here if desired
     }
   }
 
   return (
-    <button 
-      onClick={copyMarkdown}
-      disabled={isCopied}
-      className={`copy-markdown-button ${isCopied ? 'copied' : ''}`}
-      aria-label={`Copy ${title} as markdown`}
-      style={{ minWidth: '152px' }}
-    >
-      {isCopied ? (
-        <>
+    <div className="copy-icon-container">
+      <button 
+        onClick={copyMarkdown}
+        disabled={isCopied}
+        className={`copy-icon ${isCopied ? 'copied' : ''}`}
+        aria-label={`Copy ${title} as markdown`}
+      >
+        {isCopied ? (
           <Check size={14} />
-          Copied!
-        </>
-      ) : (
-        <>
+        ) : (
           <BookCopy size={14} />
-          Copy as Markdown
-        </>
-      )}
-    </button>
+        )}
+      </button>
+      <div className="tooltip">
+        {isCopied ? 'Copied!' : 'Copy as Markdown'}
+      </div>
+    </div>
   )
 } 

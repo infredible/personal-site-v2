@@ -329,32 +329,60 @@
     }
   }
 
-  /* Copy Markdown Button Styles */
-  .copy-markdown-button {
-    @apply inline-flex items-center gap-2 text-xs text-muted-foreground;
-    @apply border border-border rounded-md pl-3 pr-1 py-2;
-    @apply transition-all duration-200 ease-out;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  /* Copy Icon Styles */
+  .copy-icon-container {
+    @apply relative inline-block;
+  }
+  
+  .copy-icon {
+    @apply text-muted-foreground bg-transparent border-0 p-1 rounded;
+    @apply transition-all duration-200 ease-out cursor-pointer;
     user-select: none;
     -webkit-tap-highlight-color: rgba(0,0,0,0);
   }
   
   @media (hover: hover) {
-    .copy-markdown-button:hover:not(:disabled) {
-      @apply text-foreground bg-muted/50;
-      transform: scale(0.99);
+    .copy-icon:hover:not(:disabled) {
+      @apply text-foreground bg-muted/30;
+      transform: scale(1.05);
+    }
+    
+    .copy-icon-container:hover .tooltip {
+      @apply opacity-100 visible;
+      transform: translateX(-50%) translateY(-8px);
     }
   }
   
-  .copy-markdown-button:active:not(:disabled) {
-    transform: scale(0.96);
+  .copy-icon:active:not(:disabled) {
+    transform: scale(0.95);
   }
   
-  .copy-markdown-button.copied {
-    @apply text-green-600 border-green-600 opacity-90;
+  .copy-icon.copied {
+    @apply text-green-600;
   }
   
-  .dark .copy-markdown-button.copied {
-    @apply text-green-400 border-green-800;
+  .dark .copy-icon.copied {
+    @apply text-green-400;
+  }
+  
+  /* Tooltip Styles */
+  .tooltip {
+    @apply absolute bottom-full left-1/2;
+    @apply bg-background border border-border rounded-md px-2 py-1;
+    @apply text-xs text-foreground whitespace-nowrap;
+    @apply opacity-0 invisible pointer-events-none;
+    @apply transition-all duration-200 ease-out;
+    transform: translateX(-50%) translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+  }
+  
+  .dark .tooltip {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Copy Actions Container */
+  .copy-actions {
+    @apply flex items-center gap-1.5;
   }
 }

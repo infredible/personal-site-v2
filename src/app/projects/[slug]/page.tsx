@@ -4,7 +4,7 @@ import { getAllProjects, Project } from '@/app/lib/projects'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { ArrowLeft } from 'lucide-react'
-import { PageTransition, BackToTop, CopyMarkdown } from '@/components'
+import { PageTransition, BackToTop, CopyMarkdown, CopyLink } from '@/components'
 
 // Helper function to get other projects
 async function getOtherProjects(currentSlug: string): Promise<Project[]> {
@@ -90,24 +90,25 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               Back
             </Link>
           </div>
-
-
           
           <article>
             <div className="prose dark:prose-invert max-w-none">
-              <div className="flex items-center gap-2 prose time-period text-muted-foreground mb-4">
-                <div>{metadata.company}</div>
-                <div>•</div>
-                <div>{metadata.date}</div>
+              <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
+                <div className="flex items-center gap-2">
+                  <div>{metadata.company}</div>
+                  <div>•</div>
+                  <div>{metadata.date}</div>
+                </div>
+                <div className="copy-actions">
+                  <CopyLink title={metadata.title} />
+                  <CopyMarkdown 
+                    slug={slug} 
+                    type="project" 
+                    title={metadata.title}
+                  />
+                </div>
               </div>
-              <h1 className="text-5xl mb-8 leading-14">{metadata.title}</h1>
-              <div className="mb-8">
-                <CopyMarkdown 
-                  slug={slug} 
-                  type="project" 
-                  title={metadata.title}
-                />
-              </div>
+              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
               <Content.default />
             </div>
           </article>
