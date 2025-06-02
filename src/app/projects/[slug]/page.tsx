@@ -1,10 +1,16 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getAllProjects } from '@/app/lib/projects'
+import { getAllProjects, Project } from '@/app/lib/projects'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { ArrowLeft } from 'lucide-react'
-import { PageTransition } from '@/components'
+import { PageTransition, BackToTop } from '@/components'
+
+// Helper function to get other projects
+async function getOtherProjects(currentSlug: string): Promise<Project[]> {
+  const allProjects = await getAllProjects()
+  return allProjects.filter(project => project.id !== currentSlug)
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
@@ -73,10 +79,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   try {
     const { metadata } = await import(`@/app/content/projects/${slug}.metadata`)
     const Content = await import(`@/app/content/projects/${slug}.mdx`)
+    const otherProjects = await getOtherProjects(slug)
 
     return (
       <PageTransition>
-        <div className="page-content blog-content">
+        <div className="page-content blog-content mb-16">
           <div className="back-link">
             <Link href="/" className="flex items-center gap-2">
               <ArrowLeft size={16} />
@@ -86,14 +93,57 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           
           <article>
             <div className="prose dark:prose-invert max-w-none">
-              <div className="prose time-period">
-                {metadata.company && <span>{metadata.company} • </span>}
-                {metadata.date}
+              <div className="flex items-center gap-2 prose time-period text-muted-foreground mb-4">
+                <div>{metadata.company}</div>
+                <div>•</div>
+                <div>{metadata.date}</div>
               </div>
-              <h1>{metadata.title}</h1>
+              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
               <Content.default />
             </div>
           </article>
+
+          {/* Back to top link */}
+          <BackToTop />
+
+          {/* More Projects */}
+          {otherProjects.length > 0 && (
+            <section className="mt-16 pt-12 border-t border-border">
+              <h2 className="text-lg font-semibold mb-6 font-serif">
+                More projects
+              </h2>
+              <div className="space-y-8">
+                {otherProjects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.id}`}
+                    className="block group hover:opacity-70 transition-opacity"
+                  >
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">
+                        {project.metadata.title}
+                      </h3>
+                      <p className="text-sm">
+                        {project.metadata.description}
+                      </p>
+                      {/* <div className="flex items-center mt-2">
+                        <img 
+                          src={project.metadata.company === 'Uniswap Labs' ? "/icons/uniswap.png" : "/icons/tiktok.png"} 
+                          alt={project.metadata.company} 
+                          className="w-4 h-4 mr-2 rounded-full"
+                        />
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground text-sm">{project.metadata.company}</span>
+                          <span className="text-muted-foreground text-sm">•</span>
+                          <span className="text-muted-foreground text-sm">{project.metadata.date}</span>
+                        </div>
+                      </div> */}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </PageTransition>
     )

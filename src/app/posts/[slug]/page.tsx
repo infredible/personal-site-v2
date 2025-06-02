@@ -1,10 +1,16 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getAllPosts } from '@/app/lib/posts'
+import { getAllPosts, Post, formatDate } from '@/app/lib/posts'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { ArrowLeft } from 'lucide-react'
-import { PageTransition } from '@/components'
+import { PageTransition, BackToTop } from '@/components'
+
+// Helper function to get other posts
+async function getOtherPosts(currentSlug: string): Promise<Post[]> {
+  const allPosts = await getAllPosts()
+  return allPosts.filter(post => post.id !== currentSlug)
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
@@ -69,10 +75,11 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   try {
     const { metadata } = await import(`@/app/content/posts/${slug}.metadata`)
     const Content = await import(`@/app/content/posts/${slug}.mdx`)
+    const otherPosts = await getOtherPosts(slug)
 
     return (
       <PageTransition>
-        <div className="page-content blog-content">
+        <div className="page-content blog-content mb-16">
           <div className="back-link">
             <Link href="/" className="flex items-center gap-2">
               <ArrowLeft size={16} />
@@ -82,13 +89,43 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           
           <article>
             <div className="prose dark:prose-invert max-w-none">
-              <div className="prose time-period">
-                {metadata.date}
+              <div className="prose time-period text-muted-foreground mb-4">
+                {formatDate(metadata.date)}
               </div>
-              <h1>{metadata.title}</h1>
+              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
               <Content.default />
             </div>
           </article>
+
+          {/* Back to top link */}
+          <BackToTop />
+
+          {/* More Posts */}
+          {otherPosts.length > 0 && (
+            <section className="mt-16 pt-12 border-t border-border">
+              <h2 className="text-lg font-semibold mb-6 font-serif">
+                More thoughts
+              </h2>
+              <div className="space-y-8">
+                {otherPosts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/posts/${post.id}`}
+                    className="block group hover:opacity-70 transition-opacity"
+                  >
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">
+                        {post.metadata.title}
+                      </h3>
+                      <p className="text-sm">
+                        {post.metadata.description}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </PageTransition>
     )
