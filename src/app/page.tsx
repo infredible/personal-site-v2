@@ -11,9 +11,9 @@ export default async function Home() {
       <header className="mb-16 mt-20">
         <h1 className="text-3xl font-medium mb-1 font-serif">Fred Zaw</h1>
         <div className="flex items-center gap-2">
-          <p className="text-gray-500 mb-6">Oakland, CA</p>
-          <p className="text-gray-500 mb-6">•</p>
-          <p className="text-gray-500 mb-6">70°F</p>
+          <p className="text-muted-foreground mb-6">Oakland, CA</p>
+          <p className="text-muted-foreground mb-6">•</p>
+          <p className="text-muted-foreground mb-6">70°F</p>
         </div>
         
         <p className="text-base">
@@ -42,7 +42,7 @@ export default async function Home() {
               className="block group"
             >
               <div>
-                <h3 className="text-md font-medium mb-1 group-hover:text-gray-600 transition-colors">
+                <h3 className="text-md font-medium mb-1 group-hover:opacity-70 transition-colors">
                   {project.metadata.title}
                 </h3>
                 <p>{project.metadata.description}</p>
@@ -53,9 +53,9 @@ export default async function Home() {
                     className="w-4 h-4 mr-2 rounded-full"
                   />
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-500 text-sm">{project.metadata.company}</span>
-                    <span className="text-gray-500 text-sm">•</span>
-                    <span className="text-gray-500 text-sm">{project.metadata.date}</span>
+                    <span className="text-muted-foreground text-sm">{project.metadata.company}</span>
+                    <span className="text-muted-foreground text-sm">•</span>
+                    <span className="text-muted-foreground text-sm">{project.metadata.date}</span>
                   </div>
                 </div>
               </div>
@@ -75,11 +75,11 @@ export default async function Home() {
               className="block group"
             >
               <div>
-                <h3 className="text-md font-medium mb-1 group-hover:text-gray-600 transition-colors">
+                <h3 className="text-md font-medium mb-1 group-hover:opacity-70 transition-colors">
                   {post.metadata.title}
                 </h3>
                 <p>{post.metadata.description}</p>
-                <p className="text-gray-500 text-sm mt-2">{formatDate(post.metadata.date)}</p>
+                <p className="text-muted-foreground text-sm mt-2">{formatDate(post.metadata.date)}</p>
               </div>
             </Link>
           ))}
@@ -89,9 +89,9 @@ export default async function Home() {
       <footer className="mt-16 pt-8 border-t">
         <h2 className="text-2xl font-medium font-serif mb-4 mt-6">Elsewhere</h2>
         <div className="flex space-x-6">
-          <Link href="https://twitter.com" className="text-gray-700 hover:text-gray-900">Twitter</Link>
-          <Link href="https://read.cv" className="text-gray-700 hover:text-gray-900">Read.cv</Link>
-          <Link href="https://instagram.com" className="text-gray-700 hover:text-gray-900">Instagram</Link>
+          <Link href="https://twitter.com" className="text-muted-foreground">Twitter</Link>
+          <Link href="https://read.cv" className="text-muted-foreground">Read.cv</Link>
+          <Link href="https://instagram.com" className="text-muted-foreground">Instagram</Link>
         </div>
       </footer>
     </div>
