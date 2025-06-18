@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BookCopy, Check } from 'lucide-react'
+import { BookCopy } from 'lucide-react'
 
 interface CopyMarkdownProps {
   slug: string
@@ -27,7 +27,7 @@ export function CopyMarkdown({ slug, type, title }: CopyMarkdownProps) {
       await navigator.clipboard.writeText(content)
       
       setIsCopied(true)
-      setTimeout(() => setIsCopied(false), 2000)
+      setTimeout(() => setIsCopied(false), 600)
     } catch (error) {
       console.error('Failed to copy markdown:', error)
     }
@@ -41,14 +41,10 @@ export function CopyMarkdown({ slug, type, title }: CopyMarkdownProps) {
         className={`copy-icon ${isCopied ? 'copied' : ''}`}
         aria-label={`Copy ${title} as markdown`}
       >
-        {isCopied ? (
-          <Check size={14} />
-        ) : (
-          <BookCopy size={14} />
-        )}
+        <BookCopy size={14} />
       </button>
       <div className="tooltip">
-        {isCopied ? 'Copied!' : 'Copy as Markdown'}
+        {isCopied ? 'Copied' : 'Copy as Markdown'}
       </div>
     </div>
   )

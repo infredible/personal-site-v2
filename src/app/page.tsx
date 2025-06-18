@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
 import { getWeather, formatTemperature } from "@/app/lib/weather";
-import { PageTransition } from "@/components";
+import { PageTransition, Stories } from "@/components";
 
 export default async function Home() {
   const projects = await getAllProjects();
@@ -19,10 +19,113 @@ export default async function Home() {
     // Keep the fallback value
   }
 
+  // Stories data
+  const storiesData = [
+    { 
+      id: 'Drag to Swap', 
+      title: 'Drag to Swap', 
+      description: 'Drag to Swap', 
+      videoUrl: '/projects/swap/drag-to-swap.mp4',
+      objectFit: 'cover' as const
+    },
+    { 
+      id: 'Token Pad', 
+      title: 'Token Pad', 
+      description: 'Token Pad', 
+      videoUrl: '/projects/swap/token-pad.mp4',
+      objectFit: 'cover' as const
+    },
+    { 
+      id: 'Mobile Navigation', 
+      title: 'Mobile Navigation', 
+      description: 'Mobile Navigation', 
+      videoUrl: '/projects/swap/mobile-navigation.mp4',
+      objectFit: 'cover' as const
+    },
+    { 
+      id: 'Permit2', 
+      title: 'Permit2', 
+      description: 'Permit2', 
+      videoUrl: '/projects/swap/Permit2.mp4',
+      objectFit: 'cover' as const
+    },
+    { 
+      id: 'Mini Charts', 
+      title: 'Mini Charts', 
+      description: 'Mini Charts', 
+      videoUrl: '/projects/misc/mini-chart.mp4',
+      objectFit: 'contain' as const,
+      padding: '52px 0 24px 0',
+    },
+    { 
+      id: 'Trade Type Switcher', 
+      title: 'Trade Type Switcher', 
+      description: 'Trade Type Switcher', 
+      videoUrl: '/projects/swap/trade-type-switcher.mp4',
+      objectFit: 'cover' as const,
+    },
+    { 
+      id: 'Cortex Install', 
+      title: 'Cortex Install', 
+      description: 'Cortex Install', 
+      videoUrl: '/projects/misc/cortex-install.mp4',
+      objectFit: 'cover' as const
+    },
+    { 
+      id: 'TTEH Demo', 
+      title: 'TTEH Demo', 
+      description: 'TTEH Demo', 
+      videoUrl: '/projects/tiktok/demo.mp4',
+      objectFit: 'cover' as const
+    },
+    { 
+      id: 'MP Tilt', 
+      title: 'MP Tilt', 
+      description: 'MP Tilt', 
+      videoUrl: '/projects/misc/mp-tilt.mp4',
+      objectFit: 'contain' as const
+    },
+    { 
+      id: 'Pan Guidance', 
+      title: 'Pan Guidance', 
+      description: 'Pan Guidance', 
+      videoUrl: '/projects/misc/pan-guidance.mp4',
+      objectFit: 'contain' as const
+    },
+    { 
+      id: 'MP Scan', 
+      title: 'MP Scan', 
+      description: 'MP Scan', 
+      videoUrl: '/projects/misc/mp-scan.mp4',
+      objectFit: 'contain' as const
+    },
+    { 
+      id: 'AR Guidance', 
+      title: 'AR Guidance', 
+      description: 'AR Guidance', 
+      videoUrl: '/projects/misc/ar-guidance.mp4',
+      objectFit: 'contain' as const
+    },
+    { 
+      id: 'Waypoints', 
+      title: 'Waypoints', 
+      description: 'Waypoints', 
+      videoUrl: '/projects/misc/waypoints.mp4',
+      objectFit: 'contain' as const
+    },
+    { 
+      id: 'Ebay Passions', 
+      title: 'Ebay Passions', 
+      description: 'Ebay Passions', 
+      videoUrl: '/projects/misc/ebay-passions.mp4',
+      objectFit: 'cover' as const
+    },
+  ];
+
   return (
     <PageTransition>
       <div className="max-w-xl mx-auto px-6 py-24">
-        <header className="mb-24 mt-20">
+        <header className="mb-10 mt-20">
           <h1 className="text-3xl font-medium mb-1 font-serif">Fred Zaw</h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground mb-6">Oakland, CA</p>
@@ -44,6 +147,9 @@ export default async function Home() {
             className="rounded-lg w-full"
           />
         </div> */}
+
+        {/* Stories Section */}
+        <Stories stories={storiesData} />
 
         <section className="mb-24">
           <h2 className="text-2xl font-medium font-serif mb-10">Projects</h2>

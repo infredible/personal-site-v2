@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Link, Check } from 'lucide-react'
+import { Link } from 'lucide-react'
 
 interface CopyLinkProps {
   title: string
@@ -18,7 +18,7 @@ export function CopyLink({ title }: CopyLinkProps) {
       await navigator.clipboard.writeText(url)
       
       setIsCopied(true)
-      setTimeout(() => setIsCopied(false), 2000)
+      setTimeout(() => setIsCopied(false), 600)
     } catch (error) {
       console.error('Failed to copy link:', error)
     }
@@ -32,14 +32,10 @@ export function CopyLink({ title }: CopyLinkProps) {
         className={`copy-icon ${isCopied ? 'copied' : ''}`}
         aria-label={`Copy link to ${title}`}
       >
-        {isCopied ? (
-          <Check size={14} />
-        ) : (
-          <Link size={14} />
-        )}
+        <Link size={14} />
       </button>
       <div className="tooltip">
-        {isCopied ? 'Copied!' : 'Copy link'}
+        {isCopied ? 'Copied' : 'Copy link'}
       </div>
     </div>
   )
