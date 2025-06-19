@@ -61,7 +61,7 @@
   --accent-foreground: oklch(0.216 0.006 56.043);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
+  --input: oklch(0.923 0.003 48.717 / 0.4);
   --ring: oklch(0.709 0.01 56.259);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -158,20 +158,14 @@
 
 @layer components {
   .page-content {
-    @apply max-w-xl mx-auto px-4 sm:px-6 py-12 sm:py-16;
+    @apply max-w-xl mx-auto px-4 sm:px-6 pb-12 pt-20 sm:pb-16 sm:pt-32;
   }
   
   .blog-content {
     @apply space-y-8;
   }
   
-  .back-link {
-    @apply mb-16 text-sm;
-  }
-  
-  .back-link a {
-    @apply text-muted-foreground hover:opacity-70 transition-opacity;
-  }
+
   
   .time-period {
     @apply text-muted-foreground text-sm mb-2;
@@ -390,6 +384,8 @@
       transform: scale(0.95);
     }
   }
+
+
 
   /* Copy Actions Container */
   .copy-actions {
