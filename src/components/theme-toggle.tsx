@@ -11,7 +11,7 @@ function ThemeToggleInner() {
       <div className="theme-toggle-container inline-flex bg-background rounded-full p-1 gap-1 shadow-md border border-input transition-all duration-200">
         <button
           onClick={() => setTheme("light")}
-          className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[44px] sm:min-h-0 ${
+          className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[32px] sm:min-h-0 ${
             theme === "light"
               ? "active bg-secondary text-foreground shadow-sm"
               : "text-muted-foreground"
@@ -35,7 +35,7 @@ function ThemeToggleInner() {
         
         <button
           onClick={() => setTheme("dark")}
-          className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[44px] sm:min-h-0 ${
+          className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[32px] sm:min-h-0 ${
             theme === "dark"
               ? "active bg-secondary text-foreground shadow-sm"
               : "text-muted-foreground"
