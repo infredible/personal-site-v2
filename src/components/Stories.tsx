@@ -20,8 +20,23 @@ export function Stories({ stories }: StoriesProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [supportsHover, setSupportsHover] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Detect if device supports hover
+  useEffect(() => {
+    const checkHover = () => {
+      setSupportsHover(window.matchMedia('(hover: hover)').matches);
+    };
+    
+    checkHover();
+    const mediaQuery = window.matchMedia('(hover: hover)');
+    mediaQuery.addEventListener('change', checkHover);
+    
+    return () => mediaQuery.removeEventListener('change', checkHover);
+  }, []);
 
   // Safe play function that handles DOM removal
   const safePlay = async (video: HTMLVideoElement) => {
@@ -109,17 +124,17 @@ export function Stories({ stories }: StoriesProps) {
     safePlay(video);
   }, [currentIndex]);
 
-  // Handle play/pause on hover
+  // Handle play/pause on hover (only on devices that support hover)
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !supportsHover) return;
 
     if (isHovered) {
       safePause(video);
     } else {
       safePlay(video);
     }
-  }, [isHovered]);
+  }, [isHovered, supportsHover]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -138,14 +153,44 @@ export function Stories({ stories }: StoriesProps) {
     setCurrentIndex(currentIndex < stories.length - 1 ? currentIndex + 1 : 0);
   };
 
+  // Handle mouse events (only on devices that support hover)
+  const handleMouseEnter = () => {
+    if (supportsHover) {
+      setIsHovered(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (supportsHover) {
+      setIsHovered(false);
+    }
+  };
+
+  // Handle touch events for mobile
+  const handleTouchStart = () => {
+    // Clear any hover state on touch
+    setIsHovered(false);
+    
+    // Ensure video continues playing after touch on mobile
+    const video = videoRef.current;
+    if (video && !supportsHover) {
+      // Small delay to ensure touch interaction is complete
+      setTimeout(() => {
+        safePlay(video);
+      }, 100);
+    }
+  };
+
   const currentStory = stories[currentIndex];
 
   return (
     <div className="w-full mb-24">
       <div 
-        className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-surface-3 shadow-lg bg-black"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        ref={containerRef}
+        className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-surface-3 shadow-lg bg-black group"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
       >
         {/* Progress indicators */}
         <div className="absolute top-4 left-4 right-4 z-20 flex gap-1.5">
@@ -176,25 +221,36 @@ export function Stories({ stories }: StoriesProps) {
           preload="metadata"
         />
 
-        {/* Navigation arrows */}
-        {isHovered && (
-          <>
-            <button
-              onClick={goToPrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors cursor-pointer"
-              aria-label="Previous story"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors cursor-pointer"
-              aria-label="Next story"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </>
-        )}
+        {/* Navigation arrows - hidden on mobile, visible on hover for desktop */}
+        <div 
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 transition-opacity duration-200"
+          style={{
+            opacity: supportsHover && isHovered ? 1 : 0
+          }}
+        >
+          <button
+            onClick={goToPrevious}
+            className="p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors cursor-pointer"
+            aria-label="Previous story"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div 
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 transition-opacity duration-200"
+          style={{
+            opacity: supportsHover && isHovered ? 1 : 0
+          }}
+        >
+          <button
+            onClick={goToNext}
+            className="p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors cursor-pointer"
+            aria-label="Next story"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Click areas for navigation */}
         <button
