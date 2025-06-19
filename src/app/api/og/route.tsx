@@ -5,14 +5,38 @@ import { join } from 'path';
 
 export const runtime = 'edge';
 
+// Function to format date strings
+function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    // Check if it's a valid date
+    if (isNaN(date.getTime())) {
+      return dateString; // Return original if not a valid date
+    }
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch {
+    return dateString; // Return original if parsing fails
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const title = searchParams.get('title') || 'Fred Zaw';
-    const subtitle = searchParams.get('subtitle') || searchParams.get('date') || '';
+    const rawSubtitle = searchParams.get('subtitle') || searchParams.get('date') || '';
+    
+    // Format the subtitle if it's a date
+    const subtitle = rawSubtitle ? formatDate(rawSubtitle) : '';
 
-    // Load the Family font
+    // Load the custom fonts
     const familyBold = await readFile(join(process.cwd(), 'public/fonts/Family-Bold.ttf'));
+    const untitledSansRegular = await readFile(join(process.cwd(), 'public/fonts/UntitledSans-Regular.ttf'));
+    const untitledSansMedium = await readFile(join(process.cwd(), 'public/fonts/UntitledSans-Medium.ttf'));
 
     return new ImageResponse(
       (
@@ -27,7 +51,7 @@ export async function GET(request: NextRequest) {
             alignItems: 'flex-start',
             justifyContent: 'space-between',
             padding: '80px',
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            fontFamily: 'UntitledSans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -51,7 +75,7 @@ export async function GET(request: NextRequest) {
                   color: '#b5b6ba', // oklch(0.709 0.01 56.259) - muted-foreground color
                   margin: '0',
                   fontWeight: '400',
-                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontFamily: 'UntitledSans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 }}
               >
                 {subtitle}
@@ -72,7 +96,7 @@ export async function GET(request: NextRequest) {
                 fontSize: '28px',
                 color: '#b5b6ba', // muted-foreground color
                 fontWeight: '500',
-                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontFamily: 'UntitledSans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               }}
             >
               fredzaw.com
@@ -97,6 +121,18 @@ export async function GET(request: NextRequest) {
             data: familyBold,
             style: 'normal',
             weight: 700,
+          },
+          {
+            name: 'UntitledSans',
+            data: untitledSansRegular,
+            style: 'normal',
+            weight: 400,
+          },
+          {
+            name: 'UntitledSans',
+            data: untitledSansMedium,
+            style: 'normal',
+            weight: 500,
           },
         ],
       }
