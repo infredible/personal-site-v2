@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { ThemeProvider, ThemeToggle, PageTransitionWrapper } from "../components";
+import { ThemeProvider, ThemeToggle, PageTransitionWrapper, SafariThemeUpdater } from "../components";
 
 const untitledSans = localFont({
   src: [
@@ -65,6 +65,14 @@ export const metadata: Metadata = {
       },
     ],
   },
+  other: {
+    // Safari browser chrome theming - light mode default
+    "theme-color": "#ffffff",
+    // iOS Safari status bar style
+    "apple-mobile-web-app-status-bar-style": "default",
+    // PWA support
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -82,6 +90,7 @@ export default function RootLayout({
             {children}
           </PageTransitionWrapper>
           <ThemeToggle />
+          <SafariThemeUpdater />
         </ThemeProvider>
       </body>
     </html>
