@@ -94,7 +94,7 @@ export function Stories({ stories }: StoriesProps) {
   return (
     <div className="w-full mb-24">
       <div 
-        className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black"
+        className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-surface-3 shadow-lg bg-black"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

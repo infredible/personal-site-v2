@@ -1,3 +1,5 @@
+import { ComparisonSlider } from '@/components';
+
 Liquidity is vital to any exchange market. A core innovation of the 
 original Uniswap protocol was to democratize market-making by allowing 
 anyone to provide liquidity and earn returns on their investment.
@@ -28,14 +30,13 @@ The following are some key areas redesigned:
   <p className="image-caption">Position management page</p>
 </div>
 
-<div className="image-container">
-  <img 
-    src="/projects/lp-redesign/create-position-after.png" 
-    alt="Create position after redesign" 
-    className="project-image"
-  />
-  <p className="image-caption">Position creation</p>
-</div>
+<ComparisonSlider
+  beforeImage="/projects/lp-redesign/create-position-before.png"
+  afterImage="/projects/lp-redesign/create-position-after.png"
+  beforeAlt="Create position page before redesign"
+  afterAlt="Create position page after redesign"
+/>
+<p className="image-caption">Position creation: Before and After</p>
 
 <div className="image-container">
   <img 

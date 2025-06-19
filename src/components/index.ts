@@ -5,4 +5,5 @@ export { PageTransitionWrapper } from "./page-transition-wrapper";
 export { BackToTop } from "./BackToTop";
 export { CopyMarkdown } from "./CopyMarkdown";
 export { CopyLink } from "./CopyLink";
-export { Stories } from "./Stories"; 
+export { Stories } from "./Stories";
+export { ComparisonSlider } from "./ComparisonSlider"; 
