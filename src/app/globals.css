@@ -371,13 +371,50 @@
     }
     
     .theme-toggle-button:not(.active):hover {
-      @apply opacity-70 bg-muted;
+      @apply text-foreground bg-muted;
+    }
+  }
+  
+  /* Mobile-specific theme toggle improvements */
+  @media (max-width: 640px) {
+    .theme-toggle-container {
+      @apply shadow-lg;
+    }
+    
+    .theme-toggle-button:not(.active) {
+      @apply bg-muted/10;
+    }
+    
+    .theme-toggle-button:active:not(.active) {
+      @apply bg-muted/30;
+      transform: scale(0.95);
     }
   }
 
   /* Copy Actions Container */
   .copy-actions {
-    @apply flex items-center gap-1.5;
+    @apply flex items-center gap-2 sm:gap-0;
+  }
+  
+  /* Copy button hover states - only on devices that support hover */
+  @media (hover: hover) {
+    .copy-actions button:hover:not(:disabled) {
+      @apply text-foreground bg-muted/30;
+      transform: scale(1.05);
+    }
+  }
+  
+  /* Mobile-specific copy button improvements */
+  @media (max-width: 640px) {
+    .copy-actions button {
+      @apply bg-muted/20;
+      border: 1px solid transparent;
+    }
+    
+    .copy-actions button:active:not(:disabled) {
+      @apply bg-muted/40;
+      transform: scale(0.95);
+    }
   }
 
   /* Comparison Slider Styles */

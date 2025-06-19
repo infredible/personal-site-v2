@@ -18,14 +18,46 @@ export function CopyLink({ title }: CopyLinkProps) {
   const copyLink = async () => {
     if (isCopied) return
     
+    const url = window.location.href
+    
     try {
-      const url = window.location.href
-      await navigator.clipboard.writeText(url)
+      // Try modern Clipboard API first, with fallback if it fails
+      let copySuccessful = false
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(url)
+          copySuccessful = true
+        } catch (clipboardError) {
+          console.log('Clipboard API failed, trying fallback:', clipboardError)
+          copySuccessful = false
+        }
+      }
+      
+      // Fallback for Safari mobile and older browsers
+      if (!copySuccessful) {
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        
+        const successful = document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        if (!successful) {
+          throw new Error('Both clipboard methods failed')
+        }
+      }
       
       setIsCopied(true)
       setTimeout(() => setIsCopied(false), 600)
     } catch (error) {
       console.error('Failed to copy link:', error)
+      // Could show a toast notification here if needed
     }
   }
 
@@ -35,7 +67,7 @@ export function CopyLink({ title }: CopyLinkProps) {
         <button 
           onClick={copyLink}
           disabled={isCopied}
-          className={`text-muted-foreground bg-transparent border-0 p-1 rounded transition-all duration-200 ease-out cursor-pointer hover:text-foreground hover:bg-muted/30 active:scale-95 disabled:cursor-default ${
+          className={`text-muted-foreground bg-transparent border-0 p-2 sm:p-1 rounded transition-all duration-200 ease-out cursor-pointer active:scale-95 disabled:cursor-default min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center ${
             isCopied ? 'text-green-600 dark:text-green-400' : ''
           }`}
           style={{
@@ -44,7 +76,7 @@ export function CopyLink({ title }: CopyLinkProps) {
           }}
           aria-label={`Copy link to ${title}`}
         >
-          {isCopied ? <Check size={14} /> : <Link size={14} />}
+          {isCopied ? <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <Link className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
         </button>
       </TooltipTrigger>
       <TooltipContent>

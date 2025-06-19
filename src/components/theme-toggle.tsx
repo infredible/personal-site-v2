@@ -7,21 +7,20 @@ function ThemeToggleInner() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50">
       <div className="theme-toggle-container inline-flex bg-background rounded-full p-1 gap-1 shadow-md border border-input transition-all duration-200">
         <button
           onClick={() => setTheme("light")}
-          className={`theme-toggle-button flex items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 ${
+          className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[44px] sm:min-h-0 ${
             theme === "light"
               ? "active bg-secondary text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground"
           }`}
           aria-label="Switch to light mode"
           style={{ WebkitTapHighlightColor: "rgba(0,0,0,0)" }}
         >
           <svg
-            width="14"
-            height="14"
+            className="w-4 h-4 sm:w-3.5 sm:h-3.5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -36,17 +35,16 @@ function ThemeToggleInner() {
         
         <button
           onClick={() => setTheme("dark")}
-          className={`theme-toggle-button flex items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 ${
+          className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[44px] sm:min-h-0 ${
             theme === "dark"
               ? "active bg-secondary text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground"
           }`}
           aria-label="Switch to dark mode"
           style={{ WebkitTapHighlightColor: "rgba(0,0,0,0)" }}
         >
           <svg
-            width="14"
-            height="14"
+            className="w-4 h-4 sm:w-3.5 sm:h-3.5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
