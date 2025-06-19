@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider, ThemeToggle, PageTransitionWrapper, SafariThemeUpdater } from "../components";
+import { Analytics } from "@vercel/analytics/next"
 
 const untitledSans = localFont({
   src: [
@@ -88,6 +89,7 @@ export default function RootLayout({
           </PageTransitionWrapper>
           <ThemeToggle />
           <SafariThemeUpdater />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
