@@ -7,4 +7,5 @@ export { PageTransitionWrapper } from './page-transition-wrapper';
 export { SafariThemeUpdater } from './SafariThemeUpdater';
 export { Stories } from './Stories';
 export { ThemeProvider, useTheme } from './theme-provider';
-export { ThemeToggle } from './theme-toggle'; 
+export { ThemeToggle } from './theme-toggle';
+export { MDXImage, MDXVideo } from './MDXMedia'; 
