@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 
 interface ComparisonSliderProps {
   beforeImage: string;
@@ -137,23 +138,28 @@ export function ComparisonSlider({
         }}
       >
         {/* After Image (base layer - left side) */}
-        <img
+        <Image
           ref={afterImgRef}
           src={afterImage}
           alt={afterAlt}
+          width={800}
+          height={600}
           className="w-full h-full object-contain object-top mt-0"
           style={{
             display: containerHeight ? 'block' : 'none'
           }}
           onLoad={handleImageLoad}
           draggable={false}
+          priority
         />
         
         {/* Before Image (clipped layer - reveals from right) */}
-        <img
+        <Image
           ref={beforeImgRef}
           src={beforeImage}
           alt={beforeAlt}
+          width={800}
+          height={600}
           className="absolute top-0 left-0 w-full h-full object-contain object-top mt-0"
           style={{
             clipPath: `inset(0px ${100 - sliderPosition}% 0px 0px)`,
@@ -161,22 +167,29 @@ export function ComparisonSlider({
           }}
           onLoad={handleImageLoad}
           draggable={false}
+          priority
         />
         
         {/* Loading state - show images normally until we calculate height */}
         {!containerHeight && (
           <>
-            <img
+            <Image
               src={afterImage}
               alt={afterAlt}
+              width={800}
+              height={600}
               className="w-full h-auto block opacity-0"
               draggable={false}
+              priority
             />
-            <img
+            <Image
               src={beforeImage}
               alt={beforeAlt}
+              width={800}
+              height={600}
               className="w-full h-auto block opacity-0"
               draggable={false}
+              priority
             />
           </>
         )}

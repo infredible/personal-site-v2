@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
@@ -210,9 +211,11 @@ export default async function Home() {
                   </h3>
                   <p>{project.metadata.description}</p>
                   <div className="flex items-center mt-2">
-                    <img 
+                    <Image 
                       src={project.metadata.company === 'Uniswap Labs' ? "/icons/uniswap.png" : "/icons/tiktok.png"} 
                       alt={project.metadata.company} 
+                      width={16}
+                      height={16}
                       className="w-4 h-4 mr-2 rounded-full"
                     />
                     <div className="flex items-center gap-1">

@@ -18,7 +18,6 @@ interface StoriesProps {
 
 export function Stories({ stories }: StoriesProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -42,10 +41,11 @@ export function Stories({ stories }: StoriesProps) {
       // Start new play promise
       playPromiseRef.current = video.play();
       await playPromiseRef.current;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
       // Only log non-abort errors
-      if (error.name !== 'AbortError' && !error.message.includes('removed from the document')) {
-        console.error('Video play error:', error);
+      if (err.name !== 'AbortError' && !err.message.includes('removed from the document')) {
+        console.error('Video play error:', err);
       }
     } finally {
       playPromiseRef.current = null;
@@ -106,10 +106,8 @@ export function Stories({ stories }: StoriesProps) {
     if (!video) return;
 
     video.currentTime = 0;
-    if (isPlaying) {
-      safePlay(video);
-    }
-  }, [currentIndex, isPlaying]);
+    safePlay(video);
+  }, [currentIndex]);
 
   // Handle play/pause on hover
   useEffect(() => {
@@ -118,10 +116,10 @@ export function Stories({ stories }: StoriesProps) {
 
     if (isHovered) {
       safePause(video);
-    } else if (isPlaying) {
+    } else {
       safePlay(video);
     }
-  }, [isHovered, isPlaying]);
+  }, [isHovered]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -138,10 +136,6 @@ export function Stories({ stories }: StoriesProps) {
 
   const goToNext = () => {
     setCurrentIndex(currentIndex < stories.length - 1 ? currentIndex + 1 : 0);
-  };
-
-  const goToStory = (index: number) => {
-    setCurrentIndex(index);
   };
 
   const currentStory = stories[currentIndex];
