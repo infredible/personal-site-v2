@@ -222,8 +222,26 @@
     @apply bg-transparent p-0;
   }
   
-  .prose img {
-    @apply rounded-lg my-8 w-full;
+  /* Images and videos are now handled by MDXImage and MDXVideo components */
+  /* Enhanced skeleton loading animation */
+  @keyframes skeleton-loading {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+  
+  .mdx-media-skeleton {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+  }
+  
+  .dark .mdx-media-skeleton {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    background-size: 200px 100%;
   }
   
   .prose a {
@@ -293,12 +311,18 @@
     @apply text-sm text-muted-foreground mt-2 text-center;
   }
   
+  /* Legacy video container styles - preserved for custom video containers */
   .video-container video {
     @apply w-full rounded-lg;
   }
   
   .video-container.with-border {
     @apply border border-border rounded-lg p-4;
+  }
+  
+  /* Override for MDX videos to prevent conflicts */
+  .prose video {
+    /* MDX videos are now handled by MDXVideo component */
   }
   
   .video-caption {
