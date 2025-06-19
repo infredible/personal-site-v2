@@ -10,6 +10,8 @@ interface ComparisonSliderProps {
   className?: string;
 }
 
+type ToggleState = 'none' | 'before' | 'after';
+
 export function ComparisonSlider({
   beforeImage,
   afterImage,
@@ -18,7 +20,9 @@ export function ComparisonSlider({
   className = ""
 }: ComparisonSliderProps) {
   const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isTouching, setIsTouching] = useState(false);
+  const [activeToggle, setActiveToggle] = useState<ToggleState>('none');
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const beforeImgRef = useRef<HTMLImageElement>(null);
@@ -33,49 +37,68 @@ export function ComparisonSlider({
     setSliderPosition(percentage);
   }, []);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    updatePosition(e.clientX);
-  }, [updatePosition]);
+  const handleMouseEnter = useCallback(() => {
+    if (activeToggle === 'none') {
+      setIsHovering(true);
+    }
+  }, [activeToggle]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    updatePosition(e.clientX);
-  }, [isDragging, updatePosition]);
+  const handleMouseLeave = useCallback(() => {
+    if (activeToggle === 'none') {
+      setIsHovering(false);
+      setSliderPosition(50); // Reset to center when mouse leaves
+    }
+  }, [activeToggle]);
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    setIsDragging(true);
-    updatePosition(e.touches[0].clientX);
-  }, [updatePosition]);
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    updatePosition(e.touches[0].clientX);
-  }, [isDragging, updatePosition]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isHovering && !isTouching && activeToggle === 'none') {
       updatePosition(e.clientX);
     }
-  }, [isDragging, updatePosition]);
+  }, [isHovering, isTouching, activeToggle, updatePosition]);
 
-  const jumpToBefore = useCallback(() => {
-    setSliderPosition(0);
-  }, []);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (activeToggle === 'none') {
+      setIsTouching(true);
+      updatePosition(e.touches[0].clientX);
+    }
+  }, [activeToggle, updatePosition]);
 
-  const jumpToAfter = useCallback(() => {
-    setSliderPosition(100);
-  }, []);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isTouching || activeToggle !== 'none') return;
+    e.preventDefault();
+    updatePosition(e.touches[0].clientX);
+  }, [isTouching, activeToggle, updatePosition]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (activeToggle === 'none') {
+      setIsTouching(false);
+      setSliderPosition(50); // Reset to center when touch ends
+    }
+  }, [activeToggle]);
+
+  const handleBeforeToggle = useCallback(() => {
+    if (activeToggle === 'before') {
+      // Clicking "Before" when it's active - deactivate and reset
+      setActiveToggle('none');
+      setSliderPosition(50);
+    } else {
+      // Clicking "Before" when it's inactive or "After" is active
+      setActiveToggle('before');
+      setSliderPosition(100); // Show full Before image
+    }
+  }, [activeToggle]);
+
+  const handleAfterToggle = useCallback(() => {
+    if (activeToggle === 'after') {
+      // Clicking "After" when it's active - deactivate and reset
+      setActiveToggle('none');
+      setSliderPosition(50);
+    } else {
+      // Clicking "After" when it's inactive or "Before" is active
+      setActiveToggle('after');
+      setSliderPosition(0); // Show full After image
+    }
+  }, [activeToggle]);
 
   // Calculate container height based on the taller image
   const handleImageLoad = useCallback(() => {
@@ -95,31 +118,19 @@ export function ComparisonSlider({
     }
   }, []);
 
-  // Attach document-level event listeners during drag
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleTouchEnd);
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', handleTouchEnd);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
-
   return (
-    <div className={`comparison-slider ${isDragging ? 'dragging' : ''} ${className}`}>
+    <div className={`comparison-slider ${className}`}>
       <div
         ref={containerRef}
-        className="relative w-full overflow-hidden rounded-lg cursor-col-resize select-none bg-black"
-        onMouseDown={handleMouseDown}
-        onClick={handleClick}
+        className={`relative w-full overflow-hidden rounded-lg select-none bg-black ${
+          activeToggle === 'none' ? 'cursor-none' : 'cursor-auto'
+        }`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{ 
           touchAction: 'none',
           height: containerHeight ? `${containerHeight}px` : 'auto'
@@ -170,35 +181,43 @@ export function ComparisonSlider({
           </>
         )}
         
-        {/* Slider Handle */}
+        {/* Slider Handle - always visible */}
         <div
-          className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-col-resize z-10 transform -translate-x-0.5 pointer-events-none"
+          className="absolute top-0 bottom-0 w-1 bg-white/20 z-10 transform -translate-x-0.5 pointer-events-none"
           style={{ left: `${sliderPosition}%` }}
         >
           {/* Handle Circle */}
-          <div className="slider-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg border-2 border-gray-200 flex items-center justify-center pointer-events-none">
+          {/* <div className="slider-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg border-2 border-gray-200 flex items-center justify-center pointer-events-none">
             <div className="w-1 h-4 bg-gray-400 rounded-full"></div>
             <div className="w-1 h-4 bg-gray-400 rounded-full ml-0.5"></div>
-          </div>
+          </div> */}
         </div>
         
-        {/* Interactive Label Buttons */}
+        {/* Interactive Toggle Buttons */}
         <div className="slider-labels">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              jumpToBefore();
+              handleBeforeToggle();
             }}
-            className="absolute bottom-4 left-4 bg-black/70 hover:bg-black/90 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 border border-white/20 hover:border-white/40"
+            className={`absolute bottom-4 left-4 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 border cursor-pointer ${
+              activeToggle === 'before'
+                ? 'bg-white text-black border-white shadow-lg'
+                : 'bg-black/70 hover:bg-black/90 text-white border-white/20 hover:border-white/40'
+            }`}
           >
             Before
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              jumpToAfter();
+              handleAfterToggle();
             }}
-            className="absolute bottom-4 right-4 bg-black/70 hover:bg-black/90 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 border border-white/20 hover:border-white/40"
+            className={`absolute bottom-4 right-4 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 border cursor-pointer ${
+              activeToggle === 'after'
+                ? 'bg-white text-black border-white shadow-lg'
+                : 'bg-black/70 hover:bg-black/90 text-white border-white/20 hover:border-white/40'
+            }`}
           >
             After
           </button>
