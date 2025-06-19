@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
 
 export const runtime = 'edge';
 
@@ -33,10 +31,17 @@ export async function GET(request: NextRequest) {
     // Format the subtitle if it's a date
     const subtitle = rawSubtitle ? formatDate(rawSubtitle) : '';
 
-    // Load the custom fonts
-    const familyBold = await readFile(join(process.cwd(), 'public/fonts/Family-Bold.ttf'));
-    const untitledSansRegular = await readFile(join(process.cwd(), 'public/fonts/UntitledSans-Regular.ttf'));
-    const untitledSansMedium = await readFile(join(process.cwd(), 'public/fonts/UntitledSans-Medium.ttf'));
+    // Load the custom fonts using fetch (works in Edge Runtime)
+    const baseUrl = new URL(request.url).origin;
+    
+    const familyBoldResponse = await fetch(`${baseUrl}/fonts/Family-Bold.ttf`);
+    const familyBold = await familyBoldResponse.arrayBuffer();
+    
+    const untitledSansRegularResponse = await fetch(`${baseUrl}/fonts/UntitledSans-Regular.ttf`);
+    const untitledSansRegular = await untitledSansRegularResponse.arrayBuffer();
+    
+    const untitledSansMediumResponse = await fetch(`${baseUrl}/fonts/UntitledSans-Medium.ttf`);
+    const untitledSansMedium = await untitledSansMediumResponse.arrayBuffer();
 
     return new ImageResponse(
       (
