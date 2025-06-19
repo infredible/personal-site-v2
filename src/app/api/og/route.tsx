@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 export const runtime = 'edge';
 
@@ -9,11 +11,15 @@ export async function GET(request: NextRequest) {
     const title = searchParams.get('title') || 'Fred Zaw';
     const subtitle = searchParams.get('subtitle') || searchParams.get('date') || '';
 
+    // Load the Family font
+    const familyBold = await readFile(join(process.cwd(), 'public/fonts/Family-Bold.ttf'));
+
     return new ImageResponse(
       (
         <div
           style={{
-            background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%)',
+            // Using the dark theme background color from globals.css
+            background: '#25272c', // oklch(0.147 0.004 49.25) converted to hex
             width: '100%',
             height: '100%',
             display: 'flex',
@@ -21,18 +27,19 @@ export async function GET(request: NextRequest) {
             alignItems: 'flex-start',
             justifyContent: 'space-between',
             padding: '80px',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h1
               style={{
                 fontSize: '72px',
-                fontWeight: '600',
-                color: '#ffffff',
+                fontWeight: '700', // Using bold weight since we loaded Family-Bold
+                color: '#fcfcfc', // oklch(0.985 0.001 106.423) - foreground color
                 lineHeight: '1.1',
                 margin: '0',
                 maxWidth: '900px',
+                fontFamily: 'Family, Georgia, "Times New Roman", serif', // Using Family font first
               }}
             >
               {title}
@@ -41,9 +48,10 @@ export async function GET(request: NextRequest) {
               <p
                 style={{
                   fontSize: '32px',
-                  color: '#a1a1aa',
+                  color: '#b5b6ba', // oklch(0.709 0.01 56.259) - muted-foreground color
                   margin: '0',
                   fontWeight: '400',
+                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 }}
               >
                 {subtitle}
@@ -62,8 +70,9 @@ export async function GET(request: NextRequest) {
             <div
               style={{
                 fontSize: '28px',
-                color: '#71717a',
+                color: '#b5b6ba', // muted-foreground color
                 fontWeight: '500',
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               }}
             >
               fredzaw.com
@@ -75,22 +84,6 @@ export async function GET(request: NextRequest) {
                 gap: '16px',
               }}
             >
-              <div
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  backgroundColor: '#22c55e',
-                  borderRadius: '50%',
-                }}
-              />
-              <span
-                style={{
-                  fontSize: '24px',
-                  color: '#71717a',
-                }}
-              >
-                Online
-              </span>
             </div>
           </div>
         </div>
@@ -98,6 +91,14 @@ export async function GET(request: NextRequest) {
       {
         width: 1200,
         height: 630,
+        fonts: [
+          {
+            name: 'Family',
+            data: familyBold,
+            style: 'normal',
+            weight: 700,
+          },
+        ],
       }
     );
   } catch (e: unknown) {
