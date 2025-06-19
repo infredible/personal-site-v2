@@ -148,7 +148,7 @@
   }
 
   p {
-    line-height: 1.6;
+    line-height: 1.65; /* Optimized for mobile reading */
   }
 
   a {
@@ -158,7 +158,7 @@
 
 @layer components {
   .page-content {
-    @apply max-w-xl mx-auto px-6 py-16;
+    @apply max-w-xl mx-auto px-4 sm:px-6 py-12 sm:py-16;
   }
   
   .blog-content {
@@ -182,40 +182,44 @@
   }
   
   .prose h1 {
-    @apply text-4xl font-medium mb-8 font-serif;
+    @apply font-medium mb-6 sm:mb-8 font-serif;
+    font-size: clamp(1.75rem, 4vw, 2.25rem); /* 28px to 36px */
   }
   
   .prose h2 {
-    @apply text-2xl font-medium mt-14 mb-8 font-serif;
+    @apply font-medium mt-10 sm:mt-14 mb-6 sm:mb-8 font-serif;
+    font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px to 24px */
   }
   
   .prose h3 {
-    @apply text-xl font-medium mt-8 mb-4;
+    @apply font-medium mt-6 sm:mt-8 mb-3 sm:mb-4;
+    font-size: clamp(1.125rem, 2.5vw, 1.25rem); /* 18px to 20px */
   }
   
   .prose p {
-    @apply mb-6 leading-relaxed;
-    line-height: 1.7;
+    @apply mb-4 sm:mb-6 leading-relaxed;
+    line-height: 1.65; /* Optimized for mobile reading */
   }
   
   .prose ul, .prose ol {
-    @apply mb-10 space-y-2;
+    @apply mb-6 sm:mb-10 space-y-1 sm:space-y-2;
   }
   
   .prose li {
-    @apply leading-relaxed list-disc list-outside pl-0.5 ml-4 mb-6;
+    @apply leading-relaxed list-disc list-outside pl-0.5 ml-4 mb-3 sm:mb-6;
   }
   
   .prose blockquote {
-    @apply border-l-4 border-border pl-6 italic my-6;
+    @apply border-l-4 border-border pl-4 sm:pl-6 italic my-4 sm:my-6;
   }
   
   .prose code {
-    @apply bg-muted px-1 py-0.5 rounded text-sm;
+    @apply bg-muted px-1 py-0.5 rounded;
+    font-size: clamp(0.8rem, 1.5vw, 0.875rem); /* 12.8px to 14px */
   }
   
   .prose pre {
-    @apply bg-muted p-4 rounded-lg overflow-x-auto mb-6;
+    @apply bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto mb-4 sm:mb-6;
   }
   
   .prose pre code {
@@ -249,7 +253,7 @@
   }
 
   .prose hr {
-    @apply my-16;
+    @apply my-10 sm:my-16;
   }
   
   .dark .prose {
@@ -288,7 +292,7 @@
   }
   
   .image-container, .video-container {
-    @apply my-8;
+    @apply my-6 sm:my-8;
     width: min(100vw - 2rem, 800px);
     position: relative;
     left: 50%;
@@ -304,7 +308,7 @@
   }
   
   .image-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-8 my-12;
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 my-8 sm:my-12;
   }
   
   .image-grid p {
@@ -330,7 +334,7 @@
   }
   
   .video-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-8 my-12;
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 my-8 sm:my-12;
   }
   
   .video-grid video {
@@ -430,7 +434,7 @@
 
   /* Comparison Slider Styles */
   .comparison-slider {
-    @apply my-8;
+    @apply my-6 sm:my-8;
     width: min(100vw - 2rem, 800px);
     position: relative;
     left: 50%;
