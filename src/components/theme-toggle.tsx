@@ -11,10 +11,10 @@ function ThemeToggleInner() {
       <div className="theme-toggle-container inline-flex bg-background rounded-full p-1 gap-1 shadow-md border border-input transition-all duration-200">
         <button
           onClick={() => setTheme("light")}
-          className={`theme-toggle-button flex items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer ${
+          className={`theme-toggle-button flex items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 ${
             theme === "light"
-              ? "active bg-secondary text-foreground border border-input shadow-sm"
-              : "text-muted-foreground"
+              ? "active bg-secondary text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           }`}
           aria-label="Switch to light mode"
           style={{ WebkitTapHighlightColor: "rgba(0,0,0,0)" }}
@@ -36,10 +36,10 @@ function ThemeToggleInner() {
         
         <button
           onClick={() => setTheme("dark")}
-          className={`theme-toggle-button flex items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer ${
+          className={`theme-toggle-button flex items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 ${
             theme === "dark"
-              ? "active bg-secondary text-foreground border border-input shadow-sm"
-              : "text-muted-foreground"
+              ? "active bg-secondary text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           }`}
           aria-label="Switch to dark mode"
           style={{ WebkitTapHighlightColor: "rgba(0,0,0,0)" }}
