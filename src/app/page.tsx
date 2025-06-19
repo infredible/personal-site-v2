@@ -4,6 +4,49 @@ import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
 import { getWeather, formatTemperature } from "@/app/lib/weather";
 import { PageTransition, Stories } from "@/components";
+import { Metadata } from "next";
+import { siteConfig } from "@/app/config/site";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  
+  // Generate OG image for homepage
+  const ogUrl = new URL('/api/og', baseUrl)
+  ogUrl.searchParams.set('title', siteConfig.name)
+  ogUrl.searchParams.set('subtitle', 'Designer at Uniswap Labs')
+  const ogImage = ogUrl.toString()
+  
+  return {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    openGraph: {
+      title: siteConfig.name,
+      description: siteConfig.description,
+      type: 'website',
+      url: siteConfig.url,
+      siteName: siteConfig.name,
+      images: [{
+        url: ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: siteConfig.name,
+      description: siteConfig.description,
+      creator: '@fredzaw',
+      site: '@fredzaw',
+      images: [{
+        url: ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      }],
+    },
+  }
+}
 
 export default async function Home() {
   const projects = await getAllProjects();

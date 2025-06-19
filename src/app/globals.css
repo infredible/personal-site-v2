@@ -76,6 +76,12 @@
   --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
+  
+  /* Theme transition */
+  transition: 
+    background-color 40ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark {
@@ -115,6 +121,13 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition: 
+      background-color 40ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      fill 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      stroke 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   
   body {

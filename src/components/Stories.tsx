@@ -22,6 +22,47 @@ export function Stories({ stories }: StoriesProps) {
   const [progress, setProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
+
+  // Safe play function that handles DOM removal
+  const safePlay = async (video: HTMLVideoElement) => {
+    try {
+      // Check if video is still connected to DOM
+      if (!video.isConnected) return;
+      
+      // Wait for any pending play promise to resolve
+      if (playPromiseRef.current) {
+        try {
+          await playPromiseRef.current;
+        } catch {
+          // Ignore errors from previous play attempts
+        }
+      }
+      
+      // Start new play promise
+      playPromiseRef.current = video.play();
+      await playPromiseRef.current;
+    } catch (error: any) {
+      // Only log non-abort errors
+      if (error.name !== 'AbortError' && !error.message.includes('removed from the document')) {
+        console.error('Video play error:', error);
+      }
+    } finally {
+      playPromiseRef.current = null;
+    }
+  };
+
+  // Safe pause function
+  const safePause = (video: HTMLVideoElement) => {
+    if (!video.isConnected) return;
+    
+    // Cancel any pending play promise
+    if (playPromiseRef.current) {
+      playPromiseRef.current = null;
+    }
+    
+    video.pause();
+  };
 
   // Handle video time update for progress tracking
   useEffect(() => {
@@ -29,11 +70,13 @@ export function Stories({ stories }: StoriesProps) {
     if (!video) return;
 
     const handleTimeUpdate = () => {
+      if (!video.isConnected) return;
       const currentProgress = (video.currentTime / video.duration) * 100;
       setProgress(currentProgress);
     };
 
     const handleEnded = () => {
+      if (!video.isConnected) return;
       // Auto-advance to next story
       if (currentIndex < stories.length - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -49,19 +92,22 @@ export function Stories({ stories }: StoriesProps) {
     video.addEventListener('ended', handleEnded);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
+      if (video.isConnected) {
+        video.removeEventListener('timeupdate', handleTimeUpdate);
+        video.removeEventListener('ended', handleEnded);
+      }
     };
   }, [currentIndex, stories.length]);
 
   // Reset progress when story changes
   useEffect(() => {
     setProgress(0);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      if (isPlaying) {
-        videoRef.current.play().catch(console.error);
-      }
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.currentTime = 0;
+    if (isPlaying) {
+      safePlay(video);
     }
   }, [currentIndex, isPlaying]);
 
@@ -71,11 +117,20 @@ export function Stories({ stories }: StoriesProps) {
     if (!video) return;
 
     if (isHovered) {
-      video.pause();
+      safePause(video);
     } else if (isPlaying) {
-      video.play().catch(console.error);
+      safePlay(video);
     }
   }, [isHovered, isPlaying]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (playPromiseRef.current) {
+        playPromiseRef.current = null;
+      }
+    };
+  }, []);
 
   const goToPrevious = () => {
     setCurrentIndex(currentIndex > 0 ? currentIndex - 1 : stories.length - 1);
