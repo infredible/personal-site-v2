@@ -1,7 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { BookCopy } from 'lucide-react'
+import { BookCopy, Check } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface CopyMarkdownProps {
   slug: string
@@ -34,18 +39,26 @@ export function CopyMarkdown({ slug, type, title }: CopyMarkdownProps) {
   }
 
   return (
-    <div className="copy-icon-container">
-      <button 
-        onClick={copyMarkdown}
-        disabled={isCopied}
-        className={`copy-icon ${isCopied ? 'copied' : ''}`}
-        aria-label={`Copy ${title} as markdown`}
-      >
-        <BookCopy size={14} />
-      </button>
-      <div className="tooltip">
-        {isCopied ? 'Copied' : 'Copy as Markdown'}
-      </div>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button 
+          onClick={copyMarkdown}
+          disabled={isCopied}
+          className={`text-muted-foreground bg-transparent border-0 p-1 rounded transition-all duration-200 ease-out cursor-pointer hover:text-foreground hover:bg-muted/30 active:scale-95 disabled:cursor-default ${
+            isCopied ? 'text-green-600 dark:text-green-400' : ''
+          }`}
+          style={{
+            userSelect: 'none',
+            WebkitTapHighlightColor: 'rgba(0,0,0,0)'
+          }}
+          aria-label={`Copy ${title} as markdown`}
+        >
+          {isCopied ? <Check size={14} /> : <BookCopy size={14} />}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{isCopied ? 'Copied' : 'Copy as Markdown'}</p>
+      </TooltipContent>
+    </Tooltip>
   )
 } 
