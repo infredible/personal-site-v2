@@ -3,5 +3,6 @@ export const metadata = {
   description: "Overhauling the LP experience and introducing v4",
   date: "2024 - 2025",
   company: "Uniswap Labs",
-  index: 2
+  index: 2,
+  ogImage: "/projects/lp-redesign/hero.png"
 } 
