@@ -169,7 +169,7 @@ export default async function Home() {
   return (
     <PageTransition>
       <div className="max-w-xl mx-auto px-6 py-24">
-        <header className="mb-10 mt-20">
+        <header className="mb-10 mt-14">
           <h1 className="text-3xl font-medium mb-1 font-serif">Fred Zaw</h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground mb-6">Oakland, CA</p>
