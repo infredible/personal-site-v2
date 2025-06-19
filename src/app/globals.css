@@ -252,8 +252,7 @@
   
   .image-container, .video-container {
     @apply my-8;
-    width: 800px;
-    max-width: 800px;
+    width: min(100vw - 2rem, 800px);
     position: relative;
     left: 50%;
     transform: translateX(-50%);
@@ -389,8 +388,7 @@
   /* Comparison Slider Styles */
   .comparison-slider {
     @apply my-8;
-    width: 800px;
-    max-width: 800px;
+    width: min(100vw - 2rem, 800px);
     position: relative;
     left: 50%;
     transform: translateX(-50%);
