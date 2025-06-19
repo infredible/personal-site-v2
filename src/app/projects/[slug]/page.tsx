@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation'
 import { getAllProjects, Project } from '@/app/lib/projects'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
-import { ArrowLeft } from 'lucide-react'
-import { PageTransition, BackToTop, CopyMarkdown, CopyLink } from '@/components'
+import { PageTransition, BackToTop, CopyMarkdown, CopyLink, FloatingBackButton } from '@/components'
 
 // Helper function to get other projects
 async function getOtherProjects(currentSlug: string): Promise<Project[]> {
@@ -83,14 +82,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
     return (
       <PageTransition>
+        <FloatingBackButton />
+
         <div className="page-content blog-content mb-16">
-          <div className="back-link">
-            <Link href="/" className="flex items-center gap-2">
-              <ArrowLeft size={16} />
-              Back
-            </Link>
-          </div>
-          
           <article>
             <div className="prose dark:prose-invert max-w-none">
               <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
