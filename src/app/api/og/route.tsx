@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Format the subtitle if it's a date
     const subtitle = rawSubtitle ? formatDate(rawSubtitle) : '';
 
-    // Load the custom fonts using fetch (works in Edge Runtime)
+    // Load the custom fonts and avatar image using fetch (works in Edge Runtime)
     const baseUrl = new URL(request.url).origin;
     
     const familyBoldResponse = await fetch(`${baseUrl}/fonts/Family-Bold.ttf`);
@@ -42,6 +42,12 @@ export async function GET(request: NextRequest) {
     
     const untitledSansMediumResponse = await fetch(`${baseUrl}/fonts/UntitledSans-Medium.ttf`);
     const untitledSansMedium = await untitledSansMediumResponse.arrayBuffer();
+
+    // Load the avatar image
+    const avatarResponse = await fetch(`${baseUrl}/avatar.png`);
+    const avatarArrayBuffer = await avatarResponse.arrayBuffer();
+    const avatarBase64 = Buffer.from(avatarArrayBuffer).toString('base64');
+    const avatarDataUrl = `data:image/png;base64,${avatarBase64}`;
 
     return new ImageResponse(
       (
@@ -62,10 +68,10 @@ export async function GET(request: NextRequest) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h1
               style={{
-                fontSize: '72px',
+                fontSize: '80px',
                 fontWeight: '700', // Using bold weight since we loaded Family-Bold
                 color: '#fcfcfc', // oklch(0.985 0.001 106.423) - foreground color
-                lineHeight: '1.1',
+                lineHeight: '1.2',
                 margin: '0',
                 maxWidth: '900px',
                 fontFamily: 'Family, Georgia, "Times New Roman", serif', // Using Family font first
@@ -92,7 +98,7 @@ export async function GET(request: NextRequest) {
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               width: '100%',
             }}
           >
@@ -100,19 +106,29 @@ export async function GET(request: NextRequest) {
               style={{
                 fontSize: '28px',
                 color: '#b5b6ba', // muted-foreground color
-                fontWeight: '500',
+                fontWeight: '400',
                 fontFamily: 'UntitledSans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               }}
             >
-              fredzaw.com
+              fredz.website
             </div>
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-end',
                 gap: '16px',
               }}
             >
+              <img
+                src={avatarDataUrl}
+                alt="Fred Zaw Avatar"
+                style={{
+                  width: '240px',
+                  height: '240px',
+                  borderRadius: '120px',
+                  objectFit: 'cover',
+                }}
+              />
             </div>
           </div>
         </div>

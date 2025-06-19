@@ -189,15 +189,15 @@
   
   .prose p {
     @apply mb-6 leading-relaxed;
-    line-height: 1.6;
+    line-height: 1.7;
   }
   
   .prose ul, .prose ol {
-    @apply mb-6 space-y-2;
+    @apply mb-10 space-y-2;
   }
   
   .prose li {
-    @apply leading-relaxed;
+    @apply leading-relaxed list-disc list-outside pl-0.5 ml-4 mb-6;
   }
   
   .prose blockquote {
