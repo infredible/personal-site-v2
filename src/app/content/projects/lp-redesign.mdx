@@ -19,7 +19,11 @@ With the launch of the v4 Uniswap Protocol, we had 2 major goals for our web pro
 
 ---
 ## Key pages
-The following are some key areas redesigned:
+### Rethinking the Positions Page
+
+The Positions page is the primary dashboard for liquidity providers — a space to monitor performance, manage risk, and take action. But the previous design offered limited visibility, context, or feedback. Users had little understanding of how their positions were performing or what actions they could take.
+
+With the v4 launch, we took the opportunity to fully reimagine this page, transforming it from a static list into a powerful portfolio view.
 
 <ComparisonSlider
   beforeImage="/projects/lp-redesign/positions-before.png"
@@ -27,7 +31,24 @@ The following are some key areas redesigned:
   beforeAlt="Positions page before redesign"
   afterAlt="Positions page after redesign"
 />
-<p className="image-caption">Positions page</p>
+
+**Before: A static ledger**
+
+In the previous interface, all positions looked nearly identical. Important status indicators like “In Range” or “Out of Range” were present but downplayed. There was no visibility into fees earned, APRs, or comparative performance. For power users juggling multiple positions, this led to friction and missed opportunities.
+
+**After: A dynamic LP portfolio**
+
+We redesigned the page to function as a true dashboard, surfacing rich data like real-time fees earned, estimated APR, and price range visualizations for each position. Users can now filter positions by protocol version, network, or status, making it easier to manage complex portfolios. 
+
+Clear visual cues—such as range indicators and color-coded chips—highlight which positions need attention, while proactive prompts guide users to migrate or rebalance as needed. We also introduced a “Top Pools” panel and refreshed educational modules to help users discover new opportunities and better understand the mechanics of liquidity provision across versions.
+
+
+
+### Redesigning the Position Creation Flow
+
+Providing liquidity on Uniswap has always required users to make decisions about token pairs, fee tiers, and price ranges. But in previous versions, these critical decisions were packed into a single screen with minimal explanation — making the process opaque and intimidating, especially for new or casual LPs.
+
+The v4 launch gave us the opportunity to break this complexity apart and rebuild the flow around guidance, clarity, and control.
 
 <ComparisonSlider
   beforeImage="/projects/lp-redesign/create-position-before.png"
@@ -35,7 +56,22 @@ The following are some key areas redesigned:
   beforeAlt="Create position page before redesign"
   afterAlt="Create position page after redesign"
 />
-<p className="image-caption">Position creation: Before and After</p>
+
+**Before: Dense and Linear**
+
+The original interface combined every input — pair selection, price range, fee tier, and deposit amounts — into a single vertical flow. While compact, this made it difficult to parse for newer users. The chart was static and hard to interpret, offering little insight on liquidity distribution and range selection relative to historical price movements.
+
+**After: Step-by-Step, Informed, and Flexible**
+
+We redesigned the creation flow into a clear, three-step process: selecting a token pair and fee, setting a price range, and entering deposit amounts. This structure breaks up complexity and gives users room to understand each decision in context. Microcopy, tooltips, and dynamic components explain tradeoffs between full and custom ranges, helping users feel more confident about their choices.
+
+A major focus was improving the chart interaction. Users can now view historical price data, zoom in, and adjust their ranges with sliders, all while seeing the impact in real-time. The flow also adapts to protocol-specific features like custom hooks and more fee tiers, ensuring a consistent and supportive experience across both v3 and v4 pools.
+
+### A More Parseable Position Detail View
+
+The Position Detail page is where LPs drill into the performance of a single position — checking on fees earned, price range status, and deciding whether to rebalance or exit. But the old interface prioritized visual flair over clarity. While it featured a stylized NFT card, it offered little context or actionable insight, leaving users with a static snapshot instead of a dynamic understanding.
+
+The redesigned view surfaces the most important metrics upfront: historical price movement, fee performance, APR, and liquidity composition. We replaced the NFT with an interactive chart that shows how the current price moves within the user’s selected range, and added detailed breakdowns of token balances and earned fees — in both token and fiat terms. The new layout helps users quickly assess performance and make informed decisions, whether they’re collecting fees, adding liquidity, or migrating their position.
 
 <ComparisonSlider
   beforeImage="/projects/lp-redesign/position-detail-before.png"
@@ -43,4 +79,11 @@ The following are some key areas redesigned:
   beforeAlt="Position detail page before redesign"
   afterAlt="Position detail page after redesign"
 />
-<p className="image-caption">Position details</p>
+
+## Closing thoughts
+
+Uniswap v4 introduced a new level of flexibility for liquidity providers, driven by features like custom hooks and customizable fee tiers. But with that flexibility came added complexity. Our goal with this redesign was to make that power usable — to translate protocol-level innovation into clear, approachable interfaces.
+
+Across the Positions dashboard, creation flow, and detail view, we focused on surfacing the right data, guiding users through nuanced decisions, and creating UI patterns that scale from beginner to expert. Whether someone is experimenting with a full-range position or interacting with advanced hooks like TWAMM, the new design helps them understand what’s happening and what to do next.
+
+This work was deeply collaborative, spanning design, engineering, and protocol. Personally, it was a challenging and engaging project bringing together interaction design, prototyping, and product strategy to make Uniswap v4 feel both powerful and human.

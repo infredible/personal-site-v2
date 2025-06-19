@@ -276,7 +276,7 @@
   }
   
   .image-caption {
-    @apply text-muted-foreground text-sm mt-3 text-center italic;
+    @apply text-muted-foreground text-sm text-center italic;
   }
   
   .image-grid {
