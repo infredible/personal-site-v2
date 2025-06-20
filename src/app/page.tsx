@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight,ArrowRight } from "lucide-react";
 import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
 import { getWeather, formatTemperature } from "@/app/lib/weather";
@@ -181,6 +181,12 @@ export default async function Home() {
             Designer at Uniswap Labs unlocking a more free and open financial system. 
             Before crypto, worked on a breadth of industries including AI and spatial computing.
           </p>
+          <nav className="mt-2">
+            <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group">
+              More
+              <ArrowRight className="w-3 h-3 transition-transform translate-x-[-5px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+            </Link>
+          </nav>
         </header>
 
         {/* Placeholder for screenshot - commented out until we have the image */}
