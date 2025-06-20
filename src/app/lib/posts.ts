@@ -2,6 +2,8 @@ import { metadata as vibecodingAtScaleMetadata } from '@/app/content/posts/vibec
 import { metadata as vibecodeNoFigmaMetadata } from '@/app/content/posts/vibecode-no-figma.metadata'
 import { metadata as thoughtsOnBrutalistMetadata } from '@/app/content/posts/thoughts-on-the-brutalist.metadata'
 import { metadata as predictionsMetadata } from '@/app/content/posts/2025-predictions.metadata'
+import { metadata as ripMikealMetadata } from '@/app/content/posts/rip-mikeal.metadata'
+import { metadata as gorpcoreAnalysisMetadata } from '@/app/content/posts/gorpcore-analysis.metadata'
 
 export interface PostMetadata {
   title: string
@@ -21,11 +23,13 @@ const metadataLookup: Record<string, PostMetadata> = {
   'vibecode-no-figma': vibecodeNoFigmaMetadata,
   'thoughts-on-the-brutalist': thoughtsOnBrutalistMetadata,
   '2025-predictions': predictionsMetadata,
+  'rip-mikeal': ripMikealMetadata,
+  'gorpcore-analysis': gorpcoreAnalysisMetadata,
 }
 
 export async function getAllPosts(): Promise<Post[]> {
   // Available post slugs
-  const postSlugs = ['vibecoding-at-scale', 'vibecode-no-figma', 'thoughts-on-the-brutalist', '2025-predictions']
+  const postSlugs = ['vibecoding-at-scale', 'vibecode-no-figma', 'thoughts-on-the-brutalist', '2025-predictions', 'rip-mikeal', 'gorpcore-analysis']
   
   const posts = postSlugs.map((slug) => {
     const metadata = metadataLookup[slug]
