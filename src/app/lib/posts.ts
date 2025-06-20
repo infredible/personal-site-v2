@@ -7,6 +7,7 @@ export interface PostMetadata {
   title: string
   description: string
   date: string
+  tags: string[]
 }
 
 export interface Post {

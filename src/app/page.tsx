@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight,ArrowRight } from "lucide-react";
 import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
 import { getWeather, formatTemperature } from "@/app/lib/weather";
@@ -181,6 +181,12 @@ export default async function Home() {
             Designer at Uniswap Labs unlocking a more free and open financial system. 
             Before crypto, worked on a breadth of industries including AI and spatial computing.
           </p>
+          <nav className="mt-1">
+            <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
+              More
+              <ArrowRight className="w-3 h-3 transition-transform translate-x-[-5px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+            </Link>
+          </nav>
         </header>
 
         {/* Placeholder for screenshot - commented out until we have the image */}
@@ -210,7 +216,7 @@ export default async function Home() {
                     {project.metadata.title}
                   </h3>
                   <p>{project.metadata.description}</p>
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center mt-1.75">
                     <Image 
                       src={project.metadata.company === 'Uniswap Labs' ? "/icons/uniswap.png" : "/icons/tiktok.png"} 
                       alt={project.metadata.company} 
@@ -218,7 +224,7 @@ export default async function Home() {
                       height={16}
                       className="w-4 h-4 mr-2 rounded-full"
                     />
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 pt-0.5">
                       <span className="text-muted-foreground text-sm">{project.metadata.company}</span>
                       <span className="text-muted-foreground text-sm">•</span>
                       <span className="text-muted-foreground text-sm">{project.metadata.date}</span>
@@ -245,7 +251,15 @@ export default async function Home() {
                     {post.metadata.title}
                   </h3>
                   <p>{post.metadata.description}</p>
-                  <p className="text-muted-foreground text-sm mt-2">{formatDate(post.metadata.date)}</p>
+                  <div className="text-muted-foreground text-sm mt-2 flex items-center gap-2">
+                    <span>{formatDate(post.metadata.date)}</span>
+                    {post.metadata.tags?.length > 0 && (
+                      <>
+                        <span>•</span>
+                        <span>{post.metadata.tags.join(', ')}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
@@ -256,16 +270,24 @@ export default async function Home() {
         {/* <footer className="pt-14 border-t"> */}
           <h2 className="text-2xl font-medium font-serif mb-10">Elsewhere</h2>
           <div className="flex space-x-6">
-            <Link href="https://x.com/fredzaw" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://x.com/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
               Twitter
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            <Link href="https://read.cv/fredzaw" className="text-muted-foreground flex items-center gap-1 group">
+            {/* <Link href="https://read.cv/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
               Read.cv
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link> */}
+            <Link href="https://www.linkedin.com/in/fredzaw/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+              LinkedIn
+              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            <Link href="https://www.instagram.com/_burmaboy/" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://www.instagram.com/_burmaboy/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
               Instagram
+              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link>
+            <Link href="https://app.ens.domains/swappypapi.eth" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+              Swappypapi.eth
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </div>
