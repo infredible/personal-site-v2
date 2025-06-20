@@ -32,7 +32,7 @@ export default function AboutPage() {
             led me to study industrial design.
           </p>
           <p>
-            While in University, I was fortunate to intern at Quirky Inc. where
+            While in University, I was fortunate to intern at <a href="https://quirky.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">Quirky Inc.</a> where
             I helped design products sold at retailers like Target and Bed Bath
             and Beyond. While I continue to love ID, I became more interested
             in what I saw a more as a more multidisciplinary and faster process
@@ -41,14 +41,14 @@ export default function AboutPage() {
           </p>
           <p>
             Throughout my life, curiosity has led me. Whether it was in the
-            first part of my career, working at early-stage startups like
-            Getable and Brigade learning about new fields and building a breadth
+            first part of my career, working at early-stage startups like 
+            <a href="https://techcrunch.com/2015/06/17/sean-parker-brigade/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground"> Brigade</a> learning about new fields and building a breadth
             of experience being scrappy, getting technical or strategic
             whenever needed. Or outside of work when I began learning p5.js,
             Blender, Arduino, and After Effects to create generative artwork,
-            eventually spending time at the Gray Area Center for the Arts in the
+            eventually spending time at <a href="https://grayarea.org/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">Gray Area Center for the Arts</a> in the
             Mission. Or when I was eventually brought to spatial computing,
-            computer vision, and AI at Ebay, Matterport, and TikTok.
+            computer vision, and AI at Ebay, <a href="https://coolhunting.com/tech/make-3d-digital-clones-matterport-capture/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">Matterport</a>, and <a href="https://effecthouse.tiktok.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">TikTok</a>.
           </p>
           <p>
             When I wanted to explore new technologies, I thought about my
