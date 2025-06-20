@@ -184,7 +184,7 @@ export default async function Home() {
           <nav className="mt-1">
             <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
               More
-              <ArrowRight className="w-3 h-3 transition-transform translate-x-[-5px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+              <ArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
           </nav>
         </header>
