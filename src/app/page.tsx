@@ -264,16 +264,20 @@ export default async function Home() {
         {/* <footer className="pt-14 border-t"> */}
           <h2 className="text-2xl font-medium font-serif mb-10">Elsewhere</h2>
           <div className="flex space-x-6">
-            <Link href="https://x.com/fredzaw" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://x.com/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
               Twitter
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            <Link href="https://read.cv/fredzaw" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://read.cv/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
               Read.cv
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            <Link href="https://www.instagram.com/_burmaboy/" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://www.instagram.com/_burmaboy/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
               Instagram
+              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link>
+            <Link href="https://app.ens.domains/swappypapi.eth" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+              Swappypapi.eth
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </div>
