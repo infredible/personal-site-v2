@@ -181,8 +181,8 @@ export default async function Home() {
             Designer at Uniswap Labs unlocking a more free and open financial system. 
             Before crypto, worked on a breadth of industries including AI and spatial computing.
           </p>
-          <nav className="mt-2">
-            <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group">
+          <nav className="mt-1">
+            <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
               More
               <ArrowRight className="w-3 h-3 transition-transform translate-x-[-5px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
@@ -216,7 +216,7 @@ export default async function Home() {
                     {project.metadata.title}
                   </h3>
                   <p>{project.metadata.description}</p>
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center mt-1.75">
                     <Image 
                       src={project.metadata.company === 'Uniswap Labs' ? "/icons/uniswap.png" : "/icons/tiktok.png"} 
                       alt={project.metadata.company} 
@@ -224,7 +224,7 @@ export default async function Home() {
                       height={16}
                       className="w-4 h-4 mr-2 rounded-full"
                     />
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 pt-0.5">
                       <span className="text-muted-foreground text-sm">{project.metadata.company}</span>
                       <span className="text-muted-foreground text-sm">•</span>
                       <span className="text-muted-foreground text-sm">{project.metadata.date}</span>
