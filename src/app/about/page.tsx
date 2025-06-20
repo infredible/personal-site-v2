@@ -17,10 +17,57 @@ export default function AboutPage() {
 
         <section className="mb-24 space-y-4 text-base">
           <p>
-            I&apos;m Fred Zaw, a designer at Uniswap Labs, where I&apos;m helping to unlock a more free and open financial system. Before diving into the world of crypto, I gained experience across a breadth of industries including AI and spatial computing.
+            I&apos;m a designer and creative technologist that&apos;s been in the game for
+            over a decade. I owe my career to the Bay Area where I was born,
+            raised, and began gaining interest in technology by proximity and
+            osmosis.
           </p>
           <p>
-            I thrive on solving complex problems and creating intuitive, beautiful, and impactful products. My approach is rooted in a deep understanding of user needs, combined with a passion for pushing the boundaries of design and technology.
+            In my youth, my household had a tight budget, but that constraint
+            helped me get creative in my hobbies. I built low-end gaming rigs,
+            learned how to overclock CPUs, and scoured the internet for pirated
+            and cracked software and games. In high school, I didn&apos;t know
+            what I wanted to be, but I knew I enjoyed myself most in physics
+            class when I was building catapults or propeller-powered cars. This
+            led me to study industrial design.
+          </p>
+          <p>
+            While in University, I was fortunate to intern at Quirky Inc. where
+            I helped design products sold at retailers like Target and Bed Bath
+            and Beyond. While I continue to love ID, I became more interested
+            in what I saw a more as a more multidisciplinary and faster process
+            of building in software. I dropped out of school to self-teach and
+            pursue UI design.
+          </p>
+          <p>
+            Throughout my life, curiosity has led me. Whether it was in the
+            first part of my career, working at early-stage startups like
+            Getable and Brigade learning about new fields and building a breadth
+            of experience being scrappy, getting technical or strategic
+            whenever needed. Or outside of work when I began learning p5.js,
+            Blender, Arduino, and After Effects to create generative artwork,
+            eventually spending time at the Gray Area Center for the Arts in the
+            Mission. Or when I was eventually brought to spatial computing,
+            computer vision, and AI at Ebay, Matterport, and TikTok.
+          </p>
+          <p>
+            When I wanted to explore new technologies, I thought about my
+            interest in crypto when I first learned about Bitcoin, making my
+            first purchase of BTC on Coinbase in 2013 because I resonated with
+            the idea of programmable money. This brought me to Uniswap where
+            I&apos;ve been working on trading, liquidity provision, and market
+            insights interfaces.
+          </p>
+          <p>
+            Most recently, I&apos;ve been exploring LLMs and not just how they
+            might influence interfaces for traders but also in how we can, in a
+            scalable manner, leverage them to further blur the lines between
+            Design and Engineering in order to bring even higher quality
+            interfaces to users.
+          </p>
+          <p>
+            Outside of work these days, I&apos;m an apprentice winemaker, merging my
+            loves for craft and nature.
           </p>
         </section>
 
