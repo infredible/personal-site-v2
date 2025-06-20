@@ -42,7 +42,7 @@ export default function AboutPage() {
               <p className="text-muted-foreground">2016 — Now</p>
               <div className="space-y-1 pt-0.25">
                 <p className="font-medium">Yours Truly</p>
-                <p className="text-muted-foreground">My private design practice at which I've worked on a variety of projects involving non-profit, civic engagement, and spatial computing.</p>
+                <p className="text-muted-foreground">My private design practice at which I&apos;ve worked on a variety of projects involving non-profit, civic engagement, and spatial computing.</p>
               </div>
             </div>
 
@@ -51,7 +51,7 @@ export default function AboutPage() {
               <p className="text-muted-foreground">2021 — 2021</p>
               <div className="space-y-1 pt-0.25">
                 <p className="font-medium">TikTok</p>
-                <p className="text-muted-foreground">Founding designer on Effect House, TikTok's first creative tool for authoring AR experiences. Enabled millions of effects to power viral trends across TikTok.</p>
+                <p className="text-muted-foreground">Founding designer on Effect House, TikTok&apos;s first creative tool for authoring AR experiences. Enabled millions of effects to power viral trends across TikTok.</p>
               </div>
             </div>
 
