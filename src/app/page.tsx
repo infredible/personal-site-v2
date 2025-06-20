@@ -245,7 +245,15 @@ export default async function Home() {
                     {post.metadata.title}
                   </h3>
                   <p>{post.metadata.description}</p>
-                  <p className="text-muted-foreground text-sm mt-2">{formatDate(post.metadata.date)}</p>
+                  <div className="text-muted-foreground text-sm mt-2 flex items-center gap-2">
+                    <span>{formatDate(post.metadata.date)}</span>
+                    {post.metadata.tags?.length > 0 && (
+                      <>
+                        <span>•</span>
+                        <span>{post.metadata.tags.join(', ')}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}

@@ -84,7 +84,15 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <article>
             <div className="prose dark:prose-invert max-w-none">
               <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
-                <div>{formatDate(metadata.date)}</div>
+                <div className="flex items-center gap-2">
+                  <span>{formatDate(metadata.date)}</span>
+                  {metadata.tags?.length > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>{metadata.tags.join(', ')}</span>
+                    </>
+                  )}
+                </div>
                 <div className="copy-actions">
                   <CopyLink title={metadata.title} />
                   <CopyMarkdown 
