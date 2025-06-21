@@ -19,7 +19,7 @@ export default function AboutPage() {
           <p>
             I&apos;m a designer and creative technologist that&apos;s been in the game for
             over a decade. I owe my career to the Bay Area where I was born,
-            raised, and began gaining interest in technology by proximity and
+            raised, and gained interest in technology by proximity and
             osmosis.
           </p>
           <p>
@@ -32,7 +32,7 @@ export default function AboutPage() {
             led me to study industrial design.
           </p>
           <p>
-            While in University, I was fortunate to intern at <a href="https://quirky.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">Quirky Inc.</a> where
+            While in university, I was fortunate to intern at <a href="https://quirky.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">Quirky Inc.</a> where
             I helped design products sold at retailers like Target and Bed Bath
             and Beyond. While I continue to love ID, I became more interested
             in what I saw a more as a more multidisciplinary and faster process
