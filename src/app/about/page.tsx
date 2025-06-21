@@ -41,8 +41,7 @@ export default function AboutPage() {
           </p>
           <p>
             Throughout my life, curiosity has led me. Whether it was in the
-            first part of my career, working at early-stage startups like 
-            <a href="https://techcrunch.com/2015/06/17/sean-parker-brigade/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground"> Brigade</a> learning about new fields and building a breadth
+            first part of my career, working at early-stage startups like Getable or <a href="https://techcrunch.com/2015/06/17/sean-parker-brigade/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground"> Brigade</a> learning about new fields and building a breadth
             of experience being scrappy, getting technical or strategic
             whenever needed. Or outside of work when I began learning p5.js,
             Blender, Arduino, and After Effects to create generative artwork,
