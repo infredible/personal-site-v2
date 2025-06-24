@@ -470,7 +470,7 @@
 
   .prose ::selection,
   .prose *::selection {
-    background: rgba(255, 255, 0, 0.6);
+    background: rgba(255, 235, 59, 0.6);
     color: inherit;
   }
 }
