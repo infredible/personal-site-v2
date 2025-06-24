@@ -4,6 +4,7 @@ import { getAllPosts, Post, formatDate } from '@/app/lib/posts'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { PageTransition, BackToTop, CopyMarkdown, CopyLink, FloatingBackButton } from '@/components'
+import { HighlightableContent } from '@/components/HighlightableContent'
 
 // Helper function to get other posts
 async function getOtherPosts(currentSlug: string): Promise<Post[]> {
@@ -82,29 +83,31 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
         <div className="page-content blog-content mb-16">
           <article>
-            <div className="prose dark:prose-invert max-w-none">
-              <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
-                <div className="flex items-center gap-2">
-                  <span>{formatDate(metadata.date)}</span>
-                  {metadata.tags?.length > 0 && (
-                    <>
-                      <span>•</span>
-                      <span>{metadata.tags.join(', ')}</span>
-                    </>
-                  )}
+            <HighlightableContent>
+              <div className="prose dark:prose-invert max-w-none">
+                <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
+                  <div className="flex items-center gap-2">
+                    <span>{formatDate(metadata.date)}</span>
+                    {metadata.tags?.length > 0 && (
+                      <>
+                        <span>•</span>
+                        <span>{metadata.tags.join(', ')}</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="copy-actions">
+                    <CopyLink title={metadata.title} />
+                    <CopyMarkdown 
+                      slug={slug} 
+                      type="post" 
+                      title={metadata.title}
+                    />
+                  </div>
                 </div>
-                <div className="copy-actions">
-                  <CopyLink title={metadata.title} />
-                  <CopyMarkdown 
-                    slug={slug} 
-                    type="post" 
-                    title={metadata.title}
-                  />
-                </div>
+                <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
+                <Content.default />
               </div>
-              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
-              <Content.default />
-            </div>
+            </HighlightableContent>
           </article>
 
           {/* Back to top link */}

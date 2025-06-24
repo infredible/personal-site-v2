@@ -4,6 +4,7 @@ import { getAllProjects, Project } from '@/app/lib/projects'
 import Link from 'next/link'
 import { siteConfig } from '@/app/config/site'
 import { PageTransition, BackToTop, CopyMarkdown, CopyLink, FloatingBackButton } from '@/components'
+import { HighlightableContent } from '@/components/HighlightableContent'
 
 // Helper function to get other projects
 async function getOtherProjects(currentSlug: string): Promise<Project[]> {
@@ -86,25 +87,27 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         <div className="page-content blog-content mb-16">
           <article>
-            <div className="prose dark:prose-invert max-w-none">
-              <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
-                <div className="flex items-center gap-2">
-                  <div>{metadata.company}</div>
-                  <div>•</div>
-                  <div>{metadata.date}</div>
+            <HighlightableContent>
+              <div className="prose dark:prose-invert max-w-none">
+                <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
+                  <div className="flex items-center gap-2">
+                    <div>{metadata.company}</div>
+                    <div>•</div>
+                    <div>{metadata.date}</div>
+                  </div>
+                  <div className="copy-actions">
+                    <CopyLink title={metadata.title} />
+                    <CopyMarkdown 
+                      slug={slug} 
+                      type="project" 
+                      title={metadata.title}
+                    />
+                  </div>
                 </div>
-                <div className="copy-actions">
-                  <CopyLink title={metadata.title} />
-                  <CopyMarkdown 
-                    slug={slug} 
-                    type="project" 
-                    title={metadata.title}
-                  />
-                </div>
+                <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
+                <Content.default />
               </div>
-              <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
-              <Content.default />
-            </div>
+            </HighlightableContent>
           </article>
 
           {/* Back to top link */}
