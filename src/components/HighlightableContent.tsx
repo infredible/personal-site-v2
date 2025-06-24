@@ -256,7 +256,7 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
           {!showContainer ? (
             // Button content
             <button
-              className="w-full cursor-pointer flex items-center gap-2 font-medium text-popover-foreground hover:scale-102 transition-transform duration-80"
+              className="w-full cursor-pointer flex items-center gap-2 font-medium text-xs py-1 px-2 text-popover-foreground rounded-sm hover:bg-secondary transition-transform duration-80"
               onClick={handleShowExplanation}
               disabled={loading}
             >
