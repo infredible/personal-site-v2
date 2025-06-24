@@ -221,7 +221,7 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
         zIndex: 30,
         transform: 'translateY(-100%)',
         width: containerWidth,
-        transition: 'all 200ms ease-out',
+        transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
       };
     } else {
       // Button positioning - let it size naturally, then center
@@ -231,7 +231,7 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
         top,
         zIndex: 30,
         transform: 'translate(-50%, -100%)',
-        transition: 'all 200ms ease-out',
+        transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
       };
     }
   };
@@ -286,7 +286,6 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
               
               {loading && (
                 <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in-0 duration-200">
-                  {/* <span className="w-4 h-4 animate-spin border-2 border-yellow-400 border-t-transparent rounded-full"></span> */}
                   <span>Generating explanation…</span>
                 </div>
               )}
