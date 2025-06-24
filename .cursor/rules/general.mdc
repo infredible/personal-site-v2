@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Using shadcn
+The 'shadcn-ui' package is deprecated. Please use the 'shadcn' package instead. For example
+'npx shadcn@latest add popover'
