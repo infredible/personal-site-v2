@@ -21,9 +21,6 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
   const [streaming, setStreaming] = useState(false);
   const [streamedText, setStreamedText] = useState("");
 
-  // Mock explanation text
-  const mockExplanation = "This is a mock explanation of the highlighted text. It provides context and additional information to help the user understand the selected content better. The explanation can be multiple sentences long and should wrap nicely within the container.";
-
   // Only enable on desktop
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
 
@@ -148,30 +145,58 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
 
   // Simulate loading and streaming
   const handleShowExplanation = async () => {
+    if (!highlight?.text) return;
+    
     setLoading(true);
     setStreamedText("");
     
-    // Simulate loading delay (like API request time)
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    setLoading(false);
-    setStreaming(true);
-    
-    // Simulate streaming text character by character
-    const words = mockExplanation.split(' ');
-    let currentText = '';
-    
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      currentText += (i > 0 ? ' ' : '') + word;
-      setStreamedText(currentText);
-      
-      // Random delay between words to simulate realistic streaming
-      const delay = Math.random() * 100 + 50; // 50-150ms
-      await new Promise(resolve => setTimeout(resolve, delay));
+    try {
+      const res = await fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          highlighted: highlight.text,
+          context: getPageTextContent(),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      if (!res.body) {
+        throw new Error("No response body");
+      }
+
+      setLoading(false);
+      setStreaming(true);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        if (value) {
+          const chunk = decoder.decode(value);
+          setStreamedText((prev) => prev + chunk);
+        }
+        done = doneReading;
+      }
+
+      setStreaming(false);
+    } catch (err) {
+      console.error('Error fetching explanation:', err);
+      setLoading(false);
+      setStreaming(false);
+      setStreamedText("Sorry, there was an error fetching the explanation. Please try again.");
     }
-    
-    setStreaming(false);
+  };
+
+  // Helper to get the full page text content for context
+  const getPageTextContent = () => {
+    if (!contentRef.current) return "";
+    return contentRef.current.innerText || "";
   };
 
   // Get positioning for the container (unified for both states)

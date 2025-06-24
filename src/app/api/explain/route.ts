@@ -14,7 +14,19 @@ export async function POST(req: NextRequest) {
     return new Response('Missing highlighted text or context', { status: 400 });
   }
 
-  const prompt = `You are an expert explainer. Here is the full content for context:\n\n"""\n${context}\n"""\n\nThe user has highlighted the following text and wants to know more about it:\n\n"""\n${highlighted}\n"""\n\nPlease provide a clear, concise, and helpful explanation of the highlighted text, using the full context if needed.`;
+  const prompt = `
+  You are a product and UI design expert. 
+  Your expertise includes crypto and design, but your audience may not be familiar with crypto jargon.
+  You are providing quick supplementary reference information about a long-form article or case study.
+  Here is the full content for context:\n\n"""\n${context}\n"""\n\n
+  The user has highlighted the following text and wants to know more about it:\n\n"""\n${highlighted}\n"""\n\n
+  
+  Please provide a clear, concise, and helpful explanation of the highlighted text, using the full context if needed.
+  If the highlighted text is short, it likely just needs a quick definition. 
+  If longer, it likely needs a more detailed explanation.
+  Do not provide any other information than the definition or explanation.
+  In your writing, don't refer to the written article. Explain or define generally.
+  Try to keep explanations 1 paragraph or less.`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
