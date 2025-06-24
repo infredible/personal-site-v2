@@ -467,4 +467,10 @@
   .comparison-slider:not(.dragging) .slider-labels button {
     pointer-events: auto;
   }
+
+  .prose ::selection,
+  .prose *::selection {
+    background: rgba(255, 140, 0, 0.35);
+    color: inherit;
+  }
 }
