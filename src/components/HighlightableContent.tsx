@@ -276,7 +276,6 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
               
               {loading && (
                 <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in-0 duration-200">
-                  <span className="w-4 h-4 animate-spin border-2 border-yellow-400 border-t-transparent rounded-full"></span>
                   <span>Generating explanation…</span>
                 </div>
               )}
