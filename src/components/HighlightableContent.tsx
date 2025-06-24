@@ -260,13 +260,13 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
           className={`
             rounded-lg bg-popover shadow-lg border text-sm text-popover-foreground
             transition-all duration-80 ease-out overflow-hidden
-            ${showContainer ? 'p-4' : 'px-3 py-2'}
+            ${showContainer ? 'p-4' : 'p-0.5'}
           `}
         >
           {!showContainer ? (
             // Button content
             <button
-              className="w-full cursor-pointer flex items-center gap-2 font-medium text-popover-foreground hover:scale-102 transition-transform duration-80"
+              className="w-full cursor-pointer flex items-center gap-2 text-xs font-medium text-popover-foreground py-1 px-2 rounded-sm hover:bg-secondary transition-transform duration-80"
               onClick={handleShowExplanation}
               disabled={loading}
             >
@@ -286,7 +286,7 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
               
               {loading && (
                 <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in-0 duration-200">
-                  <span className="w-4 h-4 animate-spin border-2 border-yellow-400 border-t-transparent rounded-full"></span>
+                  {/* <span className="w-4 h-4 animate-spin border-2 border-yellow-400 border-t-transparent rounded-full"></span> */}
                   <span>Generating explanation…</span>
                 </div>
               )}
