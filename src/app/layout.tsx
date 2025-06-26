@@ -13,7 +13,7 @@ const untitledSans = localFont({
     },
     {
       path: "../../public/fonts/UntitledSans-Medium.ttf",
-      weight: "500",
+      weight: "500", 
       style: "normal",
     },
     {
@@ -25,6 +25,7 @@ const untitledSans = localFont({
   variable: "--font-untitled-sans",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
   display: "swap",
+  preload: true, // Preload the primary font family
 });
 
 const family = localFont({
@@ -43,6 +44,7 @@ const family = localFont({
   variable: "--font-family",
   fallback: ["Georgia", "Times New Roman", "serif"],
   display: "swap",
+  preload: false, // Don't preload serif font - used less frequently
 });
 
 export const metadata: Metadata = {
