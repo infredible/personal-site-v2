@@ -1,8 +1,14 @@
 'use client'
 
-import { AnimatePresence } from 'framer-motion'
 import { usePathname } from 'next/navigation'
-import { ReactNode } from 'react'
+import { ReactNode, Suspense, lazy } from 'react'
+
+// Dynamically import AnimatePresence to reduce initial bundle size
+const AnimatePresence = lazy(() => 
+  import('framer-motion').then(mod => ({ 
+    default: mod.AnimatePresence 
+  }))
+)
 
 interface PageTransitionWrapperProps {
   children: ReactNode
@@ -12,10 +18,12 @@ export function PageTransitionWrapper({ children }: PageTransitionWrapperProps) 
   const pathname = usePathname()
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <div key={pathname}>
-        {children}
-      </div>
-    </AnimatePresence>
+    <Suspense fallback={<div key={pathname}>{children}</div>}>
+      <AnimatePresence mode="wait" initial={false}>
+        <div key={pathname}>
+          {children}
+        </div>
+      </AnimatePresence>
+    </Suspense>
   )
 } 

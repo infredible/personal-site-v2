@@ -21,9 +21,36 @@ export function Stories({ stories }: StoriesProps) {
   const [progress, setProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [supportsHover, setSupportsHover] = useState(false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer for lazy loading
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          // Disconnect observer after first intersection for performance
+          observer.disconnect();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '50px', // Start loading 50px before visible
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Detect if device supports hover
   useEffect(() => {
@@ -114,15 +141,22 @@ export function Stories({ stories }: StoriesProps) {
     };
   }, [currentIndex, stories.length]);
 
+  // Load video when intersection is detected
+  useEffect(() => {
+    if (isIntersecting && !videoLoaded) {
+      setVideoLoaded(true);
+    }
+  }, [isIntersecting, videoLoaded]);
+
   // Reset progress when story changes
   useEffect(() => {
     setProgress(0);
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !videoLoaded) return;
 
     video.currentTime = 0;
     safePlay(video);
-  }, [currentIndex]);
+  }, [currentIndex, videoLoaded]);
 
   // Handle play/pause on hover (only on devices that support hover)
   useEffect(() => {
@@ -207,19 +241,30 @@ export function Stories({ stories }: StoriesProps) {
           ))}
         </div>
 
-        {/* Video */}
-        <video
-          ref={videoRef}
-          src={currentStory.videoUrl}
-          className="w-full h-full"
-          style={{ 
-            objectFit: currentStory.objectFit,
-            padding: currentStory.padding || '0'
-          }}
-          muted
-          playsInline
-          preload="metadata"
-        />
+        {/* Video - Only load when component is visible */}
+        {videoLoaded ? (
+          <video
+            ref={videoRef}
+            src={currentStory.videoUrl}
+            className="w-full h-full"
+            style={{ 
+              objectFit: currentStory.objectFit,
+              padding: currentStory.padding || '0'
+            }}
+            muted
+            playsInline
+            preload="none"
+          />
+        ) : (
+          <div 
+            className="w-full h-full bg-gray-900 flex items-center justify-center"
+            style={{ 
+              padding: currentStory.padding || '0'
+            }}
+          >
+            <div className="text-white/50 text-sm">Loading video...</div>
+          </div>
+        )}
 
         {/* Navigation arrows - hidden on mobile, visible on hover for desktop */}
         <div 
