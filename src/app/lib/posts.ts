@@ -10,6 +10,7 @@ export interface PostMetadata {
   description: string
   date: string
   tags: string[]
+  featured?: boolean
 }
 
 export interface Post {
@@ -44,8 +45,15 @@ export async function getAllPosts(): Promise<Post[]> {
     }
   }).filter((post): post is Post => post !== null)
 
-  // Sort by date descending (newest first)
-  const sortedPosts = posts.sort((a, b) => new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime())
+  // Sort by featured first, then by date descending (newest first)
+  const sortedPosts = posts.sort((a, b) => {
+    // Featured posts come first
+    if (a.metadata.featured && !b.metadata.featured) return -1
+    if (!a.metadata.featured && b.metadata.featured) return 1
+    
+    // If both are featured or both are not featured, sort by date
+    return new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime()
+  })
   
   return sortedPosts
 }

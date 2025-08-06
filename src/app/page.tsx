@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight,ArrowRight } from "lucide-react";
+import { ArrowUpRight, ArrowRight, Pin } from "lucide-react";
 import { getAllProjects } from "@/app/lib/projects";
 import { getAllPosts, formatDate } from "@/app/lib/posts";
 import { getWeather, formatTemperature } from "@/app/lib/weather";
@@ -224,7 +224,7 @@ export default async function Home() {
                       height={16}
                       className="w-4 h-4 mr-2 rounded-full"
                     />
-                    <div className="flex items-center gap-1 pt-0.25 text-xs">
+                    <div className="flex items-center gap-2 pt-0.25 text-xs">
                       <span className="text-muted-foreground">{project.metadata.company}</span>
                       <span className="text-muted-foreground">•</span>
                       <span className="text-muted-foreground">{project.metadata.date}</span>
@@ -252,6 +252,15 @@ export default async function Home() {
                   </h3>
                   <p>{post.metadata.description}</p>
                   <div className="text-muted-foreground text-xs mt-2 flex items-center gap-2">
+                    {post.metadata.featured && (
+                      <>
+                        <div className="flex items-center gap-1">
+                          <Pin className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                          <span className="text-yellow-600 dark:text-yellow-400 font-medium">Pinned</span>
+                        </div>
+                        <span>•</span>
+                      </>
+                    )}
                     <span>{formatDate(post.metadata.date)}</span>
                     {post.metadata.tags?.length > 0 && (
                       <>
