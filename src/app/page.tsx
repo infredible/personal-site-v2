@@ -224,10 +224,10 @@ export default async function Home() {
                       height={16}
                       className="w-4 h-4 mr-2 rounded-full"
                     />
-                    <div className="flex items-center gap-1 pt-0.5">
-                      <span className="text-muted-foreground text-sm">{project.metadata.company}</span>
-                      <span className="text-muted-foreground text-sm">•</span>
-                      <span className="text-muted-foreground text-sm">{project.metadata.date}</span>
+                    <div className="flex items-center gap-1 pt-0.25 text-xs">
+                      <span className="text-muted-foreground">{project.metadata.company}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">{project.metadata.date}</span>
                     </div>
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default async function Home() {
                     {post.metadata.title}
                   </h3>
                   <p>{post.metadata.description}</p>
-                  <div className="text-muted-foreground text-sm mt-2 flex items-center gap-2">
+                  <div className="text-muted-foreground text-xs mt-2 flex items-center gap-2">
                     <span>{formatDate(post.metadata.date)}</span>
                     {post.metadata.tags?.length > 0 && (
                       <>
@@ -269,24 +269,24 @@ export default async function Home() {
         <section className="mb-24">
         {/* <footer className="pt-14 border-t"> */}
           <h2 className="text-2xl font-medium font-serif mb-10">Elsewhere</h2>
-          <div className="flex space-x-6">
-            <Link href="https://x.com/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+          <div className="flex flex-col gap-y-2 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-4">
+            <Link href="https://x.com/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Twitter
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            {/* <Link href="https://read.cv/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+            {/* <Link href="https://read.cv/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Read.cv
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link> */}
-            <Link href="https://www.linkedin.com/in/fredzaw/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://www.linkedin.com/in/fredzaw/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               LinkedIn
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            <Link href="https://www.instagram.com/_burmaboy/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://www.instagram.com/_burmaboy/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Instagram
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
-            <Link href="https://app.ens.domains/swappypapi.eth" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group">
+            <Link href="https://app.ens.domains/swappypapi.eth" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Swappypapi.eth
               <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
