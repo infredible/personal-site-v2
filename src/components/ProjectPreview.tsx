@@ -40,7 +40,9 @@ export function ProjectPreview({ imageUrl, isVisible, mouseX, mouseY }: ProjectP
               width={320}
               height={240}
               className="w-full h-auto object-cover"
-              priority={false}
+              priority={true}
+              sizes="320px"
+              quality={85}
             />
           </div>
         </motion.div>

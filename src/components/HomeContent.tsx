@@ -6,7 +6,7 @@ import { ArrowUpRight, ArrowRight, Pin } from "lucide-react";
 import { formatDate, Post } from "@/app/lib/posts";
 import { Project } from "@/app/lib/projects";
 import { PageTransition, Stories, ProjectPreview } from "@/components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Story {
   id: string;
@@ -28,6 +28,23 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
+
+  // Preload all project preview images on component mount
+  useEffect(() => {
+    const preloadImages = () => {
+      projects.forEach((project) => {
+        if (project.metadata.ogImage) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = project.metadata.ogImage;
+          document.head.appendChild(link);
+        }
+      });
+    };
+
+    preloadImages();
+  }, [projects]);
 
   const handleProjectHover = (projectId: string, event: React.MouseEvent) => {
     setHoveredProject(projectId);
