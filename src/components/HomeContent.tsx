@@ -50,6 +50,10 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
   const [mouseY, setMouseY] = useState(0);
   const [transformedContent, setTransformedContent] = useState<TransformedContent | null>(null);
   const [isTransforming, setIsTransforming] = useState(false);
+  const [isWriting, setIsWriting] = useState(false);
+  const [writingPhase, setWritingPhase] = useState<'bio' | 'projects' | 'posts' | null>(null);
+  const [writtenProjects, setWrittenProjects] = useState<number>(0);
+  const [writtenPosts, setWrittenPosts] = useState<number>(0);
 
   // Preload all project preview images on component mount
   useEffect(() => {
@@ -99,7 +103,14 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
       }
 
       const transformed = await response.json();
+      
+      // Start the writing animation sequence
+      setIsTransforming(false);
+      setIsWriting(true);
       setTransformedContent(transformed);
+      
+      // Begin writing sequence
+      startWritingSequence();
     } catch (error) {
       console.error('Transform error:', error);
       // You could add error state handling here
@@ -108,8 +119,44 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
     }
   };
 
+  const startWritingSequence = async () => {
+    // Reset all writing states
+    setWritingPhase(null);
+    setWrittenProjects(0);
+    setWrittenPosts(0);
+    
+    // Phase 1: Write bio
+    setWritingPhase('bio');
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Phase 2: Write projects with stagger
+    setWritingPhase('projects');
+    const projectCount = transformedContent?.projects.length || 3;
+    for (let i = 0; i < projectCount; i++) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setWrittenProjects(i + 1);
+    }
+    
+    // Phase 3: Write posts with stagger
+    setWritingPhase('posts');
+    const postCount = transformedContent?.posts.length || 6;
+    for (let i = 0; i < postCount; i++) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      setWrittenPosts(i + 1);
+    }
+    
+    // Complete
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setIsWriting(false);
+    setWritingPhase(null);
+  };
+
   const handleReset = () => {
     setTransformedContent(null);
+    setIsWriting(false);
+    setWritingPhase(null);
+    setWrittenProjects(0);
+    setWrittenPosts(0);
   };
 
   // Helper functions to get displayed content
@@ -207,8 +254,14 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           </div>
           
           <p className="text-base">
-            {getDisplayedBio()}
+            <span className={transformedContent && writingPhase === 'bio' ? 'animate-in fade-in-0 slide-in-from-top-1 duration-500' : ''}>
+              {getDisplayedBio()}
+            </span>
+            {transformedContent && writingPhase === 'bio' && (
+              <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1"></span>
+            )}
           </p>
+
           <nav className="mt-1">
             <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
               More
@@ -233,7 +286,9 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           <h2 className="text-2xl font-medium font-serif mb-10">Projects</h2>
           
           <div className="space-y-12">
-            {getDisplayedProjects().map((project) => {
+            {getDisplayedProjects().map((project, index) => {
+              const shouldShow = !transformedContent || writingPhase !== 'projects' || index < writtenProjects;
+              if (!shouldShow) return null;
               const isTransformed = transformedContent !== null;
               const projectId = project.id;
               const projectTitle = isTransformed ? (project as TransformedProject).title : (project as Project).metadata.title;
@@ -241,11 +296,15 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
               const projectCompany = isTransformed ? (project as TransformedProject).company || 'Company' : (project as Project).metadata.company;
               const projectDate = isTransformed ? '2024' : (project as Project).metadata.date;
               
+              const isNewlyWritten = transformedContent && writingPhase === 'projects' && index === writtenProjects - 1;
+              
               return (
                 <Link 
                   key={projectId} 
                   href={isTransformed ? '#' : `/projects/${projectId}`}
-                  className="block group hover:opacity-70 transition-opacity"
+                  className={`block group hover:opacity-70 transition-opacity ${
+                    isNewlyWritten ? 'animate-in fade-in-0 slide-in-from-top-1 duration-500' : ''
+                  }`}
                   onMouseEnter={(e) => handleProjectHover(projectId, e)}
                   onMouseLeave={handleProjectLeave}
                   onMouseMove={(e) => {
@@ -283,7 +342,9 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           <h2 className="text-2xl font-medium font-serif mb-10">Thoughts</h2>
           
           <div className="space-y-8">
-            {getDisplayedPosts().map((post) => {
+            {getDisplayedPosts().map((post, index) => {
+              const shouldShow = !transformedContent || writingPhase !== 'posts' || index < writtenPosts;
+              if (!shouldShow) return null;
               const isTransformed = transformedContent !== null;
               const postId = post.id;
               const postTitle = isTransformed ? (post as TransformedPost).title : (post as Post).metadata.title;
@@ -291,12 +352,15 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
               const postDate = isTransformed ? '2024-01-01' : (post as Post).metadata.date;
               const postFeatured = isTransformed ? false : (post as Post).metadata.featured;
               const postTags = isTransformed ? [] : (post as Post).metadata.tags || [];
+              const isNewlyWritten = transformedContent && writingPhase === 'posts' && index === writtenPosts - 1;
               
               return (
                 <Link 
                   key={postId}
                   href={isTransformed ? '#' : `/posts/${postId}`}
-                  className="block group hover:opacity-70 transition-opacity"
+                  className={`block group hover:opacity-70 transition-opacity ${
+                    isNewlyWritten ? 'animate-in fade-in-0 slide-in-from-top-1 duration-500' : ''
+                  }`}
                 >
                   <div>
                     <h3 className="text-md font-medium mb-1">
@@ -370,7 +434,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
         onTransform={handleTransform}
         onReset={handleReset}
         isTransformed={transformedContent !== null}
-        isLoading={isTransforming}
+        isLoading={isTransforming || isWriting}
       />
     </PageTransition>
   );

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const prompt = `
   You are creating a COMPLETE persona transformation for a personal website. Generate entirely NEW content as if this website belongs to: "${persona}"
 
-  This is satirical parody - use ALL the buzzwords, corporate speak, and clichés that this type of person would use. Make it an exaggerated but clever satire of that profession.
+  This is satirical parody - use ALL the buzzwords, corporate speak, and clichés that this type of person would use. Make it an exaggerated and humorous satire of that profession. It should be obvious to the reader that this is a parody - ridiculous and over the top.
 
   CRITICAL: Create entirely NEW and REALISTIC projects and posts that this persona would actually have in their portfolio. Do NOT transform existing projects - create completely different ones that fit their company/role.
 
