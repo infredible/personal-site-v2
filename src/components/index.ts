@@ -1,4 +1,5 @@
 export { BackToTop } from './BackToTop';
+export { ChatBox } from './ChatBox';
 export { ComparisonSlider } from './ComparisonSlider';
 export { CopyLink } from './CopyLink';
 export { CopyMarkdown } from './CopyMarkdown';
