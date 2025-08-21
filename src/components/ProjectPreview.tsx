@@ -29,7 +29,7 @@ export function ProjectPreview({ imageUrl, isVisible, mouseX, mouseY }: ProjectP
           animate={{ opacity: 1, x: 12 }}
           exit={{ opacity: 0, x: 12 }}
           transition={{ 
-            duration: 0.3, 
+            duration: 0.2, 
             ease: [0.2, 0.0, 0.2, 1] 
           }}
         >
