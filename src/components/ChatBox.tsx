@@ -80,7 +80,7 @@ export function ChatBox({ onTransform, onReset, isTransformed, isLoading }: Chat
               }
               setIsFocused(false);
             }}
-            placeholder="Make me who you want to see"
+            placeholder="Who do you want me to be?"
             disabled={isLoading}
             className="flex-1 px-4 py-3 bg-transparent border-none outline-none placeholder-muted-foreground text-sm disabled:opacity-50"
             autoComplete="off"

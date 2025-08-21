@@ -141,6 +141,60 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
     return posts;
   };
 
+  // Helper function to get appropriate company icon
+  const getCompanyIcon = (companyName: string): string => {
+    if (!companyName) return "/icons/uniswap.png";
+    
+    const company = companyName.toLowerCase();
+    
+    // Direct matches
+    if (company.includes('google')) return "/icons/Google.png";
+    if (company.includes('meta') || company.includes('facebook')) return "/icons/Facebook.png";
+    if (company.includes('instagram')) return "/icons/Instagram.png";
+    if (company.includes('apple')) return "/icons/Apple.png";
+    if (company.includes('microsoft')) return "/icons/Microsoft.png";
+    if (company.includes('amazon')) return "/icons/Amazon.png";
+    if (company.includes('netflix')) return "/icons/Netflix.png";
+    if (company.includes('spotify')) return "/icons/Spotify.png";
+    if (company.includes('uber')) return "/icons/Uber.png";
+    if (company.includes('tesla')) return "/icons/Tesla.png";
+    if (company.includes('spacex')) return "/icons/SpaceX.png";
+    if (company.includes('stripe')) return "/icons/stripe.png";
+    if (company.includes('slack')) return "/icons/Slack.png";
+    if (company.includes('notion')) return "/icons/Notion.png";
+    if (company.includes('figma')) return "/icons/Figma.png";
+    if (company.includes('adobe')) return "/icons/Adobe.png";
+    if (company.includes('disney')) return "/icons/Disney.png";
+    if (company.includes('tiktok')) return "/icons/tiktok.png";
+    if (company.includes('twitter')) return "/icons/Twitter.png";
+    if (company.includes('linkedin')) return "/icons/Linkedin.png";
+    if (company.includes('github')) return "/icons/GitHub.png";
+    if (company.includes('reddit')) return "/icons/Reddit.png";
+    if (company.includes('discord')) return "/icons/Discord.png";
+    if (company.includes('twitch')) return "/icons/Twitch.png";
+    if (company.includes('snapchat')) return "/icons/Snapchat.png";
+    if (company.includes('youtube')) return "/icons/YouTube.png";
+    if (company.includes('paypal')) return "/icons/PayPal.png";
+    if (company.includes('mastercard')) return "/icons/Mastercard.png";
+    if (company.includes('visa')) return "/icons/Visa.png";
+    if (company.includes('pinterest')) return "/icons/Pintrest.png"; // Note: typo in filename
+    if (company.includes('medium')) return "/icons/Medium.png";
+    if (company.includes('dribbble')) return "/icons/Dribbble.png";
+    if (company.includes('behance')) return "/icons/Behance.png";
+    if (company.includes('mailchimp')) return "/icons/Mailchimp.png";
+    if (company.includes('trello')) return "/icons/Trello.png";
+    if (company.includes('dropbox')) return "/icons/Dropbox.png";
+    if (company.includes('whatsapp')) return "/icons/WhatsApp.png";
+    if (company.includes('telegram')) return "/icons/Telegram.png";
+    if (company.includes('starbucks')) return "/icons/Starbucks.png";
+    if (company.includes('mcdonalds') || company.includes("mcdonald's")) return "/icons/Mcdonalds.png";
+    if (company.includes('uniswap')) return "/icons/uniswap.png";
+    if (company.includes('coinbase')) return "/icons/uniswap.png"; // fallback to crypto
+    
+    // Default fallback
+    return "/icons/uniswap.png";
+  };
+
   return (
     <PageTransition>
       <div className="max-w-xl mx-auto px-6 py-24">
@@ -206,10 +260,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
                     <p>{projectDescription}</p>
                     <div className="flex items-center mt-1.75">
                       <Image 
-                        src={projectCompany === 'Uniswap Labs' ? "/icons/uniswap.png" : 
-                             projectCompany?.toLowerCase().includes('meta') ? "/icons/stripe.png" :
-                             projectCompany?.toLowerCase().includes('google') ? "/icons/stripe.png" :
-                             "/icons/tiktok.png"} 
+                        src={getCompanyIcon(projectCompany)} 
                         alt={projectCompany} 
                         width={16}
                         height={16}
