@@ -19,7 +19,7 @@ export function ProjectPreview({ imageUrl, isVisible, mouseX, mouseY }: ProjectP
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed z-50 pointer-events-none"
+          className="fixed z-50 pointer-events-none hidden [@media(hover:hover)]:block"
           style={{
             left: mouseX + 20,
             top: Math.max(50, mouseY - 120),
