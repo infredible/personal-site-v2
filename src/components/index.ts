@@ -8,6 +8,8 @@ export { MDXImage, MDXVideo } from './MDXMedia';
 export { PageTransition } from './page-transition';
 export { PageTransitionWrapper } from './page-transition-wrapper';
 export { ProjectPreview } from './ProjectPreview';
+export { PrototypeCanvas } from './PrototypeCanvas';
+export { PrototypeDrawer } from './PrototypeDrawer';
 export { SafariThemeUpdater } from './SafariThemeUpdater';
 export { Stories } from './Stories';
 export { ThemeProvider } from './theme-provider';

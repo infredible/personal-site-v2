@@ -76,9 +76,13 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
             Designer at Uniswap Labs unlocking a more free and open financial system. 
             Before crypto, worked on a breadth of industries including AI and spatial computing.
           </p>
-          <nav className="mt-1">
+          <nav className="mt-1 flex gap-4">
             <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
               More
+              <ArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+            </Link>
+            <Link href="/bits-n-bobs" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
+              Bits-n-Bobs
               <ArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
           </nav>
