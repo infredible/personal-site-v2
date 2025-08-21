@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ArrowUpRight, ArrowRight, Pin } from "lucide-react";
 import { formatDate, Post } from "@/app/lib/posts";
 import { Project } from "@/app/lib/projects";
-import { PageTransition, Stories, ProjectPreview } from "@/components";
+import { PageTransition, Stories, ProjectPreview, MultiplayerCursors } from "@/components";
 import { useState, useEffect } from "react";
 
 interface Story {
@@ -62,7 +62,15 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
   };
 
   return (
-    <PageTransition>
+    <>
+      {/* Multiplayer Cursors - Outside PageTransition to avoid DOM conflicts */}
+      <MultiplayerCursors
+        maxCursors={2}
+        spawnInterval={8000}
+        lifetimeRange={[30000, 60000]}
+      />
+      
+      <PageTransition>
       <div className="max-w-xl mx-auto px-6 py-24">
         <header className="mb-10 mt-14">
           <h1 className="text-3xl font-medium mb-1 font-serif">Fred Zaw</h1>
@@ -213,5 +221,6 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
         mouseY={mouseY}
       />
     </PageTransition>
+    </>
   );
 }
