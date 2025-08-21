@@ -3,15 +3,25 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, ArrowRight, Pin } from "lucide-react";
-import { formatDate } from "@/app/lib/posts";
+import { formatDate, Post } from "@/app/lib/posts";
+import { Project } from "@/app/lib/projects";
 import { PageTransition, Stories, ProjectPreview } from "@/components";
 import { useState } from "react";
 
+interface Story {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  objectFit: 'cover' | 'contain';
+  padding?: string;
+}
+
 interface HomeContentProps {
-  projects: any[];
-  posts: any[];
+  projects: Project[];
+  posts: Post[];
   weatherDisplay: string;
-  storiesData: any[];
+  storiesData: Story[];
 }
 
 export function HomeContent({ projects, posts, weatherDisplay, storiesData }: HomeContentProps) {
