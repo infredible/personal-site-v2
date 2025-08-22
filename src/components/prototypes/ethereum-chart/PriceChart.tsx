@@ -51,6 +51,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const [selectionEnd, setSelectionEnd] = useState<number | null>(null);
   const [hasDragged, setHasDragged] = useState(false);
+  const [isChartHovered, setIsChartHovered] = useState(false);
   const [selectionData, setSelectionData] = useState<{
     startPoint: PricePoint;
     endPoint: PricePoint;
@@ -350,6 +351,12 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
       setTooltipLeft(null);
       setTooltipTop(null);
     }
+    setIsChartHovered(false);
+  };
+
+  // Handler for mouse enter
+  const handleMouseEnter = () => {
+    setIsChartHovered(true);
   };
 
   // Clear selection
@@ -550,6 +557,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onTouchStart={handleMouseMove}
             onTouchMove={handleMouseMove}
@@ -597,20 +605,33 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
           </div>
           <div className="space-y-1">
             <div className="flex justify-between">
-              <span className="text-foreground">Change:</span>
+              <span className="text-muted-foreground">Change:</span>
               <span className={`font-medium ${selectionData.change >= 0 ? 'text-chart-2' : 'text-chart-1'}`}>
                 {selectionData.change >= 0 ? '+' : ''}{formatTooltipPrice(Math.abs(selectionData.change))} ({selectionData.change >= 0 ? '+' : ''}{selectionData.changePercentage.toFixed(2)}%)
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground">From:</span>
+              <span className="text-muted-foreground">From:</span>
               <span className="font-medium">{formatTooltipPrice(selectionData.startPoint.price)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground">To:</span>
+              <span className="text-muted-foreground">To:</span>
               <span className="font-medium">{formatTooltipPrice(selectionData.endPoint.price)}</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Drag selection hint */}
+      {isChartHovered && !isSelecting && !selectionData && (
+        <div
+          className="absolute text-xs text-muted-foreground/60 pointer-events-none z-20 select-none transition-opacity duration-200"
+          style={{
+            left: margin.left + 8,
+            bottom: 32,
+          }}
+        >
+          Drag to select range
         </div>
       )}
       
