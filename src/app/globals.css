@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -90,7 +89,7 @@
 
 /* Prototype-specific styling */
 .prototype-container {
-  font-family: 'Inter', var(--font-untitled-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), var(--font-untitled-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

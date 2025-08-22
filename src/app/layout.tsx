@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider, ThemeToggle, PageTransitionWrapper, SafariThemeUpdater } from "../components";
 import { Analytics } from "@vercel/analytics/next"
@@ -47,6 +48,13 @@ const family = localFont({
   preload: false, // Don't preload serif font - used less frequently
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: false, // Only load when needed for prototypes
+});
+
 export const metadata: Metadata = {
   title: "Fred Zaw",
   description: "Designer at Uniswap Labs unlocking a more free and open financial system.",
@@ -83,7 +91,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${untitledSans.variable} ${family.variable} antialiased`}
+        className={`${untitledSans.variable} ${family.variable} ${inter.variable} antialiased`}
       >
         <ThemeProvider>
           <PageTransitionWrapper>
