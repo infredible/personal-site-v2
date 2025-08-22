@@ -53,6 +53,18 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
     });
   };
 
+  const getTimePeriodText = (range: string) => {
+    const rangeMappings: Record<string, string> = {
+      '1': 'today',
+      '7': 'past week',
+      '30': 'past month',
+      '90': 'past 3 months',
+      '365': 'past year',
+    };
+    
+    return rangeMappings[range] || 'this period';
+  };
+
   // Calculate change based on selected time period
   const calculatePeriodChange = (data: ETHData | null, selectedRange: string) => {
     if (!data || !data.priceHistory || data.priceHistory.length < 2) {
@@ -105,7 +117,7 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
       {/* Price and Change Row */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <div className="text-3xl font-bold">
+          <div className="text-3xl font-medium">
             {isLoading ? (
               <div className="h-9 w-48 bg-muted animate-pulse rounded" />
             ) : (
@@ -113,17 +125,22 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
             )}
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isLoading ? (
               <div className="h-5 w-32 bg-muted animate-pulse rounded" />
             ) : changeInfo ? (
-                              <span
+              <>
+                <span
                   className={`text-sm font-medium ${
                     changeInfo.isPositive ? 'text-chart-2' : 'text-chart-1'
                   }`}
-              >
-                {changeInfo.text}
-              </span>
+                >
+                  {changeInfo.text}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {getTimePeriodText(selectedRange)}
+                </span>
+              </>
             ) : (
               <span className="text-sm text-muted-foreground">--</span>
             )}
