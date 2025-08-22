@@ -87,7 +87,7 @@ export function MasonryGrid() {
   const { positions, totalHeight } = getItemPositions();
 
   return (
-    <div className="flex flex-col items-center min-h-[600px] p-8">
+    <div className="prototype-container flex flex-col items-center min-h-[600px] p-8">
       <h3 className="text-xl font-medium mb-8">Dynamic Masonry Grid Layout</h3>
       
       {/* Controls */}

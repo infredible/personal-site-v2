@@ -19,7 +19,7 @@ export function AnimatedCharts() {
   const maxValue = Math.max(...data.map(d => d.value));
 
   return (
-    <div className="flex flex-col items-center min-h-[500px] p-8">
+    <div className="prototype-container flex flex-col items-center min-h-[500px] p-8">
       <h3 className="text-xl font-medium mb-8">Animated Chart Transitions</h3>
       
       {/* Chart type switcher */}

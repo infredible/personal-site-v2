@@ -48,7 +48,7 @@ export function DragInteractions() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-[400px] p-8">
+    <div className="prototype-container flex flex-col items-center min-h-[400px] p-8">
       <h3 className="text-xl font-medium mb-8">Drag & Drop Interface</h3>
       
       <div 

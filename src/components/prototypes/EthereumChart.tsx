@@ -86,7 +86,7 @@ export function EthereumChart() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-background rounded-lg border border-border">
+    <div className="prototype-container w-full max-w-4xl mx-auto p-6 bg-background rounded-lg border border-border">
       <ChartHeader 
         data={data}
         isLoading={isLoading}
