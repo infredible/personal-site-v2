@@ -148,12 +148,15 @@ export function Stories({ stories }: StoriesProps) {
     }
   }, [isIntersecting, videoLoaded]);
 
-  // Reset progress when story changes
+  // Handle video loading and story changes
   useEffect(() => {
-    setProgress(0);
     const video = videoRef.current;
     if (!video || !videoLoaded) return;
 
+    // Reset progress
+    setProgress(0);
+
+    // Reset currentTime and start playing
     video.currentTime = 0;
     safePlay(video);
   }, [currentIndex, videoLoaded]);
@@ -253,7 +256,7 @@ export function Stories({ stories }: StoriesProps) {
             }}
             muted
             playsInline
-            preload="none"
+            preload="metadata"
           />
         ) : (
           <div 
