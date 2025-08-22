@@ -27,10 +27,10 @@ export function TimeRangeSelector({
           onClick={() => onRangeChange(range.key)}
           disabled={disabled}
           className={`
-            px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150
+            px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-120 hover:bg-muted/50
             ${selectedRange === range.key
-              ? 'bg-muted text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}
