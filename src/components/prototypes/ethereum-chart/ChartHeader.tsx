@@ -90,11 +90,11 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
             />
           </div>
           <div>
-            <h1 className="text-md font-medium">ETH <span className="text-muted-foreground">: USD</span></h1>
+            <div className="text-md font-medium">ETH <span className="text-muted-foreground">: USD</span></div>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
           {data?.lastUpdated && (
             <span>Updated {formatLastUpdated(data.lastUpdated)}</span>
           )}
@@ -103,7 +103,7 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
 
       {/* Price and Change Row */}
       <div className="flex items-start justify-between">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="text-3xl font-bold">
             {isLoading ? (
               <div className="h-9 w-48 bg-muted animate-pulse rounded" />
@@ -117,7 +117,7 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
               <div className="h-5 w-32 bg-muted animate-pulse rounded" />
             ) : changeInfo ? (
                               <span
-                  className={`text-xs font-medium ${
+                  className={`text-sm font-medium ${
                     changeInfo.isPositive ? 'text-chart-2' : 'text-chart-1'
                   }`}
               >

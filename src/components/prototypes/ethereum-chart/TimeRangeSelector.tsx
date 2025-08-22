@@ -20,7 +20,7 @@ export function TimeRangeSelector({
   disabled = false 
 }: TimeRangeSelectorProps) {
   return (
-    <div className="flex items-center gap-4 mt-4">
+    <div className="flex items-center gap-4 mt-4.5">
       {ranges.map((range) => (
         <button
           key={range.key}

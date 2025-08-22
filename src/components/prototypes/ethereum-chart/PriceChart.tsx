@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AreaClosed, LinePath, Line, Bar } from '@visx/shape';
 import { curveMonotoneX } from '@visx/curve';
 import { scaleTime, scaleLinear } from '@visx/scale';
@@ -42,6 +42,14 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
   const [tooltipData, setTooltipData] = useState<PricePoint | null>(null);
   const [tooltipLeft, setTooltipLeft] = useState<number | null>(null);
   const [tooltipTop, setTooltipTop] = useState<number | null>(null);
+  const [animationKey, setAnimationKey] = useState(0);
+  
+  // Trigger animation when data changes (including time period changes)
+  useEffect(() => {
+    if (data.length > 0) {
+      setAnimationKey(prev => prev + 1);
+    }
+  }, [data.length, days]); // Also trigger on time period changes
   
   // Update margins - remove left margin, increase top margin for Y-axis labels
   const margin = { top: 12, right: 50, bottom: 30, left: 0 };
@@ -223,7 +231,8 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
 
   return (
     <div className="relative">
-      <svg width={width} height={height}>
+      <div className="chart-wipe-animation" key={animationKey}>
+        <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
           <LinearGradient
             id="area-gradient"
@@ -338,6 +347,7 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
           />
         </Group>
       </svg>
+      </div>
       
       {/* Tooltip with fixed y position */}
       {tooltipData && (

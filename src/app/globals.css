@@ -94,6 +94,20 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Chart wipe animation */
+@keyframes chart-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.chart-wipe-animation {
+  animation: chart-wipe 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 .dark {
   --background: oklch(0.147 0.004 49.25);
   --foreground: oklch(0.985 0.001 106.423);
