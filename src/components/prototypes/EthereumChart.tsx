@@ -33,11 +33,16 @@ const TIME_RANGES = [
 export function EthereumChart() {
   const [data, setData] = useState<ETHData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingNewPeriod, setIsLoadingNewPeriod] = useState(false);
   const [selectedRange, setSelectedRange] = useState('7');
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async (days: string) => {
-    setIsLoading(true);
+  const fetchData = async (days: string, isInitialLoad = false) => {
+    if (isInitialLoad) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingNewPeriod(true);
+    }
     setError(null);
     
     try {
@@ -53,18 +58,19 @@ export function EthereumChart() {
       console.error('Error fetching Ethereum data:', err);
     } finally {
       setIsLoading(false);
+      setIsLoadingNewPeriod(false);
     }
   };
 
   // Initial load
   useEffect(() => {
-    fetchData(selectedRange);
+    fetchData(selectedRange, true);
   }, []);
 
   const handleRangeChange = (range: string) => {
     if (range !== selectedRange) {
       setSelectedRange(range);
-      fetchData(range);
+      fetchData(range, false); // Not initial load
     }
   };
 
@@ -91,6 +97,7 @@ export function EthereumChart() {
         data={data}
         isLoading={isLoading}
         selectedRange={selectedRange}
+        isTransitioning={isLoadingNewPeriod}
       />
       
       <TimeRangeSelector
@@ -101,24 +108,24 @@ export function EthereumChart() {
       />
 
       <div className="mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : data ? (
-          <>
-
+        <div className={`transition-opacity duration-300 ${isLoadingNewPeriod ? 'opacity-40' : 'opacity-100'}`}>
+          {data ? (
             <PriceChart 
               data={data.priceHistory || []}
               currentPrice={data.currentPrice}
               priceChange={data.priceChangePercentage24h}
               days={parseInt(selectedRange)}
               selectedRange={selectedRange}
+              isFirstLoad={!isLoadingNewPeriod && isLoading}
             />
-          </>
-        ) : (
-          <div className="text-center text-muted-foreground p-8">
-            No data available
-          </div>
-        )}
+          ) : isLoading ? (
+            <LoadingState />
+          ) : (
+            <div className="text-center text-muted-foreground p-8">
+              No data available
+            </div>
+          )}
+        </div>
       </div>
 
     </div>

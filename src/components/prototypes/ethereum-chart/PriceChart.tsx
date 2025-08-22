@@ -19,6 +19,7 @@ interface InnerChartProps {
   height: number;
   isPositiveChange: boolean;
   days: number;
+  isFirstLoad: boolean;
 }
 
 interface PriceChartProps {
@@ -27,6 +28,7 @@ interface PriceChartProps {
   priceChange: number | null;
   days: number;
   selectedRange: string;
+  isFirstLoad: boolean;
 }
 
 // Helper function to get the nearest data point
@@ -37,19 +39,19 @@ const getDate = (d: PricePoint) => d.date;
 const getPrice = (d: PricePoint) => d.price;
 
 // The inner chart component that renders with specific dimensions
-function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartProps) {
+function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }: InnerChartProps) {
   // State for tooltip - fixed position above chart
   const [tooltipData, setTooltipData] = useState<PricePoint | null>(null);
   const [tooltipLeft, setTooltipLeft] = useState<number | null>(null);
   const [tooltipTop, setTooltipTop] = useState<number | null>(null);
-  const [animationKey, setAnimationKey] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
   
-  // Trigger animation when data changes (including time period changes)
+  // Only animate on the very first load
   useEffect(() => {
-    if (data.length > 0) {
-      setAnimationKey(prev => prev + 1);
+    if (isFirstLoad && data.length > 0 && !hasAnimated) {
+      setHasAnimated(true);
     }
-  }, [data.length, days]); // Also trigger on time period changes
+  }, [isFirstLoad, data.length, hasAnimated]);
   
   // Update margins - remove left margin, increase top margin for Y-axis labels
   const margin = { top: 12, right: 50, bottom: 30, left: 0 };
@@ -231,8 +233,7 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
 
   return (
     <div className="relative">
-      <div className="chart-wipe-animation" key={animationKey}>
-        <svg width={width} height={height}>
+      <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
           <LinearGradient
             id="area-gradient"
@@ -288,24 +289,26 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
             </Group>
           ))}
           
-          <AreaClosed<PricePoint>
-            data={validData}
-            x={(d) => dateScale(getDate(d)) ?? 0}
-            y={(d) => priceScale(getPrice(d)) ?? 0}
-            yScale={priceScale}
-            strokeWidth={0}
-            stroke={lineColor}
-            fill="url(#area-gradient)"
-            curve={curveMonotoneX}
-          />
-          <LinePath<PricePoint>
-            data={validData}
-            x={(d) => dateScale(getDate(d)) ?? 0}
-            y={(d) => priceScale(getPrice(d)) ?? 0}
-            stroke={lineColor}
-            strokeWidth={2}
-            curve={curveMonotoneX}
-          />
+          <g className={hasAnimated ? "chart-wipe-animation" : ""}>
+            <AreaClosed<PricePoint>
+              data={validData}
+              x={(d) => dateScale(getDate(d)) ?? 0}
+              y={(d) => priceScale(getPrice(d)) ?? 0}
+              yScale={priceScale}
+              strokeWidth={0}
+              stroke={lineColor}
+              fill="url(#area-gradient)"
+              curve={curveMonotoneX}
+            />
+            <LinePath<PricePoint>
+              data={validData}
+              x={(d) => dateScale(getDate(d)) ?? 0}
+              y={(d) => priceScale(getPrice(d)) ?? 0}
+              stroke={lineColor}
+              strokeWidth={2}
+              curve={curveMonotoneX}
+            />
+          </g>
 
           {/* Tooltip vertical line */}
           {tooltipData && (
@@ -347,7 +350,6 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
           />
         </Group>
       </svg>
-      </div>
       
       {/* Tooltip with fixed y position */}
       {tooltipData && (
@@ -378,7 +380,7 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
 }
 
 // The main component that handles responsive behavior
-export function PriceChart({ data, currentPrice, priceChange, days, selectedRange }: PriceChartProps) {
+export function PriceChart({ data, currentPrice, priceChange, days, selectedRange, isFirstLoad }: PriceChartProps) {
   // Calculate change based on selected time period for color determination
   const calculatePeriodChange = (data: PricePoint[]) => {
     if (!data || data.length < 2) return 0;
@@ -418,6 +420,7 @@ export function PriceChart({ data, currentPrice, priceChange, days, selectedRang
               height={chartHeight}
               isPositiveChange={isPositiveChange}
               days={days}
+              isFirstLoad={isFirstLoad}
             />
           );
         }}

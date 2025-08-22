@@ -8,9 +8,10 @@ interface ChartHeaderProps {
   data: ETHData | null;
   isLoading: boolean;
   selectedRange: string;
+  isTransitioning: boolean;
 }
 
-export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps) {
+export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }: ChartHeaderProps) {
   const formatPrice = (price: number | null) => {
     if (price === null) return '$--,---';
     return new Intl.NumberFormat('en-US', {
