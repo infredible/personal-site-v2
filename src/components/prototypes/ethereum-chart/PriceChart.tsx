@@ -26,6 +26,7 @@ interface PriceChartProps {
   currentPrice: number | null;
   priceChange: number | null;
   days: number;
+  selectedRange: string;
 }
 
 // Helper function to get the nearest data point
@@ -363,15 +364,28 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
 }
 
 // The main component that handles responsive behavior
-export function PriceChart({ data, currentPrice, priceChange, days }: PriceChartProps) {
-  const isPositiveChange = (priceChange || 0) >= 0;
+export function PriceChart({ data, currentPrice, priceChange, days, selectedRange }: PriceChartProps) {
+  // Calculate change based on selected time period for color determination
+  const calculatePeriodChange = (data: PricePoint[]) => {
+    if (!data || data.length < 2) return 0;
+    
+    const currentPrice = data[data.length - 1]?.price;
+    const startPrice = data[0]?.price;
+    
+    if (!currentPrice || !startPrice) return 0;
+    
+    return ((currentPrice - startPrice) / startPrice) * 100;
+  };
+
+  const periodChangePercentage = calculatePeriodChange(data);
+  const isPositiveChange = periodChangePercentage >= 0;
   
   return (
-    <div className="w-full h-80">
+    <div className="w-full h-60">
       <ParentSize>
         {({ width }) => {
           const chartWidth = width || 800;
-          const chartHeight = 320;
+          const chartHeight = 240;
           
           if (!width || width === 0) {
             return (

@@ -20,14 +20,14 @@ export function TimeRangeSelector({
   disabled = false 
 }: TimeRangeSelectorProps) {
   return (
-    <div className="flex items-center gap-4 mt-6 mb-4">
+    <div className="flex items-center gap-4 mt-4">
       {ranges.map((range) => (
         <button
           key={range.key}
           onClick={() => onRangeChange(range.key)}
           disabled={disabled}
           className={`
-            py-1.5 text-sm font-medium rounded-lg transition-all duration-120
+            py-1.5 text-xs font-medium rounded-lg transition-all duration-120
             ${selectedRange === range.key
               ? 'text-foreground'
               : 'text-muted-foreground/60 hover:text-muted-foreground'

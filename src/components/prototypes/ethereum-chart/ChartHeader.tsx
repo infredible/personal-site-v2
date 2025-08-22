@@ -1,7 +1,8 @@
 'use client'
 
 import { ETHData } from '../EthereumChart';
-import { Heart, MoreVertical, Expand } from 'lucide-react';
+import { Heart, Ellipsis, Maximize2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface ChartHeaderProps {
   data: ETHData | null;
@@ -75,19 +76,25 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
   const changeInfo = formatChange(periodChange.change, periodChange.percentage);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">⧫</span>
+      <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-5.5 h-5.5 flex items-center justify-center">
+            <Image 
+              src="/icons/eth.png" 
+              alt="Ethereum" 
+              width={24} 
+              height={24} 
+              className="w-5.5 h-5.5 rounded-full"
+            />
           </div>
           <div>
-            <h1 className="text-lg font-medium">ETH : USD</h1>
+            <h1 className="text-md font-medium">ETH <span className="text-muted-foreground">: USD</span></h1>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {data?.lastUpdated && (
             <span>Updated {formatLastUpdated(data.lastUpdated)}</span>
           )}
@@ -95,8 +102,8 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
       </div>
 
       {/* Price and Change Row */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
           <div className="text-3xl font-bold">
             {isLoading ? (
               <div className="h-9 w-48 bg-muted animate-pulse rounded" />
@@ -109,10 +116,10 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
             {isLoading ? (
               <div className="h-5 w-32 bg-muted animate-pulse rounded" />
             ) : changeInfo ? (
-              <span
-                className={`text-sm font-medium ${
-                  changeInfo.isPositive ? 'text-green-500' : 'text-red-500'
-                }`}
+                              <span
+                  className={`text-xs font-medium ${
+                    changeInfo.isPositive ? 'text-chart-2' : 'text-chart-1'
+                  }`}
               >
                 {changeInfo.text}
               </span>
@@ -122,12 +129,12 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-1">
           <button 
             className="p-2 rounded-md hover:bg-muted transition-colors"
             aria-label="Expand chart"
           >
-            <Expand className="w-4 h-4" />
+            <Maximize2 className="w-4 h-4" />
           </button>
           <button 
             className="p-2 rounded-md hover:bg-muted transition-colors"
@@ -139,7 +146,7 @@ export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps
             className="p-2 rounded-md hover:bg-muted transition-colors"
             aria-label="More options"
           >
-            <MoreVertical className="w-4 h-4" />
+            <Ellipsis className="w-4 h-4" />
           </button>
         </div>
       </div>

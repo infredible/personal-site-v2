@@ -86,7 +86,7 @@ export function EthereumChart() {
   }
 
   return (
-    <div className="prototype-container w-full max-w-4xl mx-auto p-6 bg-background rounded-lg border border-border">
+    <div className="prototype-container w-full max-w-xl mx-auto p-4 bg-background rounded-xl border border-border bg-muted/20">
       <ChartHeader 
         data={data}
         isLoading={isLoading}
@@ -100,7 +100,7 @@ export function EthereumChart() {
         disabled={isLoading}
       />
 
-      <div className="mt-6">
+      <div className="mt-2">
         {isLoading ? (
           <LoadingState />
         ) : data ? (
@@ -111,6 +111,7 @@ export function EthereumChart() {
               currentPrice={data.currentPrice}
               priceChange={data.priceChangePercentage24h}
               days={parseInt(selectedRange)}
+              selectedRange={selectedRange}
             />
           </>
         ) : (
