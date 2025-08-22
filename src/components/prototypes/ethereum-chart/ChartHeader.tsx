@@ -6,9 +6,10 @@ import { Heart, MoreVertical, Expand } from 'lucide-react';
 interface ChartHeaderProps {
   data: ETHData | null;
   isLoading: boolean;
+  selectedRange: string;
 }
 
-export function ChartHeader({ data, isLoading }: ChartHeaderProps) {
+export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps) {
   const formatPrice = (price: number | null) => {
     if (price === null) return '$--,---';
     return new Intl.NumberFormat('en-US', {
@@ -50,7 +51,28 @@ export function ChartHeader({ data, isLoading }: ChartHeaderProps) {
     });
   };
 
-  const changeInfo = formatChange(data?.priceChange24h || null, data?.priceChangePercentage24h || null);
+  // Calculate change based on selected time period
+  const calculatePeriodChange = (data: ETHData | null, selectedRange: string) => {
+    if (!data || !data.priceHistory || data.priceHistory.length < 2) {
+      return { change: null, percentage: null };
+    }
+
+    const priceHistory = data.priceHistory;
+    const currentPrice = priceHistory[priceHistory.length - 1]?.price;
+    const startPrice = priceHistory[0]?.price;
+    
+    if (!currentPrice || !startPrice) {
+      return { change: null, percentage: null };
+    }
+
+    const change = currentPrice - startPrice;
+    const percentage = ((currentPrice - startPrice) / startPrice) * 100;
+
+    return { change, percentage };
+  };
+
+  const periodChange = calculatePeriodChange(data, selectedRange);
+  const changeInfo = formatChange(periodChange.change, periodChange.percentage);
 
   return (
     <div className="space-y-4">

@@ -90,6 +90,7 @@ export function EthereumChart() {
       <ChartHeader 
         data={data}
         isLoading={isLoading}
+        selectedRange={selectedRange}
       />
       
       <TimeRangeSelector
