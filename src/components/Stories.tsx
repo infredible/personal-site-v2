@@ -109,7 +109,7 @@ export function Stories({ stories }: StoriesProps) {
   // Handle video time update for progress tracking
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !videoLoaded) return;
 
     const handleTimeUpdate = () => {
       if (!video.isConnected) return;
@@ -139,7 +139,7 @@ export function Stories({ stories }: StoriesProps) {
         video.removeEventListener('ended', handleEnded);
       }
     };
-  }, [currentIndex, stories.length]);
+  }, [currentIndex, stories.length, videoLoaded]);
 
   // Load video when intersection is detected
   useEffect(() => {
@@ -257,13 +257,11 @@ export function Stories({ stories }: StoriesProps) {
           />
         ) : (
           <div 
-            className="w-full h-full bg-gray-900 flex items-center justify-center"
+            className="w-full h-full bg-gray-900"
             style={{ 
               padding: currentStory.padding || '0'
             }}
-          >
-            <div className="text-white/50 text-sm">Loading video...</div>
-          </div>
+          />
         )}
 
         {/* Navigation arrows - hidden on mobile, visible on hover for desktop */}
