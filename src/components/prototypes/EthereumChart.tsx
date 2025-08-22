@@ -109,6 +109,7 @@ export function EthereumChart() {
               data={data.priceHistory || []}
               currentPrice={data.currentPrice}
               priceChange={data.priceChangePercentage24h}
+              days={parseInt(selectedRange)}
             />
           </>
         ) : (
