@@ -43,8 +43,8 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
   const [tooltipLeft, setTooltipLeft] = useState<number | null>(null);
   const [tooltipTop, setTooltipTop] = useState<number | null>(null);
   
-  // Update margins - remove left margin, increase bottom margin for X-axis labels
-  const margin = { top: 10, right: 50, bottom: 30, left: 0 };
+  // Update margins - remove left margin, increase top margin for Y-axis labels
+  const margin = { top: 12, right: 50, bottom: 30, left: 0 };
 
   // Chart dimensions
   const innerWidth = width - margin.left - margin.right;
@@ -229,7 +229,7 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
             id="area-gradient"
             from={gradientColors.from}
             to={gradientColors.to}
-            fromOpacity={0.4}
+            fromOpacity={0.3}
             toOpacity={0.0}
           />
           
@@ -242,14 +242,14 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
                 to={{ x: innerWidth + margin.right - 8, y: priceScale(tick) }}
                 stroke="rgb(100, 100, 100)"
                 strokeWidth={1}
-                strokeDasharray="1,6"
-                strokeOpacity={0.3}
+                strokeDasharray="1,8"
+                strokeOpacity={0.4}
               />
               
               {/* Tick label */}
               <Text
                 x={innerWidth + margin.right - 12}
-                y={priceScale(tick) - 6}
+                y={priceScale(tick) - 8}
                 textAnchor="end"
                 verticalAnchor="middle"
                 fontSize={10}
@@ -294,7 +294,7 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
             x={(d) => dateScale(getDate(d)) ?? 0}
             y={(d) => priceScale(getPrice(d)) ?? 0}
             stroke={lineColor}
-            strokeWidth={1.5}
+            strokeWidth={2}
             curve={curveMonotoneX}
           />
 
@@ -307,7 +307,6 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
               strokeWidth={1}
               strokeOpacity={0.5}
               pointerEvents="none"
-              strokeDasharray="5,5"
             />
           )}
           
@@ -317,8 +316,8 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
               cx={tooltipLeft}
               cy={tooltipTop}
               r={4}
-              fill="white"
-              stroke={lineColor}
+              fill={lineColor}
+              stroke="white"
               strokeWidth={2}
               pointerEvents="none"
             />
@@ -343,10 +342,10 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
       {/* Tooltip with fixed y position */}
       {tooltipData && (
         <div
-          className="absolute pointer-events-none bg-background border border-border p-2 rounded text-xs shadow-lg"
+          className="absolute pointer-events-none bg-background border border-border p-2 rounded-md text-xs shadow-lg z-30"
           style={{
             left: tooltipLeft! + margin.left,
-            top: margin.top - 50,
+            top: margin.top - 24,
             transform: 'translateX(-50%)',
             minWidth: '100px',
           }}
@@ -359,6 +358,11 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
           </div>
         </div>
       )}
+      
+      {/* Left gradient fade overlay */}
+      <div 
+        className="absolute top-0 left-0 bottom-0 w-32 pointer-events-none z-10 bg-gradient-to-r from-background via-background/40 to-transparent"
+      />
     </div>
   );
 }
