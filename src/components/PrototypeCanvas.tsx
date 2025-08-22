@@ -12,7 +12,7 @@ export function PrototypeCanvas({ prototype, drawerOpen }: PrototypeCanvasProps)
     return (
       <div
         className={`transition-all duration-300 ease-out ${
-          drawerOpen ? 'ml-[320px]' : 'ml-0'
+          drawerOpen ? 'ml-[336px]' : 'ml-0'
         } min-h-screen flex items-center justify-center`}
       >
         <div className="text-center max-w-md px-6">
@@ -85,7 +85,7 @@ export function PrototypeCanvas({ prototype, drawerOpen }: PrototypeCanvasProps)
   return (
     <div
       className={`transition-all duration-300 ease-out ${
-        drawerOpen ? 'ml-[320px]' : 'ml-0'
+        drawerOpen ? 'ml-[336px]' : 'ml-0'
       } min-h-screen`}
     >
       {/* Header */}

@@ -1,5 +1,5 @@
 import { ComponentType } from 'react';
-import { AnimatedButton } from '@/components/prototypes/AnimatedButton';
+import { EthereumChart } from '@/components/prototypes/EthereumChart';
 import { DragInteractions } from '@/components/prototypes/DragInteractions';
 import { AnimatedCharts } from '@/components/prototypes/AnimatedCharts';
 import { MasonryGrid } from '@/components/prototypes/MasonryGrid';
@@ -35,15 +35,15 @@ export const prototypes: PrototypeCategory[] = [
     description: 'Interactive UI components and micro-interactions',
     prototypes: [
       {
-        id: 'animated-button',
-        title: 'Animated Button States',
-        description: 'Exploration of button hover and click animations',
-        category: 'interaction-design',
+        id: 'eth-price-chart',
+        title: 'Ethereum Price Chart',
+        description: 'Real-time Ethereum price visualization with CoinGecko API integration',
+        category: 'data-visualization',
         type: 'component',
-        component: AnimatedButton,
+        component: EthereumChart,
         metadata: {
           date: '2024-01-15',
-          tags: ['animation', 'buttons', 'micro-interactions'],
+          tags: ['cryptocurrency', 'data-visualization', 'real-time', 'coingecko-api'],
           featured: true,
         },
       },
