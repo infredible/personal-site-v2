@@ -1,7 +1,7 @@
 'use client'
 
 import { ETHData } from '../EthereumChart';
-import { TrendingUp, TrendingDown, Heart, MoreVertical, Expand } from 'lucide-react';
+import { Heart, MoreVertical, Expand } from 'lucide-react';
 
 interface ChartHeaderProps {
   data: ETHData | null;
@@ -26,14 +26,14 @@ export function ChartHeader({ data, isLoading }: ChartHeaderProps) {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
-      maximumFractionDigits: 5,
+      maximumFractionDigits: 2,
     }).format(Math.abs(change));
 
     const formattedPercentage = Math.abs(percentage).toFixed(2);
     const isPositive = change >= 0;
 
     return {
-      text: `${isPositive ? '+' : '-'}${formattedPercentage}% (${isPositive ? '+' : '-'}${formattedChange})`,
+      text: `${isPositive ? '+' : '-'}${formattedChange} (${isPositive ? '+' : '-'}${formattedPercentage}%)`,
       isPositive,
     };
   };
@@ -87,22 +87,15 @@ export function ChartHeader({ data, isLoading }: ChartHeaderProps) {
             {isLoading ? (
               <div className="h-5 w-32 bg-muted animate-pulse rounded" />
             ) : changeInfo ? (
-              <>
-                {changeInfo.isPositive ? (
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500" />
-                )}
-                <span
-                  className={`text-sm font-medium ${
-                    changeInfo.isPositive ? 'text-green-500' : 'text-red-500'
-                  }`}
-                >
-                  {changeInfo.text}
-                </span>
-              </>
+              <span
+                className={`text-sm font-medium ${
+                  changeInfo.isPositive ? 'text-green-500' : 'text-red-500'
+                }`}
+              >
+                {changeInfo.text}
+              </span>
             ) : (
-              <span className="text-sm text-muted-foreground">--% (--)</span>
+              <span className="text-sm text-muted-foreground">--</span>
             )}
           </div>
         </div>

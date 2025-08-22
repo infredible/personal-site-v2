@@ -119,9 +119,6 @@ export function EthereumChart() {
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground mt-4 text-center">
-        Data provided by CoinGecko API • Updates in real-time
-      </p>
     </div>
   );
 }

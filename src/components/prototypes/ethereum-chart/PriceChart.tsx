@@ -42,8 +42,8 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
   const [tooltipLeft, setTooltipLeft] = useState<number | null>(null);
   const [tooltipTop, setTooltipTop] = useState<number | null>(null);
   
-  // Update margins - remove left margin, keep right margin for labels
-  const margin = { top: 10, right: 50, bottom: 20, left: 0 };
+  // Update margins - remove left margin, increase bottom margin for X-axis labels
+  const margin = { top: 10, right: 50, bottom: 30, left: 0 };
 
   // Chart dimensions
   const innerWidth = width - margin.left - margin.right;
@@ -239,10 +239,10 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
               <Line
                 from={{ x: 0, y: priceScale(tick) }}
                 to={{ x: innerWidth + margin.right - 8, y: priceScale(tick) }}
-                stroke="hsl(var(--border))"
+                stroke="rgb(100, 100, 100)"
                 strokeWidth={1}
                 strokeDasharray="1,6"
-                strokeOpacity={0.4}
+                strokeOpacity={0.3}
               />
               
               {/* Tick label */}
@@ -266,10 +266,10 @@ function InnerChart({ data, width, height, isPositiveChange, days }: InnerChartP
               {/* Tick label */}
               <Text
                 x={dateScale(tick)}
-                y={innerHeight + 15}
+                y={innerHeight + 12}
                 textAnchor="middle"
                 verticalAnchor="start"
-                fontSize={9}
+                fontSize={10}
                 fill="currentColor"
                 className="text-zinc-500 dark:text-zinc-400"
               >
