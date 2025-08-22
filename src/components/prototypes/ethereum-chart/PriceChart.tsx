@@ -426,7 +426,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
                 verticalAnchor="middle"
                 fontSize={10}
                 fill="currentColor"
-                className="text-zinc-500 dark:text-zinc-400"
+                className="text-muted-foreground"
               >
                 {formatPrice(tick)}
               </Text>
@@ -444,7 +444,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
                 verticalAnchor="start"
                 fontSize={10}
                 fill="currentColor"
-                className="text-zinc-500 dark:text-zinc-400"
+                className="text-muted-foreground"
               >
                 {formatXAxisLabel(tick)}
               </Text>
@@ -607,7 +607,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
             <div className="flex justify-between">
               <span className="text-muted-foreground">Change:</span>
               <span className={`font-medium ${selectionData.change >= 0 ? 'text-chart-2' : 'text-chart-1'}`}>
-                {selectionData.change >= 0 ? '+' : ''}{formatTooltipPrice(Math.abs(selectionData.change))} ({selectionData.change >= 0 ? '+' : ''}{selectionData.changePercentage.toFixed(2)}%)
+                {selectionData.change >= 0 ? '+' : '-'}{formatTooltipPrice(Math.abs(selectionData.change))} ({Math.abs(selectionData.changePercentage).toFixed(2)}%)
               </span>
             </div>
             <div className="flex justify-between">

@@ -36,7 +36,7 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
     const isPositive = change >= 0;
 
     return {
-      text: `${isPositive ? '+' : '-'}${formattedChange} (${isPositive ? '+' : '-'}${formattedPercentage}%)`,
+      text: `${isPositive ? '+' : '-'}${formattedChange} (${formattedPercentage}%)`,
       isPositive,
     };
   };
@@ -91,7 +91,7 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
   return (
     <div className="space-y-6">
       {/* Header Row */}
-      <div className="flex items-center justify-between border-b border-border pb-3">
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center gap-2">
           <div className="w-5.5 h-5.5 flex items-center justify-center">
             <Image 
@@ -107,7 +107,7 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
           </div>
         </div>
         
-        <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {data?.lastUpdated && (
             <span>Updated {formatLastUpdated(data.lastUpdated)}</span>
           )}
