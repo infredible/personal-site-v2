@@ -46,12 +46,39 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
   const [tooltipTop, setTooltipTop] = useState<number | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
   
+  // State for drag selection
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<number | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<number | null>(null);
+  const [selectionData, setSelectionData] = useState<{
+    startPoint: PricePoint;
+    endPoint: PricePoint;
+    change: number;
+    changePercentage: number;
+  } | null>(null);
+  
   // Only animate on the very first load
   useEffect(() => {
     if (isFirstLoad && data.length > 0 && !hasAnimated) {
       setHasAnimated(true);
     }
   }, [isFirstLoad, data.length, hasAnimated]);
+
+  // Global mouse up handler for drag selection
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isSelecting) {
+        setIsSelecting(false);
+      }
+    };
+
+    if (isSelecting) {
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      return () => {
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+      };
+    }
+  }, [isSelecting]);
   
   // Update margins - remove left margin, increase top margin for Y-axis labels
   const margin = { top: 12, right: 50, bottom: 30, left: 0 };
@@ -117,8 +144,8 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
   );
 
   // Colors for SVG - need to use actual color values for SVG compatibility
-  const positiveColor = '#10b981'; // Green for gains (chart-2 equivalent)
-  const negativeColor = '#ef4444'; // Red for losses (chart-1 equivalent)
+  const positiveColor = '#21C95E'; // Green for gains (chart-2 equivalent)
+  const negativeColor = '#FF5F52'; // Red for losses (chart-1 equivalent)
   
   const gradientColors = isPositiveChange 
     ? { from: positiveColor, to: positiveColor }
@@ -201,40 +228,103 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
     return true;
   });
 
-  // Handler for mouse move over the chart area
-  const handleMouseMove = (event: React.TouchEvent<SVGRectElement> | React.MouseEvent<SVGRectElement>) => {
-    // Get the mouse point relative to the SVG container
-    const { x } = localPoint(event) || { x: 0 };
-    
-    // Adjust for the left margin to get the correct position within the chart area
-    const xInChart = x - margin.left;
-    
-    // Convert the adjusted x position to a date
+  // Helper function to find nearest data point
+  const findNearestDataPoint = (xPosition: number): PricePoint | null => {
+    const xInChart = xPosition - margin.left;
     const x0 = dateScale.invert(xInChart);
     
     const index = bisectDate(validData, x0, 1);
-    if (index <= 0 || index >= validData.length) return; // Prevent out of bounds
+    if (index <= 0 || index >= validData.length) return null;
     
     const d0 = validData[index - 1];
     const d1 = validData[index];
-    const d = x0.valueOf() - d0.date.valueOf() > d1.date.valueOf() - x0.valueOf() ? d1 : d0;
-    
-    setTooltipData(d);
-    setTooltipLeft(dateScale(d.date));
-    setTooltipTop(priceScale(d.price));
+    return x0.valueOf() - d0.date.valueOf() > d1.date.valueOf() - x0.valueOf() ? d1 : d0;
   };
 
-  // Handler for mouse leave
-  const handleMouseLeave = () => {
+  // Calculate selection data
+  const calculateSelectionData = (startX: number, endX: number) => {
+    const startPoint = findNearestDataPoint(startX);
+    const endPoint = findNearestDataPoint(endX);
+    
+    if (!startPoint || !endPoint) return null;
+    
+    // Ensure proper order (start should be earlier than end)
+    const [earlierPoint, laterPoint] = startPoint.timestamp <= endPoint.timestamp 
+      ? [startPoint, endPoint] 
+      : [endPoint, startPoint];
+    
+    const change = laterPoint.price - earlierPoint.price;
+    const changePercentage = (change / earlierPoint.price) * 100;
+    
+    return {
+      startPoint: earlierPoint,
+      endPoint: laterPoint,
+      change,
+      changePercentage,
+    };
+  };
+
+  // Handler for mouse down (start selection)
+  const handleMouseDown = (event: React.MouseEvent<SVGRectElement>) => {
+    const { x } = localPoint(event) || { x: 0 };
+    setIsSelecting(true);
+    setSelectionStart(x);
+    setSelectionEnd(x);
+    // Clear tooltip during selection
     setTooltipData(null);
     setTooltipLeft(null);
     setTooltipTop(null);
   };
 
+  // Handler for mouse move over the chart area
+  const handleMouseMove = (event: React.TouchEvent<SVGRectElement> | React.MouseEvent<SVGRectElement>) => {
+    const { x } = localPoint(event) || { x: 0 };
+    
+    if (isSelecting && selectionStart !== null) {
+      // Update selection
+      setSelectionEnd(x);
+      const data = calculateSelectionData(selectionStart, x);
+      setSelectionData(data);
+    } else if (!isSelecting) {
+      // Show tooltip only when not selecting
+      const dataPoint = findNearestDataPoint(x);
+      if (dataPoint) {
+        setTooltipData(dataPoint);
+        setTooltipLeft(dateScale(dataPoint.date));
+        setTooltipTop(priceScale(dataPoint.price));
+      }
+    }
+  };
+
+  // Handler for mouse up (end selection)
+  const handleMouseUp = () => {
+    if (isSelecting && selectionStart !== null && selectionEnd !== null) {
+      const data = calculateSelectionData(selectionStart, selectionEnd);
+      setSelectionData(data);
+    }
+    setIsSelecting(false);
+  };
+
+  // Handler for mouse leave
+  const handleMouseLeave = () => {
+    if (!isSelecting) {
+      setTooltipData(null);
+      setTooltipLeft(null);
+      setTooltipTop(null);
+    }
+  };
+
+  // Clear selection
+  const clearSelection = () => {
+    setSelectionStart(null);
+    setSelectionEnd(null);
+    setSelectionData(null);
+  };
+
   return (
     <div className="relative">
       <svg width={width} height={height}>
-        <Group left={margin.left} top={margin.top}>
+        <defs>
           <LinearGradient
             id="area-gradient"
             from={gradientColors.from}
@@ -242,7 +332,19 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
             fromOpacity={0.3}
             toOpacity={0.0}
           />
-          
+          {/* Clip path definition for selection */}
+          {(selectionStart !== null && selectionEnd !== null) && (
+            <clipPath id="selection-clip">
+              <rect
+                x={Math.min(selectionStart - margin.left, selectionEnd - margin.left)}
+                y={0}
+                width={Math.abs(selectionEnd - selectionStart)}
+                height={innerHeight}
+              />
+            </clipPath>
+          )}
+        </defs>
+        <Group left={margin.left} top={margin.top}>
           {/* Y-axis tick marks and labels */}
           {yTicks.map((tick: number, i: number) => (
             <Group key={`y-tick-${i}`}>
@@ -253,7 +355,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
                 stroke="rgb(100, 100, 100)"
                 strokeWidth={1}
                 strokeDasharray="1,8"
-                strokeOpacity={0.4}
+                strokeOpacity={0.6}
               />
               
               {/* Tick label */}
@@ -289,7 +391,8 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
             </Group>
           ))}
           
-          <g className={hasAnimated ? "chart-wipe-animation" : ""}>
+          {/* Background chart (dimmed when selection is active) */}
+          <g className={hasAnimated ? "chart-wipe-animation" : ""} opacity={selectionStart !== null && selectionEnd !== null ? 0.5 : 1}>
             <AreaClosed<PricePoint>
               data={validData}
               x={(d) => dateScale(getDate(d)) ?? 0}
@@ -305,13 +408,40 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
               x={(d) => dateScale(getDate(d)) ?? 0}
               y={(d) => priceScale(getPrice(d)) ?? 0}
               stroke={lineColor}
-              strokeWidth={2}
+              strokeWidth={1.5}
               curve={curveMonotoneX}
             />
           </g>
 
+          {/* Highlighted selection (full opacity) */}
+          {(selectionStart !== null && selectionEnd !== null) && (
+            <g
+              clipPath="url(#selection-clip)"
+              className={hasAnimated ? "chart-wipe-animation" : ""}
+            >
+              <AreaClosed<PricePoint>
+                data={validData}
+                x={(d) => dateScale(getDate(d)) ?? 0}
+                y={(d) => priceScale(getPrice(d)) ?? 0}
+                yScale={priceScale}
+                strokeWidth={0}
+                stroke={lineColor}
+                fill="url(#area-gradient)"
+                curve={curveMonotoneX}
+              />
+              <LinePath<PricePoint>
+                data={validData}
+                x={(d) => dateScale(getDate(d)) ?? 0}
+                y={(d) => priceScale(getPrice(d)) ?? 0}
+                stroke={lineColor}
+                strokeWidth={1.5}
+                curve={curveMonotoneX}
+              />
+            </g>
+          )}
+
           {/* Tooltip vertical line */}
-          {tooltipData && (
+          {tooltipData && !isSelecting && (
             <Line
               from={{ x: tooltipLeft!, y: 0 }}
               to={{ x: tooltipLeft!, y: innerHeight }}
@@ -323,7 +453,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
           )}
           
           {/* Tooltip dot */}
-          {tooltipData && tooltipLeft !== null && tooltipTop !== null && (
+          {tooltipData && tooltipLeft !== null && tooltipTop !== null && !isSelecting && (
             <circle
               cx={tooltipLeft}
               cy={tooltipTop}
@@ -342,17 +472,19 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
             width={innerWidth}
             height={innerHeight}
             fill="transparent"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
             onTouchStart={handleMouseMove}
             onTouchMove={handleMouseMove}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ cursor: 'none' }}
+            style={{ cursor: isSelecting ? 'col-resize' : 'none' }}
           />
         </Group>
       </svg>
       
-      {/* Tooltip with fixed y position */}
-      {tooltipData && (
+      {/* Regular tooltip with fixed y position */}
+      {tooltipData && !isSelecting && !selectionData && (
         <div
           className="absolute pointer-events-none bg-background border border-border p-2 rounded-md text-xs shadow-lg z-30"
           style={{
@@ -368,6 +500,54 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
           <div className="font-medium whitespace-nowrap">
             {formatTooltipPrice(tooltipData.price)}
           </div>
+        </div>
+      )}
+
+      {/* Selection tooltip */}
+      {selectionData && selectionStart !== null && selectionEnd !== null && (
+        <div
+          className="absolute bg-background border border-border p-3 rounded-lg text-xs shadow-lg z-30"
+          style={{
+            left: Math.min(selectionStart, selectionEnd) + Math.abs(selectionEnd - selectionStart) / 2,
+            top: margin.top - 24,
+            transform: 'translateX(-50%)',
+            minWidth: '200px',
+          }}
+        >
+          <div className="text-muted-foreground mb-2 text-left">
+            {formatTooltipDate(selectionData.startPoint.date)} - {formatTooltipDate(selectionData.endPoint.date)}
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Change:</span>
+              <span className={`font-medium ${selectionData.change >= 0 ? 'text-chart-2' : 'text-chart-1'}`}>
+                {selectionData.change >= 0 ? '+' : ''}{formatTooltipPrice(Math.abs(selectionData.change))} ({selectionData.change >= 0 ? '+' : ''}{selectionData.changePercentage.toFixed(2)}%)
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">From:</span>
+              <span className="font-medium">{formatTooltipPrice(selectionData.startPoint.price)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">To:</span>
+              <span className="font-medium">{formatTooltipPrice(selectionData.endPoint.price)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Click to clear selection */}
+      {selectionData && !isSelecting && (
+        <div
+          className="absolute bg-background border border-border px-2 py-1 rounded text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors z-30"
+          style={{
+            left: Math.min(selectionStart!, selectionEnd!) + Math.abs(selectionEnd! - selectionStart!) / 2,
+            bottom: 10,
+            transform: 'translateX(-50%)',
+          }}
+          onClick={clearSelection}
+        >
+          Click to clear selection
         </div>
       )}
       
