@@ -4,10 +4,10 @@ import { HighlightableContent } from '@/components/HighlightableContent';
 
 export function HighlightToLearn() {
   return (
-    <div className="prototype-container flex flex-col items-center min-h-[500px] p-8">
+    <div className="prototype-container flex flex-col items-center p-8">
       
       {/* Content Card */}
-      <div className="w-full max-w-2xl p-6 bg-background rounded-xl border border-border shadow-xs">
+      <div className="w-full max-w-2xl p-12 pb-8 bg-background rounded-xl border border-border shadow-xs">
         <HighlightableContent>
           <div className="prose prose-sm max-w-none">
             {/* <h4 className="text-lg font-medium mb-4 text-foreground">Understanding Uniswap v4</h4> */}
@@ -28,7 +28,7 @@ export function HighlightToLearn() {
 
       {/* Caption */}
       <p className="text-sm text-muted-foreground max-w-xl text-left mt-8 leading-relaxed">
-        Select any text above to see the highlight-to-learn feature in action. The component uses AI to provide contextual explanations for highlighted content, perfect for educational content and technical documentation.
+        Select any text above to see the highlight-to-learn feature in action. The component uses AI to provide contextual explanations for highlighted content - a pattern to be used for educational content and technical documentation.
       </p>
     </div>
   );
