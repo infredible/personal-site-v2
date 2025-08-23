@@ -3,6 +3,7 @@ import { EthereumChart } from '@/components/prototypes/EthereumChart';
 import { DragInteractions } from '@/components/prototypes/DragInteractions';
 import { AnimatedCharts } from '@/components/prototypes/AnimatedCharts';
 import { MasonryGrid } from '@/components/prototypes/MasonryGrid';
+import { HighlightToLearn } from '@/components/prototypes/HighlightToLearn';
 
 export interface Prototype {
   id: string;
@@ -44,6 +45,14 @@ export const prototypes: PrototypeCategory[] = [
         category: 'interaction-design',
         type: 'component',
         component: DragInteractions,
+      },
+      {
+        id: 'highlight-to-learn',
+        title: 'Highlight to Learn',
+        description: 'AI-powered contextual explanations for highlighted text',
+        category: 'interaction-design',
+        type: 'component',
+        component: HighlightToLearn,
       },
     ],
   },
