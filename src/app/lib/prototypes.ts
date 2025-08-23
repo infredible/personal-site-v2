@@ -13,11 +13,6 @@ export interface Prototype {
   component?: ComponentType<any>;
   mediaUrl?: string;
   embedUrl?: string;
-  metadata: {
-    date: string;
-    tags: string[];
-    featured?: boolean;
-  };
 }
 
 export interface PrototypeCategory {
@@ -36,16 +31,11 @@ export const prototypes: PrototypeCategory[] = [
     prototypes: [
       {
         id: 'eth-price-chart',
-        title: 'Ethereum Price Chart',
+        title: 'Lil\' Price Chart',
         description: 'Real-time Ethereum price visualization with CoinGecko API integration',
         category: 'data-visualization',
         type: 'component',
         component: EthereumChart,
-        metadata: {
-          date: '2024-01-15',
-          tags: ['cryptocurrency', 'data-visualization', 'real-time', 'coingecko-api'],
-          featured: true,
-        },
       },
       {
         id: 'drag-interactions',
@@ -54,10 +44,6 @@ export const prototypes: PrototypeCategory[] = [
         category: 'interaction-design',
         type: 'component',
         component: DragInteractions,
-        metadata: {
-          date: '2024-01-20',
-          tags: ['drag-drop', 'gestures'],
-        },
       },
     ],
   },
@@ -73,10 +59,6 @@ export const prototypes: PrototypeCategory[] = [
         category: 'data-visualization',
         type: 'component',
         component: AnimatedCharts,
-        metadata: {
-          date: '2024-01-10',
-          tags: ['charts', 'animation', 'd3'],
-        },
       },
     ],
   },
@@ -92,10 +74,6 @@ export const prototypes: PrototypeCategory[] = [
         category: 'layout-experiments',
         type: 'component',
         component: MasonryGrid,
-        metadata: {
-          date: '2024-01-25',
-          tags: ['layout', 'grid', 'responsive'],
-        },
       },
     ],
   },

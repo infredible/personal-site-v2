@@ -41,7 +41,7 @@ export function PrototypeDrawer({ categories, selectedPrototype, onSelectPrototy
         {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">Prototypes</h2>
+            <h2 className="text-lg font-medium">Bits n Bobs</h2>
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 rounded-md hover:bg-muted transition-colors"
@@ -69,12 +69,6 @@ export function PrototypeDrawer({ categories, selectedPrototype, onSelectPrototy
                 <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                   {prototype.description}
                 </div>
-                {prototype.metadata.featured && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                    <span className="text-xs text-yellow-600 dark:text-yellow-400">Featured</span>
-                  </div>
-                )}
               </button>
             ))}
           </div>

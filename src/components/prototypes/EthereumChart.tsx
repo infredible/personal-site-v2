@@ -92,42 +92,51 @@ export function EthereumChart() {
   }
 
   return (
-    <div className="prototype-container w-full max-w-xl mx-auto p-4 bg-background rounded-xl border border-border bg-background shadow-xs">
-      <ChartHeader 
-        data={data}
-        isLoading={isLoading}
-        selectedRange={selectedRange}
-        isTransitioning={isLoadingNewPeriod}
-      />
-      
-      <TimeRangeSelector
-        ranges={TIME_RANGES}
-        selectedRange={selectedRange}
-        onRangeChange={handleRangeChange}
-        disabled={isLoading}
-      />
+    <div className="prototype-container flex flex-col items-center min-h-[500px] p-8">
+      {/* <h3 className="text-xl font-medium mb-8">Lil' Price Chart</h3> */}
 
-      <div className="mt-2">
-        <div className={`transition-opacity duration-300 ${isLoadingNewPeriod ? 'opacity-40' : 'opacity-100'}`}>
-          {data ? (
-            <PriceChart 
-              data={data.priceHistory || []}
-              currentPrice={data.currentPrice}
-              priceChange={data.priceChangePercentage24h}
-              days={parseInt(selectedRange)}
-              selectedRange={selectedRange}
-              isFirstLoad={!isLoadingNewPeriod && isLoading}
-            />
-          ) : isLoading ? (
-            <LoadingState />
-          ) : (
-            <div className="text-center text-muted-foreground p-8">
-              No data available
-            </div>
-          )}
+      {/* Chart Card */}
+      <div className="w-full max-w-xl p-4 bg-background rounded-xl border border-border shadow-xs">
+        <ChartHeader 
+          data={data}
+          isLoading={isLoading}
+          selectedRange={selectedRange}
+          isTransitioning={isLoadingNewPeriod}
+        />
+        
+        <TimeRangeSelector
+          ranges={TIME_RANGES}
+          selectedRange={selectedRange}
+          onRangeChange={handleRangeChange}
+          disabled={isLoading}
+        />
+
+        <div className="mt-2">
+          <div className={`transition-opacity duration-300 ${isLoadingNewPeriod ? 'opacity-40' : 'opacity-100'}`}>
+            {data ? (
+              <PriceChart 
+                data={data.priceHistory || []}
+                currentPrice={data.currentPrice}
+                priceChange={data.priceChangePercentage24h}
+                days={parseInt(selectedRange)}
+                selectedRange={selectedRange}
+                isFirstLoad={!isLoadingNewPeriod && isLoading}
+              />
+            ) : isLoading ? (
+              <LoadingState />
+            ) : (
+              <div className="text-center text-muted-foreground p-8">
+                No data available
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Caption */}
+      {/* <p className="text-sm text-muted-foreground max-w-xl text-left mt-8 leading-relaxed">
+        An interactive price chart with real time data via the CoinGecko API.
+      </p> */}
     </div>
   );
 }

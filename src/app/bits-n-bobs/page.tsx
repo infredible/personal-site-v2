@@ -22,12 +22,9 @@ export default function BitsNBobsPage() {
         setSelectedPrototype(prototypeParam);
       }
     } else {
-      // Default to first featured prototype
+      // Default to first prototype
       const allPrototypes = getAllPrototypes();
-      const featured = allPrototypes.find(p => p.metadata.featured);
-      if (featured) {
-        setSelectedPrototype(featured.id);
-      } else if (allPrototypes.length > 0) {
+      if (allPrototypes.length > 0) {
         setSelectedPrototype(allPrototypes[0].id);
       }
     }
