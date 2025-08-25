@@ -24,8 +24,6 @@ interface InnerChartProps {
 
 interface PriceChartProps {
   data: PricePoint[];
-  currentPrice: number | null;
-  priceChange: number | null;
   days: number;
   selectedRange: string;
   isFirstLoad: boolean;
@@ -97,7 +95,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
   const innerHeight = height - margin.top - margin.bottom;
 
   // Validate and transform data
-  const validData = data
+  const validData = useMemo(() => data
     .filter(d => 
       d && 
       typeof d.price === 'number' && 
@@ -111,7 +109,17 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
       ...d,
       date: d.date instanceof Date ? d.date : new Date(d.timestamp)
     }))
-    .filter(d => !isNaN(d.date.getTime()));
+    .filter(d => !isNaN(d.date.getTime())), [data]);
+
+  // Create scales
+  const dateScale = useMemo(
+    () =>
+      scaleTime({
+        range: [0, innerWidth],
+        domain: extent(validData, getDate) as [Date, Date],
+      }),
+    [validData, innerWidth]
+  );
 
   // Don't render if we don't have enough valid data
   if (validData.length < 2 || innerWidth <= 0 || innerHeight <= 0) {
@@ -124,16 +132,6 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
       </div>
     );
   }
-
-  // Create scales
-  const dateScale = useMemo(
-    () =>
-      scaleTime({
-        range: [0, innerWidth],
-        domain: extent(validData, getDate) as [Date, Date],
-      }),
-    [validData, innerWidth]
-  );
 
   const minPrice = min(validData, getPrice) || 0;
   const maxPrice = max(validData, getPrice) || 0;
@@ -149,7 +147,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
         ],
         nice: true,
       }),
-    [validData, innerHeight, minPrice, maxPrice, pricePadding]
+    [innerHeight, minPrice, maxPrice, pricePadding]
   );
 
   // Colors for SVG - need to use actual color values for SVG compatibility
@@ -644,7 +642,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
 }
 
 // The main component that handles responsive behavior
-export function PriceChart({ data, currentPrice, priceChange, days, selectedRange, isFirstLoad }: PriceChartProps) {
+export function PriceChart({ data, days, isFirstLoad }: PriceChartProps) {
   // Calculate change based on selected time period for color determination
   const calculatePeriodChange = (data: PricePoint[]) => {
     if (!data || data.length < 2) return 0;

@@ -4,10 +4,10 @@ import { Prototype } from '@/app/lib/prototypes';
 
 interface PrototypeCanvasProps {
   prototype: Prototype | null;
-  drawerOpen: boolean;
+  drawerOpen?: boolean; // Made optional since it's not used
 }
 
-export function PrototypeCanvas({ prototype, drawerOpen }: PrototypeCanvasProps) {
+export function PrototypeCanvas({ prototype }: PrototypeCanvasProps) {
   if (!prototype) {
     return (
       <div

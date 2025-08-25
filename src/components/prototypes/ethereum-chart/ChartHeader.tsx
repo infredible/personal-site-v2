@@ -11,7 +11,7 @@ interface ChartHeaderProps {
   isTransitioning: boolean;
 }
 
-export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }: ChartHeaderProps) {
+export function ChartHeader({ data, isLoading, selectedRange }: ChartHeaderProps) {
   const formatPrice = (price: number | null) => {
     if (price === null) return '$--,---';
     return new Intl.NumberFormat('en-US', {
@@ -66,7 +66,7 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
   };
 
   // Calculate change based on selected time period
-  const calculatePeriodChange = (data: ETHData | null, selectedRange: string) => {
+  const calculatePeriodChange = (data: ETHData | null) => {
     if (!data || !data.priceHistory || data.priceHistory.length < 2) {
       return { change: null, percentage: null };
     }
@@ -85,7 +85,7 @@ export function ChartHeader({ data, isLoading, selectedRange, isTransitioning }:
     return { change, percentage };
   };
 
-  const periodChange = calculatePeriodChange(data, selectedRange);
+  const periodChange = calculatePeriodChange(data);
   const changeInfo = formatChange(periodChange.change, periodChange.percentage);
 
   return (

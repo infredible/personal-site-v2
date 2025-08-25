@@ -11,7 +11,7 @@ export interface Prototype {
   description: string;
   category: string;
   type: 'component' | 'video' | 'image' | 'embed';
-  component?: ComponentType<any>;
+  component?: ComponentType;
   mediaUrl?: string;
   embedUrl?: string;
 }

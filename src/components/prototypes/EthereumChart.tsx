@@ -65,7 +65,7 @@ export function EthereumChart() {
   // Initial load
   useEffect(() => {
     fetchData(selectedRange, true);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRangeChange = (range: string) => {
     if (range !== selectedRange) {
@@ -116,8 +116,6 @@ export function EthereumChart() {
             {data ? (
               <PriceChart 
                 data={data.priceHistory || []}
-                currentPrice={data.currentPrice}
-                priceChange={data.priceChangePercentage24h}
                 days={parseInt(selectedRange)}
                 selectedRange={selectedRange}
                 isFirstLoad={!isLoadingNewPeriod && isLoading}

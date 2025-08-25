@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronRight, X } from 'lucide-react';
-import { PrototypeCategory, Prototype } from '@/app/lib/prototypes';
+import { PrototypeCategory } from '@/app/lib/prototypes';
 
 interface PrototypeDrawerProps {
   categories: PrototypeCategory[];

@@ -9,7 +9,7 @@ interface DragItem {
 }
 
 export function DragInteractions() {
-  const [items, setItems] = useState<DragItem[]>([
+  const [items] = useState<DragItem[]>([
     { id: '1', text: 'Drag me around', color: 'bg-blue-500' },
     { id: '2', text: 'I can be dragged too', color: 'bg-green-500' },
     { id: '3', text: 'Try dragging this', color: 'bg-purple-500' },
