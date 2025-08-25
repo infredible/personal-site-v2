@@ -108,6 +108,20 @@
   animation: chart-wipe 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Shimmer animation for gradient text */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0%;
+  }
+  100% {
+    background-position: -200% 0%;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
+
 .dark {
   --background: oklch(0.147 0.004 49.25);
   --foreground: oklch(0.985 0.001 106.423);

@@ -129,30 +129,19 @@ export function CryptoChatbox() {
           
           {/* Custom Animated Placeholder */}
           {!isFocused && !inputValue && (
-            <div className="absolute top-4 left-4 pointer-events-none text-base leading-relaxed overflow-hidden">
-              {/* Static gray text as base */}
-              <div className="text-gray-400">
-                What do you want to do onchain today?
-              </div>
-              
-              {/* Animated shimmer overlay */}
-              <motion.div
-                className="absolute top-0 left-0 text-[#FF37C7]"
+            <div className="absolute top-4 left-4 pointer-events-none text-base leading-relaxed">
+              <div
+                className="whitespace-nowrap animate-shimmer"
                 style={{
-                  clipPath: 'inset(0 100% 0 0)',
-                }}
-                animate={{
-                  clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)', 'inset(0 0% 0 100%)'],
-                }}
-                transition={{
-                  duration: 3,
-                  ease: 'easeInOut',
-                  repeat: Infinity,
-                  repeatType: 'loop',
+                  background: 'linear-gradient(90deg, #9ca3af 0%, #9ca3af 40%, #FF37C7 50%, #9ca3af 60%, #9ca3af 100%)',
+                  backgroundSize: '200% 100%',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
                 }}
               >
                 What do you want to do onchain today?
-              </motion.div>
+              </div>
             </div>
           )}
           
