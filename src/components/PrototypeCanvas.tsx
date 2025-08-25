@@ -52,6 +52,7 @@ export function PrototypeCanvas({ prototype }: PrototypeCanvasProps) {
       case 'image':
         return (
           <div className="w-full max-w-4xl mx-auto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={prototype.mediaUrl}
               alt={prototype.title}

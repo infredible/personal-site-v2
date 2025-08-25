@@ -111,7 +111,12 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
     }))
     .filter(d => !isNaN(d.date.getTime())), [data]);
 
-  // Create scales
+  // Calculate price range for scales (before hooks)
+  const minPrice = min(validData, getPrice) || 0;
+  const maxPrice = max(validData, getPrice) || 0;
+  const pricePadding = (maxPrice - minPrice) * 0.1;
+
+  // Create scales (hooks must be called before any early returns)
   const dateScale = useMemo(
     () =>
       scaleTime({
@@ -120,22 +125,6 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
       }),
     [validData, innerWidth]
   );
-
-  // Don't render if we don't have enough valid data
-  if (validData.length < 2 || innerWidth <= 0 || innerHeight <= 0) {
-    return (
-      <div className="w-full h-80 flex items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <div className="text-sm">Loading chart data...</div>
-          <div className="text-xs mt-1">{validData.length} data points available</div>
-        </div>
-      </div>
-    );
-  }
-
-  const minPrice = min(validData, getPrice) || 0;
-  const maxPrice = max(validData, getPrice) || 0;
-  const pricePadding = (maxPrice - minPrice) * 0.1;
 
   const priceScale = useMemo(
     () =>
@@ -149,6 +138,18 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
       }),
     [innerHeight, minPrice, maxPrice, pricePadding]
   );
+
+  // Don't render if we don't have enough valid data
+  if (validData.length < 2 || innerWidth <= 0 || innerHeight <= 0) {
+    return (
+      <div className="w-full h-80 flex items-center justify-center text-muted-foreground">
+        <div className="text-center">
+          <div className="text-sm">Loading chart data...</div>
+          <div className="text-xs mt-1">{validData.length} data points available</div>
+        </div>
+      </div>
+    );
+  }
 
   // Colors for SVG - need to use actual color values for SVG compatibility
   const positiveColor = '#21C95E'; // Green for gains (chart-2 equivalent)
@@ -222,7 +223,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
   // Generate x-axis ticks with proper edge handling
   const xTickInterval = getTickInterval();
   const rawXTicks = validData
-    .filter((_: PricePoint, i: number) => i % xTickInterval === 0)
+    .filter((_: PricePoint, index: number) => index % xTickInterval === 0)
     .map((d: PricePoint) => d.date);
   
   // Filter out ticks that would be too close to the edges

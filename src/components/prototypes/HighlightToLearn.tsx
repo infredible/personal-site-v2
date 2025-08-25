@@ -19,7 +19,7 @@ export function HighlightToLearn() {
                 Over 150 hooks have already been developed, introducing everything from dynamic fees to automated liquidity management. By allowing developers to build and experiment directly on top of the protocol, hooks enable faster development cycles and stickier integrations. More hooks drive deeper liquidity and more swapping, which strengthen the network effects around the Uniswap Protocol.
               </p>
               <p>
-                The ability for anyone to create hooks has already unlocked tons of creativity – with new features and experiments happening on top of the AMM. We can't wait to see how hook developers continue pushing the edges of DeFi with v4 now live.
+                The ability for anyone to create hooks has already unlocked tons of creativity – with new features and experiments happening on top of the AMM. We can&apos;t wait to see how hook developers continue pushing the edges of DeFi with v4 now live.
               </p>
             </div>
           </div>
