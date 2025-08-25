@@ -89,6 +89,7 @@ export function CryptoChatbox() {
   const [selectedModel, setSelectedModel] = useState('auto');
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSend = () => {
     if (inputValue.trim()) {
@@ -110,21 +111,51 @@ export function CryptoChatbox() {
 
   return (
     <div className="prototype-container flex flex-col items-center min-h-[500px] p-8">
+      {/* Shimmer Animation Styles */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+        
+        .placeholder-shimmer::placeholder {
+          background: linear-gradient(
+            90deg,
+            rgba(156, 163, 175, 1) 0%,
+            rgba(255, 55, 199, 0.8) 50%,
+            rgba(156, 163, 175, 1) 100%
+          );
+          background-size: 200% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shimmer 3s ease-in-out infinite;
+        }
+      `}</style>
+
       {/* Clean, Minimal Chat Interface */}
-      <div className="w-full max-w-3xl space-y-4">
+      <div className="w-full max-w-xl space-y-4">
         {/* Main Input Area */}
         <div className="relative">
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             placeholder="What do you want to do onchain today?"
-            className="w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-2xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none placeholder:text-muted-foreground text-base leading-relaxed"
+            className={`w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-3xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none text-base leading-relaxed ${
+              !isFocused && !inputValue ? 'placeholder-shimmer' : 'placeholder:text-muted-foreground'
+            }`}
             disabled={isTyping}
           />
           
           {/* Controls inside input - bottom left */}
-          <div className="absolute bottom-3 left-3 flex gap-2 items-center">
+          <div className="absolute bottom-5 left-3 flex gap-2 items-center">
             <Dropdown
               label="Network"
               value={selectedNetwork}
@@ -143,7 +174,7 @@ export function CryptoChatbox() {
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || isTyping}
-            className="absolute bottom-3 right-3 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute bottom-5 right-4 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Send message"
           >
             <Send className="w-4 h-4" />
