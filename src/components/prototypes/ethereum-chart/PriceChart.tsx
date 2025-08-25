@@ -623,7 +623,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
             left: Math.min(selectionStart, selectionEnd) + Math.abs(selectionEnd - selectionStart) / 2,
             top: margin.top - 80,
             transform: 'translateX(-50%)',
-            width: '220px',
+            width: '200px',
             userSelect: 'none',
             pointerEvents: 'none',
           }}
