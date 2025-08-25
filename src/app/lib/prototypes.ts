@@ -31,6 +31,14 @@ export const prototypes: PrototypeCategory[] = [
     description: 'Interactive UI components and micro-interactions',
     prototypes: [
       {
+        id: 'highlight-to-learn',
+        title: 'Highlight to Learn',
+        description: 'AI-powered contextual explanations for highlighted text',
+        category: 'interaction-design',
+        type: 'component',
+        component: HighlightToLearn,
+      },
+      {
         id: 'eth-price-chart',
         title: 'Lil\' Price Chart',
         description: 'Real-time Ethereum price visualization with CoinGecko API integration',
@@ -45,14 +53,6 @@ export const prototypes: PrototypeCategory[] = [
         category: 'interaction-design',
         type: 'component',
         component: DragInteractions,
-      },
-      {
-        id: 'highlight-to-learn',
-        title: 'Highlight to Learn',
-        description: 'AI-powered contextual explanations for highlighted text',
-        category: 'interaction-design',
-        type: 'component',
-        component: HighlightToLearn,
       },
     ],
   },
