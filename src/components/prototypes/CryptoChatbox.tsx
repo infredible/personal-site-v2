@@ -40,13 +40,11 @@ function Dropdown({ label, value, options, onSelect, className = '' }: DropdownP
     <div className={`relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-muted rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-base">{selectedOption?.icon}</span>
-          <span>{selectedOption?.name}</span>
-        </div>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="text-sm">{selectedOption?.icon}</span>
+        <span>{selectedOption?.name}</span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
@@ -58,7 +56,7 @@ function Dropdown({ label, value, options, onSelect, className = '' }: DropdownP
           />
           
           {/* Dropdown menu */}
-          <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-20 min-w-[200px] max-h-60 overflow-y-auto">
             {options.map((option) => (
               <button
                 key={option.id}
@@ -66,19 +64,14 @@ function Dropdown({ label, value, options, onSelect, className = '' }: DropdownP
                   onSelect(option.id);
                   setIsOpen(false);
                 }}
-                className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg"
               >
-                <span className="text-base mt-0.5">{option.icon}</span>
+                <span className="text-sm">{option.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm">{option.name}</div>
-                  {'description' in option && (
+                  {'description' in option && option.description && (
                     <div className="text-xs text-muted-foreground mt-0.5">
                       {option.description}
-                    </div>
-                  )}
-                  {'color' in option && option.id !== 'all' && (
-                    <div className={`text-xs mt-0.5 ${option.color}`}>
-                      Network
                     </div>
                   )}
                 </div>
@@ -117,70 +110,61 @@ export function CryptoChatbox() {
 
   return (
     <div className="prototype-container flex flex-col items-center min-h-[500px] p-8">
-      {/* Main Chat Interface */}
-      <div className="w-full max-w-2xl bg-background rounded-xl border border-border shadow-xs">
-        {/* Header */}
-        <div className="p-6 border-b border-border">
-          <h3 className="text-lg font-medium">Crypto AI Assistant</h3>
+      {/* Clean, Minimal Chat Interface */}
+      <div className="w-full max-w-3xl space-y-4">
+        {/* Main Input Area */}
+        <div className="relative">
+          <textarea
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="What do you want to do onchain today?"
+            className="w-full min-h-[80px] p-4 pr-12 bg-background border border-border rounded-2xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none placeholder:text-muted-foreground text-base leading-relaxed"
+            disabled={isTyping}
+          />
+          
+          {/* Send Button */}
+          <button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || isTyping}
+            className="absolute bottom-3 right-3 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Send message"
+          >
+            <Send className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Chat Input Area */}
-        <div className="p-6">
-          <div className="relative mb-4">
-            <textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="What do you want to do onchain today?"
-              className="w-full min-h-[120px] p-4 pr-12 bg-muted rounded-lg border-0 resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none placeholder:text-muted-foreground text-sm leading-relaxed"
-              disabled={isTyping}
-            />
-            
-            {/* Send Button */}
-            <button
-              onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping}
-              className="absolute bottom-3 right-3 p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Send message"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Controls underneath - pill-shaped buttons */}
+        <div className="flex gap-3 items-center">
+          <Dropdown
+            label="Network"
+            value={selectedNetwork}
+            options={NETWORKS}
+            onSelect={setSelectedNetwork}
+          />
+          <Dropdown
+            label="Model"
+            value={selectedModel}
+            options={AI_MODELS}
+            onSelect={setSelectedModel}
+          />
+        </div>
 
-          {/* Controls underneath input - aligned left */}
-          <div className="flex gap-3 items-start">
-            <Dropdown
-              label="Network"
-              value={selectedNetwork}
-              options={NETWORKS}
-              onSelect={setSelectedNetwork}
-              className="w-48"
-            />
-            <Dropdown
-              label="Model"
-              value={selectedModel}
-              options={AI_MODELS}
-              onSelect={setSelectedModel}
-              className="w-48"
-            />
-          </div>
-
-          {/* Status indicator */}
-          {isTyping && (
-            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-              <span>AI is thinking...</span>
+        {/* Status indicator */}
+        {isTyping && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-          )}
-        </div>
+            <span>AI is thinking...</span>
+          </div>
+        )}
       </div>
 
       {/* Caption */}
-      <p className="text-sm text-muted-foreground max-w-2xl text-left mt-8 leading-relaxed">
+      <p className="text-sm text-muted-foreground max-w-3xl text-left mt-12 leading-relaxed">
         A crypto-focused AI chat interface with network and model selection. Explores conversational UX patterns for blockchain interactions and multi-model AI assistance.
       </p>
     </div>
