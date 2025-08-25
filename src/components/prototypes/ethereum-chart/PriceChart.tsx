@@ -211,6 +211,35 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
     }
   };
 
+  // Smart format for selection range tooltip
+  const formatSelectionDateRange = (startDate: Date, endDate: Date) => {
+    const timeDiffHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+    
+    // For 1-day charts
+    if (days === 1) {
+      // If same day, show time range only
+      if (format(startDate, 'MMM d') === format(endDate, 'MMM d')) {
+        return `${format(startDate, 'h:mm a')} - ${format(endDate, 'h:mm a')}`;
+      } else {
+        // Different days, show full format
+        return `${format(startDate, 'MMM d, h:mm a')} - ${format(endDate, 'MMM d, h:mm a')}`;
+      }
+    }
+    
+    // For weekly charts, show time if selection is less than 12 hours
+    if (days <= 7 && timeDiffHours < 12) {
+      return `${format(startDate, 'MMM d, h:mm a')} - ${format(endDate, 'MMM d, h:mm a')}`;
+    }
+    
+    // For longer periods or larger selections, show date only
+    if (days <= 30) {
+      return `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}`;
+    }
+    
+    // For very long periods, show full date
+    return `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`;
+  };
+
   // Calculate how many ticks to show based on chart width
   const getTickInterval = () => {
     const dataLength = validData.length;
@@ -600,7 +629,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
           }}
         >
           <div className="text-muted-foreground mb-1 text-left">
-            {formatTooltipDate(selectionData.startPoint.date)} - {formatTooltipDate(selectionData.endPoint.date)}
+            {formatSelectionDateRange(selectionData.startPoint.date, selectionData.endPoint.date)}
           </div>
           <div className="space-y-1">
             <div className="flex justify-between">
