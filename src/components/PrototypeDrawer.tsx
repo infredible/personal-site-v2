@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronRight, X } from 'lucide-react';
-import { PrototypeCategory } from '@/app/lib/prototypes';
+import { Prototype } from '@/app/lib/prototypes';
 
 interface PrototypeDrawerProps {
-  categories: PrototypeCategory[];
+  prototypes: Prototype[];
   selectedPrototype: string | null;
   onSelectPrototype: (prototypeId: string) => void;
 }
 
-export function PrototypeDrawer({ categories, selectedPrototype, onSelectPrototype }: PrototypeDrawerProps) {
+export function PrototypeDrawer({ prototypes, selectedPrototype, onSelectPrototype }: PrototypeDrawerProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   // Load drawer state from localStorage
@@ -26,8 +26,7 @@ export function PrototypeDrawer({ categories, selectedPrototype, onSelectPrototy
     localStorage.setItem('prototype-drawer-open', JSON.stringify(isOpen));
   }, [isOpen]);
 
-  // Flatten all prototypes from all categories
-  const allPrototypes = categories.flatMap(category => category.prototypes);
+
 
   return (
     <>
@@ -55,7 +54,7 @@ export function PrototypeDrawer({ categories, selectedPrototype, onSelectPrototy
         {/* Prototypes List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-2">
-            {allPrototypes.map((prototype) => (
+            {prototypes.map((prototype) => (
               <button
                 key={prototype.id}
                 onClick={() => onSelectPrototype(prototype.id)}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react';
-import { getCategories, getPrototype, getAllPrototypes } from '@/app/lib/prototypes';
+import { getAllPrototypes, getPrototype } from '@/app/lib/prototypes';
 import { PrototypeDrawer } from '@/components/PrototypeDrawer';
 import { PrototypeCanvas } from '@/components/PrototypeCanvas';
 import { PageTransition, FloatingBackButton } from '@/components';
@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 
 function PlaygroundContent() {
   const searchParams = useSearchParams();
-  const categories = getCategories();
+  const prototypes = getAllPrototypes();
   const [selectedPrototype, setSelectedPrototype] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(true);
 
@@ -23,12 +23,11 @@ function PlaygroundContent() {
       }
     } else {
       // Default to first prototype
-      const allPrototypes = getAllPrototypes();
-      if (allPrototypes.length > 0) {
-        setSelectedPrototype(allPrototypes[0].id);
+      if (prototypes.length > 0) {
+        setSelectedPrototype(prototypes[0].id);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, prototypes]);
 
   // Update URL when prototype changes
   const handleSelectPrototype = (prototypeId: string) => {
@@ -66,7 +65,7 @@ function PlaygroundContent() {
         
         {/* Drawer */}
         <PrototypeDrawer
-          categories={categories}
+          prototypes={prototypes}
           selectedPrototype={selectedPrototype}
           onSelectPrototype={handleSelectPrototype}
         />
