@@ -119,11 +119,27 @@ export function CryptoChatbox() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="What do you want to do onchain today?"
-            className="w-full min-h-[80px] p-4 pr-12 bg-background border border-border rounded-2xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none placeholder:text-muted-foreground text-base leading-relaxed"
+            className="w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-2xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none placeholder:text-muted-foreground text-base leading-relaxed"
             disabled={isTyping}
           />
           
-          {/* Send Button */}
+          {/* Controls inside input - bottom left */}
+          <div className="absolute bottom-3 left-3 flex gap-2 items-center">
+            <Dropdown
+              label="Network"
+              value={selectedNetwork}
+              options={NETWORKS}
+              onSelect={setSelectedNetwork}
+            />
+            <Dropdown
+              label="Model"
+              value={selectedModel}
+              options={AI_MODELS}
+              onSelect={setSelectedModel}
+            />
+          </div>
+          
+          {/* Send Button - bottom right */}
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || isTyping}
@@ -132,22 +148,6 @@ export function CryptoChatbox() {
           >
             <Send className="w-4 h-4" />
           </button>
-        </div>
-
-        {/* Controls underneath - pill-shaped buttons */}
-        <div className="flex gap-3 items-center">
-          <Dropdown
-            label="Network"
-            value={selectedNetwork}
-            options={NETWORKS}
-            onSelect={setSelectedNetwork}
-          />
-          <Dropdown
-            label="Model"
-            value={selectedModel}
-            options={AI_MODELS}
-            onSelect={setSelectedModel}
-          />
         </div>
 
         {/* Status indicator */}
