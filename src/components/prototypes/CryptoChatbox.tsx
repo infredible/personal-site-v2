@@ -133,7 +133,7 @@ export function CryptoChatbox() {
               <div
                 className="whitespace-nowrap animate-shimmer"
                 style={{
-                  background: 'linear-gradient(90deg, #9ca3af 0%, #9ca3af 40%, #FF37C7 50%, #9ca3af 60%, #9ca3af 100%)',
+                  background: 'linear-gradient(90deg, #9ca3af 0%, #9ca3af 20%, #FF37C7 35%, #FF37C7 65%, #9ca3af 80%, #9ca3af 100%)',
                   backgroundSize: '200% 100%',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',

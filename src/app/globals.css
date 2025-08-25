@@ -119,7 +119,7 @@
 }
 
 .animate-shimmer {
-  animation: shimmer 3s linear infinite;
+  animation: shimmer 5s ease-in-out infinite;
 }
 
 .dark {
