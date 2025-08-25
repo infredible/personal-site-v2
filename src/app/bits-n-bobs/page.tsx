@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { getCategories, getPrototype, getAllPrototypes } from '@/app/lib/prototypes';
 import { PrototypeDrawer } from '@/components/PrototypeDrawer';
 import { PrototypeCanvas } from '@/components/PrototypeCanvas';
 import { PageTransition, FloatingBackButton } from '@/components';
 import { useSearchParams } from 'next/navigation';
 
-export default function BitsNBobsPage() {
+function BitsNBobsContent() {
   const searchParams = useSearchParams();
   const categories = getCategories();
   const [selectedPrototype, setSelectedPrototype] = useState<string | null>(null);
@@ -78,5 +78,20 @@ export default function BitsNBobsPage() {
         />
       </div>
     </PageTransition>
+  );
+}
+
+export default function BitsNBobsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-medium mb-2">Loading prototypes...</div>
+          <div className="text-sm text-muted-foreground">Preparing your creative experiments</div>
+        </div>
+      </div>
+    }>
+      <BitsNBobsContent />
+    </Suspense>
   );
 }
