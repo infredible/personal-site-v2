@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronDown, Send } from 'lucide-react';
 
 // Network configurations
@@ -111,32 +112,6 @@ export function CryptoChatbox() {
 
   return (
     <div className="prototype-container flex flex-col items-center min-h-[500px] p-8">
-      {/* Shimmer Animation Styles */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            background-position: -200% 0;
-          }
-          100% {
-            background-position: 200% 0;
-          }
-        }
-        
-        .placeholder-shimmer::placeholder {
-          background: linear-gradient(
-            90deg,
-            rgba(156, 163, 175, 1) 0%,
-            rgba(255, 55, 199, 0.8) 50%,
-            rgba(156, 163, 175, 1) 100%
-          );
-          background-size: 200% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: shimmer 3s ease-in-out infinite;
-        }
-      `}</style>
-
       {/* Clean, Minimal Chat Interface */}
       <div className="w-full max-w-xl space-y-4">
         {/* Main Input Area */}
@@ -147,12 +122,33 @@ export function CryptoChatbox() {
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="What do you want to do onchain today?"
-            className={`w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-3xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none text-base leading-relaxed ${
-              !isFocused && !inputValue ? 'placeholder-shimmer' : 'placeholder:text-muted-foreground'
-            }`}
+            placeholder=""
+            className="w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-3xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none text-base leading-relaxed"
             disabled={isTyping}
           />
+          
+          {/* Custom Animated Placeholder */}
+          {!isFocused && !inputValue && (
+            <div className="absolute top-4 left-4 pointer-events-none text-base leading-relaxed overflow-hidden">
+              <motion.div
+                className="bg-gradient-to-r from-gray-400 via-[#FF37C7] to-gray-400 bg-clip-text text-transparent"
+                style={{
+                  backgroundSize: '200% 100%',
+                }}
+                animate={{
+                  backgroundPosition: ['0% 50%', '200% 50%'],
+                }}
+                transition={{
+                  duration: 3,
+                  ease: 'easeInOut',
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                }}
+              >
+                What do you want to do onchain today?
+              </motion.div>
+            </div>
+          )}
           
           {/* Controls inside input - bottom left */}
           <div className="absolute bottom-5 left-3 flex gap-2 items-center">
