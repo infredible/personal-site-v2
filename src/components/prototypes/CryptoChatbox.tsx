@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ArrowUpFromDot, Shuffle } from 'lucide-react';
 
 // Network configurations
 const NETWORKS = [
@@ -17,7 +17,7 @@ const NETWORKS = [
 
 // AI Model configurations  
 const AI_MODELS = [
-  { id: 'auto', name: 'Auto', description: 'Best model for the task', icon: '✨' },
+  { id: 'auto', name: 'Auto', description: 'Best model for the task', icon: <Shuffle className="w-3 h-3" /> },
   { id: 'gpt-5', name: 'GPT-5', description: 'Latest OpenAI model', icon: '🤖' },
   { id: 'gpt-4', name: 'GPT-4', description: 'Advanced reasoning', icon: '🧠' },
   { id: 'gpt-4o', name: 'GPT-4o', description: 'Optimized for speed', icon: '⚡' },
@@ -124,24 +124,31 @@ export function CryptoChatbox() {
             onBlur={() => setIsFocused(false)}
             placeholder=""
             className="w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-3xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none text-base leading-relaxed"
+            style={{ caretColor: '#FF37C7' }}
             disabled={isTyping}
           />
           
-          {/* Custom Animated Placeholder */}
-          {!isFocused && !inputValue && (
+          {/* Custom Placeholder - with or without shimmer */}
+          {!inputValue && (
             <div className="absolute top-4 left-4 pointer-events-none text-base leading-relaxed">
-              <div
-                className="whitespace-nowrap animate-shimmer"
-                style={{
-                  background: 'linear-gradient(90deg, #9ca3af 0%, #9ca3af 20%, #FF37C7 35%, #FF37C7 65%, #9ca3af 80%, #9ca3af 100%)',
-                  backgroundSize: '200% 100%',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
-                }}
-              >
-                What do you want to do onchain today?
-              </div>
+              {!isFocused ? (
+                <div
+                  className="whitespace-nowrap animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, #9ca3af 0%, #9ca3af 20%, #FF37C7 35%, #FF37C7 65%, #9ca3af 80%, #9ca3af 100%)',
+                    backgroundSize: '200% 100%',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent',
+                  }}
+                >
+                  What do you want to do onchain today?
+                </div>
+              ) : (
+                <div className="whitespace-nowrap text-gray-400">
+                  What do you want to do onchain today?
+                </div>
+              )}
             </div>
           )}
           
@@ -161,15 +168,40 @@ export function CryptoChatbox() {
             />
           </div>
           
-          {/* Send Button - bottom right */}
-          <button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isTyping}
-            className="absolute bottom-5 right-4 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Send message"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+          {/* Send Button - bottom right (animated) */}
+          <AnimatePresence>
+            {inputValue.trim() && (
+              <motion.button
+                onClick={handleSend}
+                disabled={isTyping}
+                className="absolute bottom-5 right-4 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Send message"
+                initial={{ 
+                  scale: .8, 
+                  rotate: 90,
+                  opacity: 0
+                }}
+                animate={{ 
+                  scale: 1, 
+                  rotate: 0,
+                  opacity: 1
+                }}
+                exit={{ 
+                  scale: .8, 
+                  rotate: 90,
+                  opacity: 0
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 24,
+                  duration: 0.24
+                }}
+              >
+                <ArrowUpFromDot className="w-4 h-4" />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Status indicator */}
