@@ -227,7 +227,7 @@ function InnerChart({ data, width, height, isPositiveChange, days, isFirstLoad }
     .map((d: PricePoint) => d.date);
   
   // Filter out ticks that would be too close to the edges
-  const xTicks = rawXTicks.filter((timestamp: Date, i: number) => {
+  const xTicks = rawXTicks.filter((timestamp: Date) => {
     const xPos = dateScale(timestamp);
     // Skip ticks that are within 30px of the left edge
     if (xPos < 30) return false;
