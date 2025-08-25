@@ -113,16 +113,13 @@
   0% {
     background-position: 200% 0%;
   }
-  75% {
-    background-position: -50% 0%;
-  }
-  75.1%, 100% {
-    background-position: -50% 0%;
+  100% {
+    background-position: -200% 0%;
   }
 }
 
 .animate-shimmer {
-  animation: shimmer 4s linear infinite;
+  animation: shimmer 6s linear infinite;
 }
 
 .dark {
