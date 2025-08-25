@@ -7,7 +7,7 @@ import { PrototypeCanvas } from '@/components/PrototypeCanvas';
 import { PageTransition, FloatingBackButton } from '@/components';
 import { useSearchParams } from 'next/navigation';
 
-function BitsNBobsContent() {
+function PlaygroundContent() {
   const searchParams = useSearchParams();
   const categories = getCategories();
   const [selectedPrototype, setSelectedPrototype] = useState<string | null>(null);
@@ -81,7 +81,7 @@ function BitsNBobsContent() {
   );
 }
 
-export default function BitsNBobsPage() {
+export default function PlaygroundPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
@@ -91,7 +91,7 @@ export default function BitsNBobsPage() {
         </div>
       </div>
     }>
-      <BitsNBobsContent />
+      <PlaygroundContent />
     </Suspense>
   );
 }

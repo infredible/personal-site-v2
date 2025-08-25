@@ -41,7 +41,7 @@ export function PrototypeDrawer({ categories, selectedPrototype, onSelectPrototy
         {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">Bits n Bobs</h2>
+            <h2 className="text-lg font-medium">Playground</h2>
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 rounded-md hover:bg-muted transition-colors"

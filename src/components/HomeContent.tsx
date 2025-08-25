@@ -81,8 +81,8 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
               More
               <ArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
-            <Link href="/bits-n-bobs" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
-              Bits-n-Bobs
+            <Link href="/playground" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
+              Playground
               <ArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
           </nav>
