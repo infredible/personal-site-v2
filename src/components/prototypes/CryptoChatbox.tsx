@@ -121,30 +121,12 @@ export function CryptoChatbox() {
       <div className="w-full max-w-2xl bg-background rounded-xl border border-border shadow-xs">
         {/* Header */}
         <div className="p-6 border-b border-border">
-          <h3 className="text-lg font-medium mb-4">Crypto AI Assistant</h3>
-          
-          {/* Control Row */}
-          <div className="flex gap-3">
-            <Dropdown
-              label="Network"
-              value={selectedNetwork}
-              options={NETWORKS}
-              onSelect={setSelectedNetwork}
-              className="flex-1"
-            />
-            <Dropdown
-              label="Model"
-              value={selectedModel}
-              options={AI_MODELS}
-              onSelect={setSelectedModel}
-              className="flex-1"
-            />
-          </div>
+          <h3 className="text-lg font-medium">Crypto AI Assistant</h3>
         </div>
 
         {/* Chat Input Area */}
         <div className="p-6">
-          <div className="relative">
+          <div className="relative mb-4">
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -165,9 +147,27 @@ export function CryptoChatbox() {
             </button>
           </div>
 
+          {/* Controls underneath input - aligned left */}
+          <div className="flex gap-3 items-start">
+            <Dropdown
+              label="Network"
+              value={selectedNetwork}
+              options={NETWORKS}
+              onSelect={setSelectedNetwork}
+              className="w-48"
+            />
+            <Dropdown
+              label="Model"
+              value={selectedModel}
+              options={AI_MODELS}
+              onSelect={setSelectedModel}
+              className="w-48"
+            />
+          </div>
+
           {/* Status indicator */}
           {isTyping && (
-            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
