@@ -41,7 +41,7 @@ function Dropdown({ label, value, options, onSelect, className = '' }: DropdownP
     <div className={`relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 hover:scale-102 active:scale-98 transition-all cursor-pointer"
       >
         <span className="text-sm">{selectedOption?.icon}</span>
         <span>{selectedOption?.name}</span>
@@ -65,7 +65,7 @@ function Dropdown({ label, value, options, onSelect, className = '' }: DropdownP
                   onSelect(option.id);
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted hover:scale-102 active:scale-98 transition-all first:rounded-t-lg last:rounded-b-lg cursor-pointer"
               >
                 <span className="text-sm">{option.icon}</span>
                 <div className="flex-1 min-w-0">
@@ -123,17 +123,17 @@ export function CryptoChatbox() {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder=""
-            className="w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-3xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none text-base leading-relaxed"
+            className="w-full min-h-[80px] p-4 pb-12 pr-12 bg-background border border-border rounded-3xl resize-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none text-base leading-relaxed cursor-text"
             style={{ caretColor: '#FF37C7' }}
             disabled={isTyping}
           />
           
           {/* Custom Placeholder - with or without shimmer */}
           {!inputValue && (
-            <div className="absolute top-4 left-4 pointer-events-none text-base leading-relaxed">
+            <div className="absolute top-4 left-4 pointer-events-none text-base leading-relaxed z-10">
               {!isFocused ? (
                 <div
-                  className="whitespace-nowrap animate-shimmer"
+                  className="whitespace-nowrap animate-shimmer pointer-events-none"
                   style={{
                     background: 'linear-gradient(90deg, #9ca3af 0%, #9ca3af 20%, #FF37C7 35%, #FF37C7 65%, #9ca3af 80%, #9ca3af 100%)',
                     backgroundSize: '200% 100%',
@@ -145,7 +145,7 @@ export function CryptoChatbox() {
                   What do you want to do onchain today?
                 </div>
               ) : (
-                <div className="whitespace-nowrap text-gray-400">
+                <div className="whitespace-nowrap text-gray-400 pointer-events-none">
                   What do you want to do onchain today?
                 </div>
               )}
@@ -153,7 +153,7 @@ export function CryptoChatbox() {
           )}
           
           {/* Controls inside input - bottom left */}
-          <div className="absolute bottom-5 left-3 flex gap-2 items-center">
+          <div className="absolute bottom-5 left-3 flex gap-2 items-center z-20">
             <Dropdown
               label="Network"
               value={selectedNetwork}
@@ -174,7 +174,7 @@ export function CryptoChatbox() {
               <motion.button
                 onClick={handleSend}
                 disabled={isTyping}
-                className="absolute bottom-5 right-4 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute bottom-5 right-4 p-2 bg-foreground text-background rounded-full hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer z-20"
                 aria-label="Send message"
                 initial={{ 
                   scale: .8, 
