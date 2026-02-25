@@ -7,8 +7,8 @@ function ThemeToggleInner() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50">
-      <div className="theme-toggle-container inline-flex bg-background rounded-full p-1 gap-1 shadow-md border border-input transition-all duration-200">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+      <div className="theme-toggle-container inline-flex bg-input backdrop-blur-sm rounded-full p-1 gap-1 border border-input transition-all duration-200">
         <button
           onClick={() => setTheme("light")}
           className={`theme-toggle-button flex items-center justify-center gap-1 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium select-none tracking-wide cursor-pointer transition-[background-color,box-shadow] duration-200 min-h-[32px] sm:min-h-0 ${

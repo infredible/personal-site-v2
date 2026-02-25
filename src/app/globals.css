@@ -381,25 +381,17 @@
   }
   
   @media (hover: hover) {
-    .theme-toggle-container:hover {
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    }
-    
     .theme-toggle-button:not(.active):hover {
       @apply text-foreground bg-muted;
     }
   }
-  
+
   /* Mobile-specific theme toggle improvements */
   @media (max-width: 640px) {
-    .theme-toggle-container {
-      @apply shadow-lg;
-    }
-    
     .theme-toggle-button:not(.active) {
       @apply bg-muted/10;
     }
-    
+
     .theme-toggle-button:active:not(.active) {
       @apply bg-muted/30;
       transform: scale(0.95);
