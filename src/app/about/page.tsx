@@ -17,7 +17,7 @@ export default function AboutPage() {
             <h1 className="text-3xl font-bold mb-1 font-serif leading-tight">About Me</h1>
           </header>
 
-          <section className="mb-24 space-y-4 text-base">
+          <section className="mb-24 space-y-4 text-base long-form">
             <p>
               I&apos;m a designer and creative technologist that&apos;s been in the game for
               over a decade. I owe my career to the Bay Area where I was born,

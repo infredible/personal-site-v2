@@ -104,7 +104,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     />
                   </div>
                 </div>
-                <h1 className="text-3xl sm:text-5xl mb-12 leading-tight sm:leading-14">{metadata.title}</h1>
+                <h1 className="title-display mb-12 leading-tight">{metadata.title}</h1>
                 <Content.default />
               </div>
             </HighlightableContent>
@@ -130,7 +130,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                       <h3 className="text-sm font-medium mb-1">
                         {project.metadata.title}
                       </h3>
-                      <p className="text-sm">
+                      <p className="text-sm leading-relaxed">
                         {project.metadata.description}
                       </p>
                       {/* <div className="flex items-center mt-2">
