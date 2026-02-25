@@ -40,6 +40,16 @@ const family = localFont({
       weight: "900",
       style: "normal",
     },
+    {
+      path: "../../public/fonts/Family-Regular-Italic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../public/fonts/Family-Bold-Italic.ttf",
+      weight: "700",
+      style: "italic",
+    },
   ],
   variable: "--font-family",
   fallback: ["Georgia", "Times New Roman", "serif"],
