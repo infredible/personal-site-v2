@@ -4,5 +4,5 @@ export const metadata = {
   date: "2025-05-12",
   ogImage: "/posts/vibecoding-2.png",
   tags: ['Tech', 'Design'],
-  featured: true
+  featured: false
 } 
