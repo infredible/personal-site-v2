@@ -75,7 +75,7 @@ export default function AboutPage() {
           <section>
             <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Work Experience</h2>
 
-            <div className="space-y-10 text-sm">
+            <div className="space-y-10 text-sm leading-relaxed">
               {/* Uniswap Labs */}
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
                 <p className="text-muted-foreground">2022 — Now</p>
@@ -134,7 +134,7 @@ export default function AboutPage() {
 
           <section className="mt-16">
             <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Volunteering</h2>
-            <div className="space-y-10 text-sm">
+            <div className="space-y-10 text-sm leading-relaxed">
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
                 <p className="text-muted-foreground">2022 — Now</p>
                 <div className="space-y-1 pt-0.25">
@@ -150,7 +150,7 @@ export default function AboutPage() {
 
           <section className="mt-16">
             <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Education</h2>
-            <div className="space-y-10 text-sm">
+            <div className="space-y-10 text-sm leading-relaxed">
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
                 <p className="text-muted-foreground">2017 — 2017</p>
                 <div className="space-y-1 pt-0.25">

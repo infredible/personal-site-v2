@@ -142,14 +142,19 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
+    font-feature-settings: "kern", "liga", "calt";
   }
-  
+
+  .dark body {
+    -webkit-font-smoothing: auto;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-weight: 500;
   }
 
   p {
-    line-height: 1.5; /* Optimized for mobile reading */
+    line-height: 1.5;
   }
 
   a {
@@ -178,6 +183,11 @@
 
   .title-display {
     font-size: 3rem;
+    letter-spacing: -0.02em;
+  }
+
+  .font-serif {
+    letter-spacing: -0.01em;
   }
   
   .prose {
@@ -187,11 +197,13 @@
   .prose h1 {
     @apply font-bold mb-6 sm:mb-8 font-serif leading-tight;
     font-size: 2.25rem;
+    letter-spacing: -0.015em;
   }
 
   .prose h2 {
     @apply font-bold mt-10 sm:mt-14 mb-6 sm:mb-8 font-serif leading-snug;
     font-size: 1.375rem;
+    letter-spacing: -0.01em;
   }
 
   .prose h3 {
@@ -209,7 +221,7 @@
   }
   
   .prose li {
-    @apply leading-relaxed list-disc list-outside pl-0.5 ml-4 mb-3 sm:mb-6;
+    @apply leading-relaxed list-disc list-outside pl-0.5 ml-4 mb-3 sm:mb-4;
   }
   
   .prose blockquote {
@@ -252,7 +264,7 @@
   }
   
   .prose a {
-    @apply text-foreground underline underline-offset-2 hover:opacity-70 transition-opacity;
+    @apply text-foreground underline underline-offset-4 hover:opacity-70 transition-opacity;
   }
 
   .prose hr {
