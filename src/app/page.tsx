@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImage = ogUrl.toString()
   
   return {
-    title: siteConfig.name,
+    title: siteConfig.title,
     description: siteConfig.description,
     openGraph: {
       title: siteConfig.name,

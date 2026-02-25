@@ -48,7 +48,7 @@ const family = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Fred Zaw",
+  title: "The Website of Fred Zaw",
   description: "Designer at Uniswap Labs unlocking a more free and open financial system.",
   icons: {
     icon: [
