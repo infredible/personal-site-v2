@@ -3,5 +3,5 @@ export const metadata = {
   description: "I tried to complete a couple projects only vibecoding without Figma and this is how it went",
   date: "2025-03-31",
   tags: ['Tech', 'Design'],
-  featured: true
+  featured: false
 } 
