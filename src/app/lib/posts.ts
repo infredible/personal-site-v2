@@ -4,6 +4,7 @@ import { metadata as thoughtsOnBrutalistMetadata } from '@/app/content/posts/tho
 import { metadata as predictionsMetadata } from '@/app/content/posts/2025-predictions.metadata'
 import { metadata as ripMikealMetadata } from '@/app/content/posts/rip-mikeal.metadata'
 import { metadata as gorpcoreAnalysisMetadata } from '@/app/content/posts/gorpcore-analysis.metadata'
+import { metadata as recapMetadata } from '@/app/content/posts/2025-recap.metadata'
 
 export interface PostMetadata {
   title: string
@@ -26,11 +27,12 @@ const metadataLookup: Record<string, PostMetadata> = {
   '2025-predictions': predictionsMetadata,
   'rip-mikeal': ripMikealMetadata,
   'gorpcore-analysis': gorpcoreAnalysisMetadata,
+  '2025-recap': recapMetadata,
 }
 
 export async function getAllPosts(): Promise<Post[]> {
   // Available post slugs
-  const postSlugs = ['vibecoding-at-scale', 'vibecode-no-figma', 'thoughts-on-the-brutalist', '2025-predictions', 'rip-mikeal', 'gorpcore-analysis']
+  const postSlugs = ['vibecoding-at-scale', 'vibecode-no-figma', 'thoughts-on-the-brutalist', '2025-predictions', 'rip-mikeal', 'gorpcore-analysis', '2025-recap']
   
   const posts = postSlugs.map((slug) => {
     const metadata = metadataLookup[slug]
