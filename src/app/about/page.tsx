@@ -12,12 +12,12 @@ export default function AboutPage() {
     <PageTransition>
       <FloatingBackButton />
       <HighlightableContent>
-        <div className="max-w-xl mx-auto px-6 py-24">
+        <div className="max-w-xl mx-auto px-4 sm:px-6 py-24">
           <header className="mb-10 mt-14">
-            <h1 className="text-3xl font-medium mb-1 font-serif">About Me</h1>
+            <h1 className="text-3xl font-bold mb-1 font-serif leading-tight">About Me</h1>
           </header>
 
-          <section className="mb-24 space-y-4 text-base">
+          <section className="mb-24 space-y-4 text-base long-form">
             <p>
               I&apos;m a designer and creative technologist that&apos;s been in the game for
               over a decade. I owe my career to the Bay Area where I was born,
@@ -73,9 +73,9 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-medium font-serif mb-10">Work Experience</h2>
+            <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Work Experience</h2>
 
-            <div className="space-y-10 text-sm">
+            <div className="space-y-10 text-sm leading-relaxed">
               {/* Uniswap Labs */}
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
                 <p className="text-muted-foreground">2022 — Now</p>
@@ -133,8 +133,8 @@ export default function AboutPage() {
           </section>
 
           <section className="mt-16">
-            <h2 className="text-2xl font-medium font-serif mb-10">Volunteering</h2>
-            <div className="space-y-10 text-sm">
+            <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Volunteering</h2>
+            <div className="space-y-10 text-sm leading-relaxed">
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
                 <p className="text-muted-foreground">2022 — Now</p>
                 <div className="space-y-1 pt-0.25">
@@ -149,8 +149,8 @@ export default function AboutPage() {
           </section>
 
           <section className="mt-16">
-            <h2 className="text-2xl font-medium font-serif mb-10">Education</h2>
-            <div className="space-y-10 text-sm">
+            <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Education</h2>
+            <div className="space-y-10 text-sm leading-relaxed">
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
                 <p className="text-muted-foreground">2017 — 2017</p>
                 <div className="space-y-1 pt-0.25">

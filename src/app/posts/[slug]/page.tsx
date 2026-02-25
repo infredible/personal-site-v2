@@ -104,7 +104,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                     />
                   </div>
                 </div>
-                <h1 className="text-5xl mb-12 leading-14">{metadata.title}</h1>
+                <h1 className="title-display mb-12 leading-tight">{metadata.title}</h1>
                 <Content.default />
               </div>
             </HighlightableContent>
@@ -116,7 +116,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           {/* More Posts */}
           {otherPosts.length > 0 && (
             <section className="mt-16 pt-12 border-t border-border">
-              <h2 className="text-lg font-semibold mb-6 font-serif">
+              <h2 className="text-lg font-bold mb-6 font-serif leading-snug">
                 More thoughts
               </h2>
               <div className="space-y-8">
@@ -130,7 +130,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                       <h3 className="text-sm font-medium mb-1">
                         {post.metadata.title}
                       </h3>
-                      <p className="text-sm">
+                      <p className="text-sm leading-relaxed">
                         {post.metadata.description}
                       </p>
                     </div>
