@@ -176,23 +176,23 @@
   }
   
   .prose h1 {
-    @apply font-medium mb-6 sm:mb-8 font-serif;
+    @apply font-bold mb-6 sm:mb-8 font-serif leading-tight;
     font-size: clamp(1.75rem, 4vw, 2.25rem); /* 28px to 36px */
   }
-  
+
   .prose h2 {
-    @apply font-medium mt-10 sm:mt-14 mb-6 sm:mb-8 font-serif;
+    @apply font-bold mt-10 sm:mt-14 mb-6 sm:mb-8 font-serif leading-snug;
     font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px to 24px */
   }
-  
+
   .prose h3 {
-    @apply font-medium mt-6 sm:mt-8 mb-3 sm:mb-4;
+    @apply font-medium mt-6 sm:mt-8 mb-3 sm:mb-4 leading-snug;
     font-size: clamp(1.125rem, 2.5vw, 1.25rem); /* 18px to 20px */
   }
   
   .prose p {
-    @apply mb-4 sm:mb-6 leading-relaxed;
-    line-height: 1.65; /* Optimized for mobile reading */
+    @apply mb-4 sm:mb-6;
+    line-height: 1.65;
   }
   
   .prose ul, .prose ol {
