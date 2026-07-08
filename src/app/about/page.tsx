@@ -86,7 +86,7 @@ export default function AboutPage() {
                 <p className="text-muted-foreground">2026 — Now</p>
                 <div className="space-y-1 pt-0.25">
                   <p className="font-medium">Clay</p>
-                  <p className="text-muted-foreground">Working on AI and agentic capabilities as well as internal tools.</p>
+                  <p className="text-muted-foreground">Working on AI, agentic capabilities, and internal tools.</p>
                 </div>
               </div>
 
