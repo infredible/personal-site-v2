@@ -113,7 +113,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
                 }}
               >
                 <div>
-                  <h3 className="text-base font-medium mb-1">
+                  <h3 className="text-lg font-medium font-serif mb-1">
                     {project.metadata.title}
                   </h3>
                   <p className="text-muted-foreground">{project.metadata.description}</p>
@@ -148,7 +148,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
                 className="block group hover:opacity-70 transition-opacity"
               >
                 <div>
-                  <h3 className="text-base font-medium mb-1">
+                  <h3 className="text-lg font-medium font-serif mb-1">
                     {post.metadata.title}
                   </h3>
                   <p className="text-muted-foreground">{post.metadata.description}</p>
