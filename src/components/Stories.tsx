@@ -221,7 +221,7 @@ export function Stories({ stories }: StoriesProps) {
   const currentStory = stories[currentIndex];
 
   return (
-    <div className="w-full mb-24">
+    <div className="w-full mb-16">
       <div 
         ref={containerRef}
         className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-surface-3 shadow-lg bg-black group"

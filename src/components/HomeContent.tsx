@@ -96,7 +96,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
         {/* Stories Section */}
         <Stories stories={storiesData} />
 
-        <section className="mb-24">
+        <section className="border-t border-border pt-16 mb-16">
           <h2 className="text-2xl font-medium font-serif mb-10 leading-snug">Projects</h2>
           
           <div className="space-y-12">
@@ -137,7 +137,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           </div>
         </section>
 
-        <section className="mb-24">
+        <section className="border-t border-border pt-16 mb-16">
           <h2 className="text-2xl font-medium font-serif mb-10 leading-snug">Thoughts</h2>
           
           <div className="space-y-8">
@@ -176,7 +176,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           </div>
         </section>
 
-        <section className="mb-24">
+        <section className="border-t border-border pt-16 mb-16">
         {/* <footer className="pt-14 border-t"> */}
           <h2 className="text-2xl font-medium font-serif mb-10 leading-snug">Elsewhere</h2>
           <div className="flex flex-col gap-y-2 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-4">
