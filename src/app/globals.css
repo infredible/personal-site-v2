@@ -195,7 +195,8 @@
   }
   
   .prose h1 {
-    @apply font-medium mb-6 sm:mb-8 font-serif leading-tight;
+    @apply mb-6 sm:mb-8 font-serif leading-tight;
+    font-weight: var(--font-weight-medium);
     font-size: 2.25rem;
     letter-spacing: -0.015em;
   }
@@ -206,12 +207,14 @@
   }
 
   .prose .section-label {
-    @apply font-serif italic font-medium block mb-2;
+    @apply font-serif italic block mb-2;
+    font-weight: var(--font-weight-medium);
     font-size: 1.25rem;
   }
 
   .prose h2 {
-    @apply font-medium mt-10 sm:mt-14 mb-6 sm:mb-8 font-serif leading-snug;
+    @apply mt-10 sm:mt-14 mb-6 sm:mb-8 font-serif leading-snug;
+    font-weight: var(--font-weight-medium);
     font-size: 1.9rem;
     letter-spacing: -0.01em;
     text-wrap: balance;
