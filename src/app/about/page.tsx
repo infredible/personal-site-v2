@@ -60,11 +60,16 @@ export default function AboutPage() {
               insights interfaces.
             </p>
             <p>
-              Most recently, I&apos;ve been exploring LLMs and not just how they
-              might influence interfaces for traders but also in how we can, in a
+              At Uniswap, I began exploring LLMs and not just how they might
+              influence interfaces for traders but also in how we can, in a
               scalable manner, leverage them to further blur the lines between
               Design and Engineering in order to bring even higher quality
               interfaces to users.
+            </p>
+            <p>
+              Most recently, I&apos;ve joined <a href="https://clay.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">Clay</a> where I work on AI and
+              agentic capabilities as well as internal tools, continuing to
+              chase that intersection of design, engineering, and applied AI.
             </p>
             <p>
               Outside of work these days, I&apos;m an apprentice winemaker, merging my
@@ -76,9 +81,18 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold font-serif mb-10 leading-snug">Work Experience</h2>
 
             <div className="space-y-10 text-sm leading-relaxed">
+              {/* Clay */}
+              <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
+                <p className="text-muted-foreground">2026 — Now</p>
+                <div className="space-y-1 pt-0.25">
+                  <p className="font-medium">Clay</p>
+                  <p className="text-muted-foreground">Working on AI and agentic capabilities as well as internal tools.</p>
+                </div>
+              </div>
+
               {/* Uniswap Labs */}
               <div className="grid md:grid-cols-[110px_1fr] gap-x-6 gap-y-2">
-                <p className="text-muted-foreground">2022 — Now</p>
+                <p className="text-muted-foreground">2022 — 2026</p>
                 <div className="space-y-1 pt-0.25">
                   <p className="font-medium">Uniswap Labs</p>
                   <p className="text-muted-foreground">Leading design on web, swapping/trading, market data, and liquidity provision.</p>
