@@ -90,7 +90,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                     <span>{formatDate(metadata.date)}</span>
                     {metadata.tags?.length > 0 && (
                       <>
-                        <span>•</span>
+                        <span>·</span>
                         <span>{metadata.tags.join(', ')}</span>
                       </>
                     )}

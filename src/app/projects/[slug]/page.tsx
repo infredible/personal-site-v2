@@ -92,7 +92,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 <div className="flex items-center justify-between prose time-period text-muted-foreground mb-4">
                   <div className="flex items-center gap-2">
                     <div>{metadata.company}</div>
-                    <div>•</div>
+                    <div>·</div>
                     <div>{metadata.date}</div>
                   </div>
                   <div className="copy-actions">
@@ -141,7 +141,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                         />
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground text-sm">{project.metadata.company}</span>
-                          <span className="text-muted-foreground text-sm">•</span>
+                          <span className="text-muted-foreground text-sm">·</span>
                           <span className="text-muted-foreground text-sm">{project.metadata.date}</span>
                         </div>
                       </div> */}

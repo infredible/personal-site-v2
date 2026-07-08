@@ -68,7 +68,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           <h1 className="text-3xl font-medium mb-1 font-serif leading-tight">Fred Zaw</h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground mb-6">Oakland, CA</p>
-            <p className="text-muted-foreground mb-6">•</p>
+            <p className="text-muted-foreground mb-6">·</p>
             <p className="text-muted-foreground mb-6">{weatherDisplay}</p>
           </div>
           
@@ -127,7 +127,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
                     />
                     <div className="flex items-center gap-2 pt-0.25 text-xs">
                       <span className="text-muted-foreground">{project.metadata.company}</span>
-                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">·</span>
                       <span className="text-muted-foreground">{project.metadata.date}</span>
                     </div>
                   </div>
@@ -159,13 +159,13 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
                           <UilMapPin className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                           <span className="text-yellow-600 dark:text-yellow-400 font-medium">Pinned</span>
                         </div>
-                        <span>•</span>
+                        <span>·</span>
                       </>
                     )}
                     <span>{formatDate(post.metadata.date)}</span>
                     {post.metadata.tags?.length > 0 && (
                       <>
-                        <span>•</span>
+                        <span>·</span>
                         <span>{post.metadata.tags.join(', ')}</span>
                       </>
                     )}
