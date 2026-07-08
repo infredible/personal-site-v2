@@ -4,6 +4,7 @@ import { EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider, ThemeToggle, PageTransitionWrapper, SafariThemeUpdater } from "../components";
 import { Analytics } from "@vercel/analytics/next"
+import { Agentation } from "agentation"
 
 const untitledSans = localFont({
   src: [
@@ -84,6 +85,7 @@ export default function RootLayout({
           <ThemeToggle />
           <SafariThemeUpdater />
           <Analytics />
+          {process.env.NODE_ENV === "development" && <Agentation />}
         </ThemeProvider>
       </body>
     </html>
