@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Generate OG image for homepage
   const ogUrl = new URL('/api/og', baseUrl)
   ogUrl.searchParams.set('title', siteConfig.name)
-  ogUrl.searchParams.set('subtitle', 'Designer at Uniswap Labs')
+  ogUrl.searchParams.set('subtitle', 'Designer at Clay')
   const ogImage = ogUrl.toString()
   
   return {
