@@ -73,8 +73,8 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           </div>
           
           <p className="text-base">
-            Designer at Uniswap Labs unlocking a more free and open financial system. 
-            Before crypto, worked on a breadth of industries including AI and spatial computing.
+            Designer at <a href="https://clay.com/" target="_blank" rel="noopener noreferrer" className="text-foreground underline">Clay</a> working on AI and agentic capabilities. Previously at <a href="https://uniswap.org/" target="_blank" rel="noopener noreferrer" className="text-foreground underline">Uniswap Labs</a>{" "}
+            unlocking a more free and open financial system, with earlier work spanning AI and spatial computing.
           </p>
           <nav className="mt-1">
             <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
