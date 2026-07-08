@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     // Load the custom fonts and avatar image using fetch (works in Edge Runtime)
     const baseUrl = new URL(request.url).origin;
     
-    const familyBoldResponse = await fetch(`${baseUrl}/fonts/Family-Bold.ttf`);
-    const familyBold = await familyBoldResponse.arrayBuffer();
+    const garamondBoldResponse = await fetch(`${baseUrl}/fonts/EBGaramond-Bold.ttf`);
+    const garamondBold = await garamondBoldResponse.arrayBuffer();
     
     const untitledSansRegularResponse = await fetch(`${baseUrl}/fonts/UntitledSans-Regular.ttf`);
     const untitledSansRegular = await untitledSansRegularResponse.arrayBuffer();
@@ -69,12 +69,12 @@ export async function GET(request: NextRequest) {
             <h1
               style={{
                 fontSize: '80px',
-                fontWeight: '700', // Using bold weight since we loaded Family-Bold
+                fontWeight: '700', // Using bold weight since we loaded EB Garamond Bold
                 color: '#fcfcfc', // oklch(0.985 0.001 106.423) - foreground color
                 lineHeight: '1.2',
                 margin: '0',
                 maxWidth: '900px',
-                fontFamily: 'Family, Georgia, "Times New Roman", serif', // Using Family font first
+                fontFamily: '"EB Garamond", Georgia, "Times New Roman", serif', // Using EB Garamond serif first
               }}
             >
               {title}
@@ -138,8 +138,8 @@ export async function GET(request: NextRequest) {
         height: 630,
         fonts: [
           {
-            name: 'Family',
-            data: familyBold,
+            name: 'EB Garamond',
+            data: garamondBold,
             style: 'normal',
             weight: 700,
           },

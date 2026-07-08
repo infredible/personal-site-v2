@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BookCopy, Check } from 'lucide-react'
+import { UilCopy, UilCheck } from '@iconscout/react-unicons'
 import {
   Tooltip,
   TooltipContent,
@@ -98,7 +98,7 @@ export function CopyMarkdown({ slug, type, title }: CopyMarkdownProps) {
           }}
           aria-label={`Copy ${title} as markdown`}
         >
-          {isCopied ? <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <BookCopy className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
+          {isCopied ? <UilCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <UilCopy className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
         </button>
       </TooltipTrigger>
       <TooltipContent>
