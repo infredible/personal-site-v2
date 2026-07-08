@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { UilAngleLeft, UilAngleRight } from '@iconscout/react-unicons';
 
 interface Story {
   id: string;
@@ -279,7 +279,7 @@ export function Stories({ stories }: StoriesProps) {
             className="p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors cursor-pointer"
             aria-label="Previous story"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <UilAngleLeft className="w-5 h-5" />
           </button>
         </div>
         
@@ -294,7 +294,7 @@ export function Stories({ stories }: StoriesProps) {
             className="p-2 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors cursor-pointer"
             aria-label="Next story"
           >
-            <ChevronRight className="w-5 h-5" />
+            <UilAngleRight className="w-5 h-5" />
           </button>
         </div>
 

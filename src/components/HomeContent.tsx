@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight, ArrowRight, Pin } from "lucide-react";
+import { UilArrowUpRight, UilArrowRight, UilMapPin } from "@iconscout/react-unicons";
 import { formatDate, Post } from "@/app/lib/posts";
 import { Project } from "@/app/lib/projects";
 import { PageTransition, Stories, ProjectPreview } from "@/components";
@@ -79,7 +79,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           <nav className="mt-1">
             <Link href="/about" className="text-sm text-muted-foreground flex items-center gap-1 group h-[32px]">
               More
-              <ArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+              <UilArrowRight className="w-3.5 h-3.5 transition-transform translate-x-[-3px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
           </nav>
         </header>
@@ -156,7 +156,7 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
                     {post.metadata.featured && (
                       <>
                         <div className="flex items-center gap-1">
-                          <Pin className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                          <UilMapPin className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                           <span className="text-yellow-600 dark:text-yellow-400 font-medium">Pinned</span>
                         </div>
                         <span>•</span>
@@ -182,23 +182,23 @@ export function HomeContent({ projects, posts, weatherDisplay, storiesData }: Ho
           <div className="flex flex-col gap-y-2 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-4">
             <Link href="https://x.com/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Twitter
-              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <UilArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
             {/* <Link href="https://read.cv/fredzaw" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Read.cv
-              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <UilArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link> */}
             <Link href="https://www.linkedin.com/in/fredzaw/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               LinkedIn
-              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <UilArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
             <Link href="https://www.instagram.com/_burmaboy/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Instagram
-              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <UilArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
             <Link href="https://app.ens.domains/swappypapi.eth" target="_blank" rel="noopener noreferrer" className="text-muted-foreground flex items-center gap-1 group py-1 sm:py-0">
               Swappypapi.eth
-              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <UilArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           </div>
         {/* </footer> */}

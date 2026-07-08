@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { UilArrowLeft } from '@iconscout/react-unicons'
 import { useEffect, useState } from 'react'
 
 interface FloatingBackButtonProps {
@@ -40,7 +40,7 @@ export function FloatingBackButton({
           aria-label={ariaLabel}
           style={{ WebkitTapHighlightColor: "rgba(0,0,0,0)" }}
         >
-          <ArrowLeft size={16} />
+          <UilArrowLeft size={16} />
           {label}
         </button>
       </div>

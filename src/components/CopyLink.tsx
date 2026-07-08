@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Link, Check } from 'lucide-react'
+import { UilLink, UilCheck } from '@iconscout/react-unicons'
 import {
   Tooltip,
   TooltipContent,
@@ -76,7 +76,7 @@ export function CopyLink({ title }: CopyLinkProps) {
           }}
           aria-label={`Copy link to ${title}`}
         >
-          {isCopied ? <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <Link className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
+          {isCopied ? <UilCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <UilLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
         </button>
       </TooltipTrigger>
       <TooltipContent>

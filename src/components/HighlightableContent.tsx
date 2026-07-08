@@ -1,6 +1,6 @@
 'use client';
 import React, { useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { UilSpin } from "@iconscout/react-unicons";
 
 interface HighlightableContentProps {
   children: React.ReactNode;
@@ -260,14 +260,14 @@ export const HighlightableContent: React.FC<HighlightableContentProps> = ({ chil
               onClick={handleShowExplanation}
               disabled={loading}
             >
-              <Sparkles className="w-3.5 h-3.5 text-popover-foreground" />
+              <UilSpin className="w-3.5 h-3.5 text-popover-foreground" />
               <span>Learn more</span>
             </button>
           ) : (
             // Explanation content
             <div className="max-w-sm">
               <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
-                <Sparkles className="w-3 h-3" />
+                <UilSpin className="w-3 h-3" />
                 <span>Explanation</span>
                 {streaming && (
                   <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
