@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider, ThemeToggle, PageTransitionWrapper, SafariThemeUpdater } from "../components";
 import { Analytics } from "@vercel/analytics/next"
@@ -28,29 +29,10 @@ const untitledSans = localFont({
   preload: true, // Preload the primary font family
 });
 
-const family = localFont({
-  src: [
-    {
-      path: "../../public/fonts/Family-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Family-Heavy.ttf",
-      weight: "900",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Family-Regular-Italic.ttf",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/Family-Bold-Italic.ttf",
-      weight: "700",
-      style: "italic",
-    },
-  ],
+const family = EB_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  style: ["normal", "italic"],
   variable: "--font-family",
   fallback: ["Georgia", "Times New Roman", "serif"],
   display: "swap",
