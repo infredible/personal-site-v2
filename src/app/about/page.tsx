@@ -5,6 +5,9 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About",
   description: "About Fred Zaw",
+  alternates: {
+    canonical: "/about",
+  },
 };
 
 export default function AboutPage() {

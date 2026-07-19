@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider, ThemeToggle, PageTransitionWrapper, SafariThemeUpdater } from "../components";
 import { Analytics } from "@vercel/analytics/next"
 import { Agentation } from "agentation"
+import { siteConfig } from "./config/site"
 
 const untitledSans = localFont({
   src: [
@@ -41,8 +42,9 @@ const family = EB_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "The Website of Fred Zaw",
-  description: "Designer at Clay working on AI and agentic capabilities. Previously at Uniswap Labs unlocking a more free and open financial system, with earlier work spanning AI and spatial computing.",
+  metadataBase: new URL(siteConfig.url),
+  title: siteConfig.title,
+  description: siteConfig.description,
   icons: {
     icon: [
       {

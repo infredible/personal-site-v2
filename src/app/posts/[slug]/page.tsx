@@ -29,6 +29,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
       title: metadata.title,
       description: metadata.description,
+      alternates: {
+        canonical: `/posts/${slug}`,
+      },
       openGraph: {
         title: metadata.title,
         description: metadata.description,
@@ -61,6 +64,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {}
   }
 }
+
+// Only serve slugs registered in lib/posts.ts.
+export const dynamicParams = false
 
 export async function generateStaticParams() {
   const posts = await getAllPosts()
