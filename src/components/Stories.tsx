@@ -70,7 +70,12 @@ export function Stories({ stories }: StoriesProps) {
     try {
       // Check if video is still connected to DOM
       if (!video.isConnected) return;
-      
+
+      // Nothing decodable yet (e.g. hover or arrow click landed mid source
+      // swap). Bail rather than throw — the `canplay` listener in the story
+      // effect starts playback once the source is ready.
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+
       // Wait for any pending play promise to resolve
       if (playPromiseRef.current) {
         try {
@@ -156,9 +161,19 @@ export function Stories({ stories }: StoriesProps) {
     // Reset progress
     setProgress(0);
 
-    // Reset currentTime and start playing
-    video.currentTime = 0;
-    safePlay(video);
+    // Swapping `src` on a live <video> resets its resource selection but does
+    // not reload it, so the element is momentarily sourceless. Seeking or
+    // calling play() in that window throws (NotSupportedError / InvalidState).
+    // Reload explicitly, then wait for a decodable frame before playing.
+    video.load();
+
+    const handleCanPlay = () => {
+      video.currentTime = 0;
+      safePlay(video);
+    };
+
+    video.addEventListener('canplay', handleCanPlay, { once: true });
+    return () => video.removeEventListener('canplay', handleCanPlay);
   }, [currentIndex, videoLoaded]);
 
   // Handle play/pause on hover (only on devices that support hover)
