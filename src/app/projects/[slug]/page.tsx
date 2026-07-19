@@ -33,6 +33,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
       title: metadata.title,
       description: metadata.description,
+      alternates: {
+        canonical: `/projects/${slug}`,
+      },
       openGraph: {
         title: metadata.title,
         description: metadata.description,
@@ -65,6 +68,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {}
   }
 }
+
+// Only serve slugs registered in lib/projects.ts. Without this, unregistered
+// content files (e.g. template.mdx) resolve at request time and get indexed.
+export const dynamicParams = false
 
 export async function generateStaticParams() {
   const projects = await getAllProjects()
