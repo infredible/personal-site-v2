@@ -7,7 +7,8 @@ function ThemeToggleInner() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+    // Hidden while a ShowcaseShell is on the page: its controls bar has its own theme switch
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 [body:has([data-showcase-shell])_&]:hidden">
       <div className="theme-toggle-container inline-flex bg-input backdrop-blur-sm rounded-full p-1 gap-1 border border-input transition-all duration-200">
         <button
           onClick={() => setTheme("light")}

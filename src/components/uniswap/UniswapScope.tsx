@@ -21,9 +21,23 @@ export const uniswapScopeClassName = cn('uniswap', inter.variable)
 interface UniswapScopeProps extends React.ComponentProps<'div'> {
   /** Full showcase page: fills the viewport. Leave off for inline embeds (e.g. in project MDX). */
   fullPage?: boolean
+  /**
+   * Force a theme for this subtree regardless of the site theme (renders
+   * `data-theme`), e.g. to show light and dark frames side by side. Unset, the
+   * scope follows the nearest forced ancestor scope, else the site theme. Also
+   * drives Tailwind's `dark:` variant inside the subtree. Radix portal content
+   * renders outside the subtree: give it the same `data-theme` if it must match.
+   */
+  theme?: 'light' | 'dark'
 }
 
 /** Applies the Uniswap theme to its children. Works as a page wrapper or inline in any page. */
-export function UniswapScope({ fullPage = false, className, ...props }: UniswapScopeProps) {
-  return <div className={cn(uniswapScopeClassName, fullPage && 'min-h-dvh', className)} {...props} />
+export function UniswapScope({ fullPage = false, theme, className, ...props }: UniswapScopeProps) {
+  return (
+    <div
+      data-theme={theme}
+      className={cn(uniswapScopeClassName, fullPage && 'min-h-dvh', className)}
+      {...props}
+    />
+  )
 }

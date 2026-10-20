@@ -10,6 +10,15 @@
  * showcase pages, or inline embeds in project MDX) and by portal content.
  * Inside that scope, shadcn's semantic variables are remapped onto Uniswap
  * tokens, so stock shadcn components pick up the Uniswap look unchanged.
+ *
+ * Theme: a scope follows the site theme (`.dark` on <html>) unless it has
+ * data-theme="light" | "dark" (<UniswapScope theme>), which forces that theme
+ * for its subtree. The light and dark rules below are mutually exclusive:
+ *   - a forced scope takes its own theme,
+ *   - an unforced scope nested inside a forced one declares nothing and
+ *     inherits the forced values (custom properties inherit),
+ *   - any other unforced scope follows the site theme.
+ * So specificity never decides between them, and nesting works either way.
  */
 
 /* Expose tokens as Tailwind utilities: bg-surface2, text-neutral2, rounded-uni-20, p-uni-12, text-heading2... */
@@ -147,6 +156,31 @@
      stand-in; --font-inter is set by UniswapScope. */
   --uni-font-sans: var(--font-inter), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
+  /* shadcn bridge: point shadcn's semantic variables at Uniswap tokens */
+  --background: var(--uni-surface1);
+  --foreground: var(--uni-neutral1);
+  --card: var(--uni-surface1);
+  --card-foreground: var(--uni-neutral1);
+  --popover: var(--uni-surface1);
+  --popover-foreground: var(--uni-neutral1);
+  --primary: var(--uni-accent1);
+  --primary-foreground: #ffffff;
+  --secondary: var(--uni-surface3);
+  --secondary-foreground: var(--uni-neutral1);
+  --muted: var(--uni-surface2);
+  --muted-foreground: var(--uni-neutral2);
+  --accent: var(--uni-surface2Hovered);
+  --accent-foreground: var(--uni-neutral1);
+  --destructive: var(--uni-statusCritical);
+  --border: var(--uni-surface3);
+  --input: var(--uni-surface3);
+  --ring: var(--uni-accent1);
+  --radius: 16px;
+}
+
+/* Light: unforced scopes on a light site, and forced-light scopes */
+.uniswap:not(.dark *, [data-theme], .uniswap[data-theme] *),
+.uniswap[data-theme="light"] {
   /* Light (sporeLight) */
   --uni-neutral1: #131313;
   --uni-neutral1Hovered: rgba(19, 19, 19, 0.83);
@@ -189,30 +223,11 @@
 
   --uni-shadow-short: 0px 1px 6px 2px rgba(0, 0, 0, 0.03), 0px 1px 2px 0px rgba(0, 0, 0, 0.02);
   --uni-shadow-medium: 0px 6px 12px -3px rgba(19, 19, 19, 0.04), 0px 2px 5px -2px rgba(19, 19, 19, 0.03);
-
-  /* shadcn bridge: point shadcn's semantic variables at Uniswap tokens */
-  --background: var(--uni-surface1);
-  --foreground: var(--uni-neutral1);
-  --card: var(--uni-surface1);
-  --card-foreground: var(--uni-neutral1);
-  --popover: var(--uni-surface1);
-  --popover-foreground: var(--uni-neutral1);
-  --primary: var(--uni-accent1);
-  --primary-foreground: #ffffff;
-  --secondary: var(--uni-surface3);
-  --secondary-foreground: var(--uni-neutral1);
-  --muted: var(--uni-surface2);
-  --muted-foreground: var(--uni-neutral2);
-  --accent: var(--uni-surface2Hovered);
-  --accent-foreground: var(--uni-neutral1);
-  --destructive: var(--uni-statusCritical);
-  --border: var(--uni-surface3);
-  --input: var(--uni-surface3);
-  --ring: var(--uni-accent1);
-  --radius: 16px;
 }
 
-.dark .uniswap {
+/* Dark: unforced scopes on a dark site, and forced-dark scopes */
+.dark .uniswap:not([data-theme], .uniswap[data-theme] *),
+.uniswap[data-theme="dark"] {
   /* Dark (sporeDark) */
   --uni-neutral1: #ffffff;
   --uni-neutral1Hovered: rgba(255, 255, 255, 0.85);
@@ -260,13 +275,19 @@
 /* Element styles live in layers so Tailwind utilities on scoped elements always win. */
 @layer base {
   .uniswap {
-    color-scheme: light;
     font-family: var(--uni-font-sans);
     background-color: var(--uni-surface1);
     color: var(--uni-neutral1);
   }
 
-  .dark .uniswap {
+  /* Same selectors as the token rules; nested unforced scopes inherit. */
+  .uniswap:not(.dark *, [data-theme], .uniswap[data-theme] *),
+  .uniswap[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  .dark .uniswap:not([data-theme], .uniswap[data-theme] *),
+  .uniswap[data-theme="dark"] {
     color-scheme: dark;
   }
 }
