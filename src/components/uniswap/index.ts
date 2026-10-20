@@ -7,5 +7,15 @@ export { SegmentedControl } from './SegmentedControl'
 export type { SegmentedControlOption, SegmentedControlProps } from './SegmentedControl'
 export { Pill, pillVariants } from './Pill'
 export { SearchInput } from './SearchInput'
-export { UniModal, UniModalTrigger, UniModalClose, UniModalContent } from './UniModal'
+export {
+  UniModal,
+  UniModalTrigger,
+  UniModalClose,
+  UniModalContent,
+  ModalSurface,
+  PopoverSurface,
+  modalSurfaceClassName,
+  popoverSurfaceClassName,
+} from './UniModal'
+export type { ModalSurfaceProps } from './UniModal'
 export { UniTooltip } from './UniTooltip'
