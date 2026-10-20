@@ -79,6 +79,20 @@ Stories are configured in the `storiesData` array in `src/app/page.tsx` with vid
 - Custom font loading with fallbacks and display swap optimization
 - Responsive image handling via Next.js Image component
 
+## Uniswap Showcase
+
+Design engineering recreations of Uniswap UIs. Shared code lives in `src/components/uniswap/` so it can be used both on showcase pages (`src/app/showcase/uniswap/`) and inline in project MDX.
+
+- **Tokens**: `src/components/uniswap/theme.css` (imported by `globals.css`) holds Uniswap's tokens, ported from `Uniswap/interface` `packages/ui/src/theme`. Values are scoped to `.uniswap`; light on `.uniswap`, dark on `.dark .uniswap`.
+- **Utilities**: Uniswap names are used directly, e.g. `bg-surface2`, `text-neutral2`, `hover:bg-accent1Hovered`, `text-body3`, `text-buttonLabel2`. Radius, spacing, and shadow are px-based and prefixed: `rounded-uni-20`, `p-uni-16`, `gap-uni-8`, `shadow-uni-medium`.
+- **Scope**: wrap usage in `<UniswapScope>` (`fullPage` on showcase pages; without it for inline embeds). Radix portal content renders outside the wrapper, so it must carry `uniswapScopeClassName`; the `Uni*` components already do.
+- **Embeds in MDX**: import directly in the `.mdx` file and wrap in `<UniswapScope>`. `theme.css` resets `.prose` element styles (margins, bullets, serif headings, link underlines) inside the scope.
+- **shadcn bridge**: inside the scope, shadcn variables (`--primary`, `--muted`, `--border`, ...) map to Uniswap tokens. Keep `components/ui/*` stock; Uniswap components compose shadcn primitives when their styling is a usable base, or the underlying Radix primitive when Uniswap's styling replaces it entirely (e.g. `UniButton`, `SegmentedControl`).
+- **Components**: `UniButton` (variant × emphasis × size, from Uniswap's button tables), `SegmentedControl`, `Pill`, `SearchInput`, `UniModal`, `UniTooltip`. Export new ones from `src/components/uniswap/index.ts`.
+- **tailwind-merge**: new custom text/radius/spacing/shadow scales must be registered in `src/lib/utils.ts`, or `cn()` will drop them as conflicts.
+- **Catalog**: `/showcase/uniswap/system` renders every token and component; add new tokens to `_lib/tokens.ts` and component demos to `_components/ComponentGallery.tsx`.
+- **shadcn CLI**: if `npx shadcn@latest add` can't reach the registry, write the stock new-york v4 source by hand and install its Radix dependency from npm.
+
 ## Important Conventions
 
 - Use 'shadcn' package instead of deprecated 'shadcn-ui' (e.g., `npx shadcn@latest add popover`)
