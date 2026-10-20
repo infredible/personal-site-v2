@@ -43,7 +43,7 @@ function SwitchButton({ onClick, disabled = false, hovered = false, className }:
       }}
       className={cn(
         'flex w-fit shrink-0 items-center justify-center rounded-uni-16 border-4 border-surface1 bg-surface2 p-uni-8 text-neutral1 outline-none',
-        'transition-[transform,background-color] duration-100 ease-[cubic-bezier(0.17,0.67,0.45,1)]',
+        'transition-[transform,translate,scale,rotate,background-color] duration-100 ease-[cubic-bezier(0.17,0.67,0.45,1)]',
         'focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-neutral3Hovered',
         interactive ? 'cursor-pointer hover:bg-surface2Hovered active:scale-[0.98]' : 'cursor-default',
         hovered && 'bg-surface2Hovered',

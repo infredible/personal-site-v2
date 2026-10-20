@@ -48,6 +48,13 @@ export interface ShowcaseComponentRenderArgs {
   resetKey: number
 }
 
+export interface ShowcaseLink {
+  href: string
+  label: string
+  /** Icon; on mobile only the icon shows. */
+  icon?: React.ReactNode
+}
+
 export interface ShowcaseShellProps {
   title: string
   /** Small label above the title, e.g. "Uniswap recreation". */
@@ -56,6 +63,8 @@ export interface ShowcaseShellProps {
   backHref?: string
   /** Back link text. Default "Back". */
   backLabel?: string
+  /** Related pages, shown at the end of the bar in both views (e.g. the design system). */
+  links?: ShowcaseLink[]
   /** Shows a preset select in the Component view. */
   presets?: ShowcasePreset[]
   /** Default preset id. Defaults to the first preset. */
@@ -190,6 +199,7 @@ function ShowcaseBar({
   eyebrow,
   backHref = '/',
   backLabel = 'Back',
+  links,
   presets,
   componentControls,
   canvasControls,
@@ -256,6 +266,25 @@ function ShowcaseBar({
               canvasControls
             )}
           </div>
+          {links && links.length > 0 && (
+            <nav aria-label="Related" className="flex shrink-0 items-center gap-2">
+              <span aria-hidden className="h-6 w-px bg-border max-sm:hidden" />
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  title={link.label}
+                  className={cn(
+                    'inline-flex h-[calc(2rem+2px)] shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium tracking-wide text-muted-foreground',
+                    'outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 [&_svg]:size-3.5 [&_svg]:shrink-0',
+                  )}
+                >
+                  {link.icon}
+                  <span className={cn(link.icon && 'max-sm:sr-only')}>{link.label}</span>
+                </Link>
+              ))}
+            </nav>
+          )}
           <ThemeSwitch />
         </div>
       </div>

@@ -38,7 +38,7 @@ function TokenSelectButton({ token, onClick, compact = false, className }: Token
       className={cn(
         'inline-flex h-uni-36 w-fit shrink-0 items-center gap-uni-6 rounded-uni-full border border-surface3Solid px-uni-12',
         'shadow-[0_0_10px_rgba(19,19,19,0.04)] select-none outline-none',
-        'transition-[transform,background-color] duration-100 ease-[cubic-bezier(0.17,0.67,0.45,1)]',
+        'transition-[transform,translate,scale,rotate,background-color] duration-100 ease-[cubic-bezier(0.17,0.67,0.45,1)]',
         'focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-neutral3Hovered',
         token ? 'bg-surface1 text-neutral1' : 'bg-accent1 text-white',
         interactive && 'cursor-pointer active:scale-[0.98]',

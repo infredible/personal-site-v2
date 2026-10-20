@@ -4,6 +4,7 @@ export { ShowcaseShell } from './ShowcaseShell'
 export type {
   ShowcaseShellProps,
   ShowcaseComponentRenderArgs,
+  ShowcaseLink,
   ShowcasePreset,
   ShowcaseView,
   ShowcaseViewport,

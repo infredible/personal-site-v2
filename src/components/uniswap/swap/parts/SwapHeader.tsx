@@ -84,7 +84,7 @@ function SwapSettingsButton({
         aria-hidden
         strokeWidth={2}
         className={cn(
-          'size-uni-20 transition-[transform,color] duration-[80ms] ease-out',
+          'size-uni-20 transition-[transform,translate,scale,rotate,color] duration-[80ms] ease-out',
           'group-hover/gear:rotate-90',
           tone === 'neutral' && 'group-hover/gear:text-neutral2Hovered',
           hovered && 'rotate-90',

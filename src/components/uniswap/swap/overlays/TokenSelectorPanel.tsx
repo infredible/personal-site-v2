@@ -147,7 +147,7 @@ export function TokenSelectorPanel({
                 onClick={() => onSelect?.(token)}
                 className={cn(
                   'flex shrink-0 cursor-pointer items-center gap-uni-8 rounded-uni-full border border-surface3 bg-surface1 py-uni-4 pr-uni-12 pl-uni-4',
-                  'text-buttonLabel2 text-neutral1 outline-none transition-[background-color,border-color,transform] duration-100',
+                  'text-buttonLabel2 text-neutral1 outline-none transition-[background-color,border-color,transform,translate,scale,rotate] duration-100',
                   'hover:border-surface3Hovered hover:bg-surface2 active:scale-[0.98]',
                   'focus-visible:border-surface3Hovered focus-visible:bg-surface2',
                   'disabled:cursor-default disabled:opacity-50 disabled:hover:border-surface3 disabled:hover:bg-surface1',
@@ -227,7 +227,7 @@ function TokenRow({
       aria-current={selected || undefined}
       className={cn(
         'flex cursor-pointer items-center justify-between gap-uni-8 rounded-uni-16 p-uni-8 outline-none select-none',
-        'transition-[background-color,transform] duration-100 active:scale-[0.99]',
+        'transition-[background-color,transform,translate,scale,rotate] duration-100 active:scale-[0.99]',
         'data-[selected=true]:bg-surface2',
         'data-[disabled=true]:cursor-default data-[disabled=true]:opacity-50 data-[disabled=true]:active:scale-100',
       )}
