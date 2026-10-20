@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowDownIcon, ChevronDownIcon, InfoIcon } from 'lucide-react'
+import { ArrowDown, ChevronDown, InfoCircle } from '@/components/uniswap/icons'
 import {
   Pill,
   SearchInput,
@@ -96,10 +96,10 @@ export function ComponentGallery() {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-uni-12">
-          <UniButton icon={<ArrowDownIcon />} emphasis="secondary">
+          <UniButton icon={<ArrowDown />} emphasis="secondary">
             With icon
           </UniButton>
-          <UniButton icon={<ChevronDownIcon />} iconPosition="after" emphasis="tertiary">
+          <UniButton icon={<ChevronDown />} iconPosition="after" emphasis="tertiary">
             Icon after
           </UniButton>
           <UniButton disabled>Disabled</UniButton>
@@ -145,7 +145,7 @@ export function ComponentGallery() {
             Price impact
             <UniTooltip content="The impact your trade has on the market price of this pool.">
               <button type="button" className="text-neutral3 hover:text-neutral2 cursor-pointer" aria-label="About price impact">
-                <InfoIcon className="size-uni-16" />
+                <InfoCircle className="size-uni-16" />
               </button>
             </UniTooltip>
           </div>
@@ -156,7 +156,7 @@ export function ComponentGallery() {
         <Demo title="UniModal + Command" description="Preview of the token selector: shadcn dialog parts and cmdk.">
           <UniModal>
             <UniModalTrigger asChild>
-              <UniButton emphasis="secondary" icon={<ChevronDownIcon />} iconPosition="after" className="self-start">
+              <UniButton emphasis="secondary" icon={<ChevronDown />} iconPosition="after" className="self-start">
                 Select token
               </UniButton>
             </UniModalTrigger>
