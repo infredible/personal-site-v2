@@ -1,0 +1,267 @@
+/*
+ * Uniswap design tokens, scoped to the showcase.
+ *
+ * Values are ported from Uniswap's open-source interface repo
+ * (packages/ui/src/theme: color/colors.ts, fonts.ts, borderRadii.ts,
+ * spacing.ts, shadows.ts). Token names are kept identical so components
+ * here read the same way Uniswap's code does.
+ *
+ * Everything is scoped under `.uniswap`, which the showcase layout applies.
+ * Inside that scope, shadcn's semantic variables are remapped onto Uniswap
+ * tokens, so stock shadcn components pick up the Uniswap look unchanged.
+ */
+
+/* Expose tokens as Tailwind utilities: bg-surface2, text-neutral2, rounded-uni-20, p-uni-12, text-heading2... */
+@theme inline {
+  --color-neutral1: var(--uni-neutral1);
+  --color-neutral1Hovered: var(--uni-neutral1Hovered);
+  --color-neutral2: var(--uni-neutral2);
+  --color-neutral2Hovered: var(--uni-neutral2Hovered);
+  --color-neutral3: var(--uni-neutral3);
+  --color-neutral3Hovered: var(--uni-neutral3Hovered);
+
+  --color-surface1: var(--uni-surface1);
+  --color-surface1Hovered: var(--uni-surface1Hovered);
+  --color-surface2: var(--uni-surface2);
+  --color-surface2Hovered: var(--uni-surface2Hovered);
+  --color-surface3: var(--uni-surface3);
+  --color-surface3Solid: var(--uni-surface3Solid);
+  --color-surface3Hovered: var(--uni-surface3Hovered);
+  --color-surface4: var(--uni-surface4);
+  --color-surface5: var(--uni-surface5);
+  --color-surface5Hovered: var(--uni-surface5Hovered);
+
+  --color-accent1: var(--uni-accent1);
+  --color-accent1Hovered: var(--uni-accent1Hovered);
+  --color-accent2: var(--uni-accent2);
+  --color-accent2Hovered: var(--uni-accent2Hovered);
+  --color-accent2Solid: var(--uni-accent2Solid);
+  --color-accent3: var(--uni-accent3);
+  --color-accent3Hovered: var(--uni-accent3Hovered);
+
+  --color-statusSuccess: var(--uni-statusSuccess);
+  --color-statusSuccessHovered: var(--uni-statusSuccessHovered);
+  --color-statusSuccess2: var(--uni-statusSuccess2);
+  --color-statusSuccess2Hovered: var(--uni-statusSuccess2Hovered);
+  --color-statusWarning: var(--uni-statusWarning);
+  --color-statusWarningHovered: var(--uni-statusWarningHovered);
+  --color-statusWarning2: var(--uni-statusWarning2);
+  --color-statusWarning2Hovered: var(--uni-statusWarning2Hovered);
+  --color-statusCritical: var(--uni-statusCritical);
+  --color-statusCriticalHovered: var(--uni-statusCriticalHovered);
+  --color-statusCritical2: var(--uni-statusCritical2);
+  --color-statusCritical2Hovered: var(--uni-statusCritical2Hovered);
+
+  --color-scrim: rgba(0, 0, 0, 0.6);
+
+  /* Radii and spacing are in px, not rem: this site scales its root font-size,
+     and Uniswap's tokens are absolute. */
+  --radius-uni-4: 4px;
+  --radius-uni-6: 6px;
+  --radius-uni-8: 8px;
+  --radius-uni-12: 12px;
+  --radius-uni-16: 16px;
+  --radius-uni-20: 20px;
+  --radius-uni-24: 24px;
+  --radius-uni-32: 32px;
+  --radius-uni-full: 999999px;
+
+  --spacing-uni-1: 1px;
+  --spacing-uni-2: 2px;
+  --spacing-uni-4: 4px;
+  --spacing-uni-6: 6px;
+  --spacing-uni-8: 8px;
+  --spacing-uni-12: 12px;
+  --spacing-uni-16: 16px;
+  --spacing-uni-18: 18px;
+  --spacing-uni-20: 20px;
+  --spacing-uni-24: 24px;
+  --spacing-uni-28: 28px;
+  --spacing-uni-32: 32px;
+  --spacing-uni-36: 36px;
+  --spacing-uni-40: 40px;
+  --spacing-uni-48: 48px;
+  --spacing-uni-60: 60px;
+
+  --shadow-uni-short: var(--uni-shadow-short);
+  --shadow-uni-medium: var(--uni-shadow-medium);
+
+  /* Type scale (web values: Basel book = 485, medium = 535) */
+  --text-heading1: 52px;
+  --text-heading1--line-height: 50px;
+  --text-heading1--letter-spacing: -0.02em;
+  --text-heading1--font-weight: 485;
+  --text-heading2: 36px;
+  --text-heading2--line-height: 40px;
+  --text-heading2--letter-spacing: -0.01em;
+  --text-heading2--font-weight: 485;
+  --text-heading3: 24px;
+  --text-heading3--line-height: 28px;
+  --text-heading3--letter-spacing: -0.005em;
+  --text-heading3--font-weight: 485;
+  --text-subheading1: 18px;
+  --text-subheading1--line-height: 24px;
+  --text-subheading1--font-weight: 485;
+  --text-subheading2: 16px;
+  --text-subheading2--line-height: 20px;
+  --text-subheading2--font-weight: 485;
+  --text-body1: 18px;
+  --text-body1--line-height: 24px;
+  --text-body1--font-weight: 485;
+  --text-body2: 16px;
+  --text-body2--line-height: 22px;
+  --text-body2--font-weight: 485;
+  --text-body3: 14px;
+  --text-body3--line-height: 18px;
+  --text-body3--font-weight: 485;
+  --text-body4: 12px;
+  --text-body4--line-height: 16px;
+  --text-body4--font-weight: 485;
+  --text-body5: 10px;
+  --text-body5--line-height: 12px;
+  --text-body5--font-weight: 485;
+  --text-buttonLabel1: 18px;
+  --text-buttonLabel1--line-height: 20.7px;
+  --text-buttonLabel1--font-weight: 535;
+  --text-buttonLabel2: 16px;
+  --text-buttonLabel2--line-height: 18.4px;
+  --text-buttonLabel2--font-weight: 535;
+  --text-buttonLabel3: 14px;
+  --text-buttonLabel3--line-height: 16.1px;
+  --text-buttonLabel3--font-weight: 535;
+  --text-buttonLabel4: 12px;
+  --text-buttonLabel4--line-height: 13.8px;
+  --text-buttonLabel4--font-weight: 535;
+  --text-monospace: 12px;
+  --text-monospace--line-height: 16px;
+
+  --font-uni: var(--uni-font-sans);
+  --font-uni-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, "Cascadia Mono", "Roboto Mono", monospace;
+}
+
+.uniswap {
+  /* Uniswap ships Basel Grotesk, which is a commercial font. Inter is the
+     stand-in; --font-inter is set by the showcase layout. */
+  --uni-font-sans: var(--font-inter), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Light (sporeLight) */
+  --uni-neutral1: #131313;
+  --uni-neutral1Hovered: rgba(19, 19, 19, 0.83);
+  --uni-neutral2: rgba(19, 19, 19, 0.63);
+  --uni-neutral2Hovered: rgba(19, 19, 19, 0.83);
+  --uni-neutral3: rgba(19, 19, 19, 0.35);
+  --uni-neutral3Hovered: rgba(19, 19, 19, 0.55);
+
+  --uni-surface1: #ffffff;
+  --uni-surface1Hovered: #fcfcfc;
+  --uni-surface2: #f9f9f9;
+  --uni-surface2Hovered: #f2f2f2;
+  --uni-surface3: rgba(19, 19, 19, 0.08);
+  --uni-surface3Solid: #f2f2f2;
+  --uni-surface3Hovered: rgba(19, 19, 19, 0.1);
+  --uni-surface4: rgba(255, 255, 255, 0.64);
+  --uni-surface5: rgba(0, 0, 0, 0.04);
+  --uni-surface5Hovered: rgba(0, 0, 0, 0.06);
+
+  --uni-accent1: #ff37c7;
+  --uni-accent1Hovered: #e500a5;
+  --uni-accent2: rgba(255, 55, 199, 0.08);
+  --uni-accent2Hovered: rgba(255, 55, 199, 0.12);
+  --uni-accent2Solid: #fff3fc;
+  --uni-accent3: #222222;
+  --uni-accent3Hovered: #000000;
+
+  --uni-statusSuccess: #0c8911;
+  --uni-statusSuccessHovered: #06742c;
+  --uni-statusSuccess2: rgba(15, 194, 68, 0.06);
+  --uni-statusSuccess2Hovered: rgba(15, 194, 68, 0.12);
+  --uni-statusWarning: #996f01;
+  --uni-statusWarningHovered: #7a5801;
+  --uni-statusWarning2: rgba(255, 191, 23, 0.1);
+  --uni-statusWarning2Hovered: rgba(255, 191, 23, 0.1);
+  --uni-statusCritical: #e10f0f;
+  --uni-statusCriticalHovered: #bf0d0d;
+  --uni-statusCritical2: rgba(255, 0, 0, 0.05);
+  --uni-statusCritical2Hovered: rgba(255, 0, 0, 0.1);
+
+  --uni-shadow-short: 0px 1px 6px 2px rgba(0, 0, 0, 0.03), 0px 1px 2px 0px rgba(0, 0, 0, 0.02);
+  --uni-shadow-medium: 0px 6px 12px -3px rgba(19, 19, 19, 0.04), 0px 2px 5px -2px rgba(19, 19, 19, 0.03);
+
+  /* shadcn bridge: point shadcn's semantic variables at Uniswap tokens */
+  --background: var(--uni-surface1);
+  --foreground: var(--uni-neutral1);
+  --card: var(--uni-surface1);
+  --card-foreground: var(--uni-neutral1);
+  --popover: var(--uni-surface1);
+  --popover-foreground: var(--uni-neutral1);
+  --primary: var(--uni-accent1);
+  --primary-foreground: #ffffff;
+  --secondary: var(--uni-surface3);
+  --secondary-foreground: var(--uni-neutral1);
+  --muted: var(--uni-surface2);
+  --muted-foreground: var(--uni-neutral2);
+  --accent: var(--uni-surface2Hovered);
+  --accent-foreground: var(--uni-neutral1);
+  --destructive: var(--uni-statusCritical);
+  --border: var(--uni-surface3);
+  --input: var(--uni-surface3);
+  --ring: var(--uni-accent1);
+  --radius: 16px;
+
+  color-scheme: light;
+  font-family: var(--uni-font-sans);
+  background-color: var(--uni-surface1);
+  color: var(--uni-neutral1);
+}
+
+.dark .uniswap {
+  /* Dark (sporeDark) */
+  --uni-neutral1: #ffffff;
+  --uni-neutral1Hovered: rgba(255, 255, 255, 0.85);
+  --uni-neutral2: rgba(255, 255, 255, 0.65);
+  --uni-neutral2Hovered: rgba(255, 255, 255, 0.85);
+  --uni-neutral3: rgba(255, 255, 255, 0.38);
+  --uni-neutral3Hovered: rgba(255, 255, 255, 0.58);
+
+  --uni-surface1: #131313;
+  --uni-surface1Hovered: #1a1a1a;
+  --uni-surface2: #1f1f1f;
+  --uni-surface2Hovered: #242424;
+  --uni-surface3: rgba(255, 255, 255, 0.12);
+  --uni-surface3Solid: #393939;
+  --uni-surface3Hovered: rgba(255, 255, 255, 0.16);
+  --uni-surface4: rgba(255, 255, 255, 0.2);
+  --uni-surface5: rgba(0, 0, 0, 0.04);
+  --uni-surface5Hovered: rgba(0, 0, 0, 0.06);
+
+  --uni-accent1: #ff37c7;
+  --uni-accent1Hovered: #e500a5;
+  --uni-accent2: rgba(255, 55, 199, 0.08);
+  --uni-accent2Hovered: rgba(255, 55, 199, 0.12);
+  --uni-accent2Solid: #261621;
+  --uni-accent3: #ffffff;
+  --uni-accent3Hovered: #f5f5f5;
+
+  --uni-statusSuccess: #21c95e;
+  --uni-statusSuccessHovered: #15863c;
+  --uni-statusSuccess2: rgba(33, 201, 94, 0.12);
+  --uni-statusSuccess2Hovered: #093a16;
+  --uni-statusWarning: #ffbf17;
+  --uni-statusWarningHovered: #ffdd0d;
+  --uni-statusWarning2: rgba(255, 191, 23, 0.08);
+  --uni-statusWarning2Hovered: rgba(255, 191, 23, 0.16);
+  --uni-statusCritical: #ff593c;
+  --uni-statusCriticalHovered: #ff401f;
+  --uni-statusCritical2: rgba(255, 89, 60, 0.12);
+  --uni-statusCritical2Hovered: rgba(255, 89, 60, 0.2);
+
+  --uni-shadow-short: 0px 1px 3px 0px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.24);
+  --uni-shadow-medium: 0px 10px 15px -3px rgba(19, 19, 19, 0.54), 0px 4px 6px -2px rgba(19, 19, 19, 0.4);
+
+  color-scheme: dark;
+}
+
+/* The site's global link hover dims to 70% opacity; Uniswap UI handles its own hover states. */
+.uniswap a:hover {
+  opacity: 1;
+}

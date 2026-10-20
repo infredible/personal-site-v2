@@ -79,6 +79,17 @@ Stories are configured in the `storiesData` array in `src/app/page.tsx` with vid
 - Custom font loading with fallbacks and display swap optimization
 - Responsive image handling via Next.js Image component
 
+## Uniswap Showcase
+
+Design engineering recreations of Uniswap UIs live under `src/app/showcase/uniswap/`.
+
+- **Tokens**: `theme.css` (imported by `globals.css`) holds Uniswap's tokens, ported from `Uniswap/interface` `packages/ui/src/theme`. Values are scoped to `.uniswap`; light values on `.uniswap`, dark on `.dark .uniswap`.
+- **Utilities**: Uniswap names are used directly, e.g. `bg-surface2`, `text-neutral2`, `hover:bg-accent1Hovered`, `text-body3`, `text-buttonLabel2`. Radius, spacing, and shadow are px-based and prefixed: `rounded-uni-20`, `p-uni-16`, `gap-uni-8`, `shadow-uni-medium`.
+- **shadcn bridge**: inside the scope, shadcn variables (`--primary`, `--muted`, `--border`, ...) map to Uniswap tokens, so stock `components/ui` components need no edits.
+- **Scope**: the showcase `layout.tsx` applies the scope via `UniswapScope`, which also adds `.uniswap` to `<body>` so Radix portals pick it up.
+- **tailwind-merge**: new custom text/radius/spacing/shadow scales must be registered in `src/lib/utils.ts`, or `cn()` will drop them as conflicts.
+- **Catalog**: `/showcase/uniswap/system` renders every token; add new tokens to `_lib/tokens.ts`.
+
 ## Important Conventions
 
 - Use 'shadcn' package instead of deprecated 'shadcn-ui' (e.g., `npx shadcn@latest add popover`)
