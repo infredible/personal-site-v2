@@ -6,7 +6,8 @@
  * spacing.ts, shadows.ts). Token names are kept identical so components
  * here read the same way Uniswap's code does.
  *
- * Everything is scoped under `.uniswap`, which the showcase layout applies.
+ * Everything is scoped under `.uniswap`, applied by <UniswapScope> (full
+ * showcase pages, or inline embeds in project MDX) and by portal content.
  * Inside that scope, shadcn's semantic variables are remapped onto Uniswap
  * tokens, so stock shadcn components pick up the Uniswap look unchanged.
  */
@@ -135,13 +136,15 @@
   --text-monospace: 12px;
   --text-monospace--line-height: 16px;
 
+  --animate-uni-spin: uni-spin 1s cubic-bezier(0.83, 0, 0.17, 1) infinite;
+
   --font-uni: var(--uni-font-sans);
   --font-uni-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, "Cascadia Mono", "Roboto Mono", monospace;
 }
 
 .uniswap {
   /* Uniswap ships Basel Grotesk, which is a commercial font. Inter is the
-     stand-in; --font-inter is set by the showcase layout. */
+     stand-in; --font-inter is set by UniswapScope. */
   --uni-font-sans: var(--font-inter), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   /* Light (sporeLight) */
@@ -207,11 +210,6 @@
   --input: var(--uni-surface3);
   --ring: var(--uni-accent1);
   --radius: 16px;
-
-  color-scheme: light;
-  font-family: var(--uni-font-sans);
-  background-color: var(--uni-surface1);
-  color: var(--uni-neutral1);
 }
 
 .dark .uniswap {
@@ -257,11 +255,57 @@
 
   --uni-shadow-short: 0px 1px 3px 0px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.24);
   --uni-shadow-medium: 0px 10px 15px -3px rgba(19, 19, 19, 0.54), 0px 4px 6px -2px rgba(19, 19, 19, 0.4);
-
-  color-scheme: dark;
 }
 
-/* The site's global link hover dims to 70% opacity; Uniswap UI handles its own hover states. */
-.uniswap a:hover {
-  opacity: 1;
+/* Element styles live in layers so Tailwind utilities on scoped elements always win. */
+@layer base {
+  .uniswap {
+    color-scheme: light;
+    font-family: var(--uni-font-sans);
+    background-color: var(--uni-surface1);
+    color: var(--uni-neutral1);
+  }
+
+  .dark .uniswap {
+    color-scheme: dark;
+  }
+}
+
+/*
+ * Isolation for embeds: a scope placed inside MDX content (.prose) or other
+ * site styling shouldn't inherit its margins, bullets, serif headings, or link
+ * treatments. Same layer as those rules; the tripled class outranks selectors
+ * like `.dark .prose a` (which come later in the cascade). Utilities still win.
+ */
+@layer components {
+  .uniswap.uniswap.uniswap :is(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, code, figure) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    color: inherit;
+    list-style: none;
+  }
+
+  .uniswap.uniswap.uniswap a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .uniswap.uniswap.uniswap a:hover {
+    opacity: 1;
+  }
+}
+
+/* Spinner from Uniswap's SpinningLoader: 1s symmetric ease, not linear */
+@keyframes uni-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

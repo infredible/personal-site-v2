@@ -1,14 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { UniswapScope } from './_components/UniswapScope'
-
-// Stand-in for Basel Grotesk (commercial). Inter's variable axis covers
-// Uniswap's web weights (485 book, 535 medium).
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
+import { UniswapScope } from '@/components/uniswap'
 
 export const metadata: Metadata = {
   title: {
@@ -20,9 +11,5 @@ export const metadata: Metadata = {
 }
 
 export default function UniswapLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <UniswapScope fontClassName={inter.variable}>
-      {children}
-    </UniswapScope>
-  )
+  return <UniswapScope fullPage>{children}</UniswapScope>
 }

@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { uniswapScopeClassName } from '@/components/uniswap'
 import { cn } from '@/lib/utils'
+import { ComponentGallery } from '../_components/ComponentGallery'
 import { ColorSwatch, TypeSample } from '../_components/TokenReadouts'
 import { colorGroups, radii, shadcnBridge, shadows, spacing, typeScale } from '../_lib/tokens'
 
@@ -16,6 +20,7 @@ const sections = [
   { id: 'radius', label: 'Radius' },
   { id: 'spacing', label: 'Spacing' },
   { id: 'shadow', label: 'Shadow' },
+  { id: 'components', label: 'Components' },
   { id: 'shadcn', label: 'shadcn bridge' },
 ]
 
@@ -35,9 +40,6 @@ function Section({ id, title, description, children }: {
     </section>
   )
 }
-
-const pillButton =
-  'inline-flex items-center justify-center rounded-uni-full px-uni-16 h-uni-40 text-buttonLabel3 transition-colors cursor-pointer'
 
 export default function DesignSystemPage() {
   return (
@@ -130,9 +132,17 @@ export default function DesignSystemPage() {
       </Section>
 
       <Section
+        id="components"
+        title="Components"
+        description="Uniswap components in src/components/uniswap. Each one composes a shadcn primitive or the Radix primitive under it, and works inline in any page inside <UniswapScope>."
+      >
+        <ComponentGallery />
+      </Section>
+
+      <Section
         id="shadcn"
         title="shadcn bridge"
-        description="Inside the .uniswap scope, shadcn's variables point at Uniswap tokens, so stock components from components/ui render in Uniswap's style with no edits."
+        description="Inside the .uniswap scope, shadcn's variables point at Uniswap tokens, so stock components from components/ui render in Uniswap's colors with no edits. Portal content (popovers, tooltips) takes uniswapScopeClassName, since it renders outside the scope wrapper."
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-uni-24">
           <div className="rounded-uni-20 border border-surface3 overflow-hidden">
@@ -150,11 +160,18 @@ export default function DesignSystemPage() {
           <div className="flex flex-col gap-uni-16 rounded-uni-20 bg-surface2 p-uni-24">
             <span className="text-body3 text-neutral2">Stock shadcn components</span>
             <div className="flex flex-wrap gap-uni-12">
+              <Button>Button</Button>
+              <Button variant="secondary">Secondary</Button>
+              <Button variant="outline">Outline</Button>
+              <Button variant="destructive">Destructive</Button>
+            </div>
+            <Input placeholder="Stock shadcn Input" />
+            <div className="flex flex-wrap gap-uni-12">
               <Popover>
-                <PopoverTrigger className={cn(pillButton, 'bg-accent1 hover:bg-accent1Hovered text-white')}>
-                  Open popover
+                <PopoverTrigger asChild>
+                  <Button variant="outline">Open popover</Button>
                 </PopoverTrigger>
-                <PopoverContent className="flex flex-col gap-uni-4">
+                <PopoverContent className={cn(uniswapScopeClassName, 'flex flex-col gap-uni-4')}>
                   <span className="text-subheading2 text-foreground">Popover</span>
                   <span className="text-body3 text-muted-foreground">
                     Unmodified components/ui/popover, themed by the scope.
@@ -162,10 +179,10 @@ export default function DesignSystemPage() {
                 </PopoverContent>
               </Popover>
               <Tooltip>
-                <TooltipTrigger className={cn(pillButton, 'bg-surface3 hover:bg-surface3Hovered text-neutral1')}>
-                  Hover for tooltip
+                <TooltipTrigger asChild>
+                  <Button variant="ghost">Hover for tooltip</Button>
                 </TooltipTrigger>
-                <TooltipContent>Unmodified components/ui/tooltip</TooltipContent>
+                <TooltipContent className={uniswapScopeClassName}>Unmodified components/ui/tooltip</TooltipContent>
               </Tooltip>
             </div>
             <div className="flex flex-wrap gap-uni-8 pt-uni-8">
