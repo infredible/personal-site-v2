@@ -213,10 +213,12 @@ function SlippageRow({
     const next = Number(value)
     // Reject invalid input with a shake, as Uniswap does
     if (Number.isNaN(next) || next > MAX_CUSTOM_SLIPPAGE || value.split('.').length > 2 || (decimals?.length ?? 0) > 2) {
-      fieldRef.current?.animate(
-        [0, -4, 4, -4, 4, 0].map((x) => ({ transform: `translateX(${x}px)` })),
-        { duration: 300, easing: 'ease-in-out' },
-      )
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        fieldRef.current?.animate(
+          [0, -4, 4, -4, 4, 0].map((x) => ({ transform: `translateX(${x}px)` })),
+          { duration: 300, easing: 'ease-in-out' },
+        )
+      }
       return
     }
     setDraft(value)

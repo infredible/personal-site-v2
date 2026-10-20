@@ -290,6 +290,17 @@
   .uniswap[data-theme="dark"] {
     color-scheme: dark;
   }
+
+  /*
+   * The site gives every element a 200ms color transition (for its theme
+   * crossfade). Inside the scope that made hovers lag behind the pointer;
+   * Uniswap's states change crisply, and components that should animate set
+   * their own transition (utilities outrank this layer).
+   */
+  .uniswap,
+  .uniswap * {
+    transition: none;
+  }
 }
 
 /*

@@ -82,10 +82,15 @@ function setRef<T>(ref: React.Ref<T> | undefined, value: T) {
   else if (ref) (ref as React.RefObject<T>).current = value
 }
 
-/** Hover-reveal transition from Uniswap's hoverStyles.ts: translateY(-8) scale(.95) → identity, staggered 40ms in, no delay out. */
+/**
+ * Hover-reveal from Uniswap's hoverStyles.ts: translateY(-8) scale(.95) → identity,
+ * staggered 40ms in. Exit is faster with no stagger (the system responding, not
+ * the user deciding). Reduced motion keeps the fade and drops the movement.
+ */
 function revealClasses(forceVisible: boolean) {
   return cn(
-    'transition-[opacity,transform,translate,scale,rotate] duration-200 ease-out',
+    'transition-[opacity,transform,translate,scale,rotate] duration-[120ms] ease-[cubic-bezier(0.23,1,0.32,1)]',
+    'group-hover/panel:duration-200 motion-reduce:translate-y-0! motion-reduce:scale-100!',
     forceVisible
       ? 'opacity-100 translate-y-0 scale-100 [transition-delay:var(--reveal-delay)]'
       : [
@@ -176,7 +181,8 @@ function CurrencyPanel({
       onClick={handlePanelClick}
       className={cn(
         'group/panel relative overflow-hidden rounded-uni-20 border',
-        'transition-[opacity,transform,translate,scale,rotate] duration-[80ms] ease-in-out',
+        // Hover/focus frame change: 80ms like Uniswap's panel, on the properties that actually change
+        'transition-[background-color,border-color] duration-[80ms] ease-out',
         isFocused
           ? cn('border-surface3 bg-surface1 hover:border-surface3Hovered', hovered && 'border-surface3Hovered')
           : cn('border-transparent bg-surface2 hover:bg-surface2Hovered', hovered && 'bg-surface2Hovered'),
@@ -245,7 +251,7 @@ function CurrencyPanel({
                       }}
                       className={cn(
                         'flex cursor-pointer rounded-uni-full bg-surface3 p-uni-4 outline-none',
-                        'transition-transform duration-[80ms] ease-in-out hover:scale-110 hover:bg-surface3Hovered',
+                        'transition-[transform,translate,scale,rotate,background-color] duration-[80ms] ease-out hover:scale-110 hover:bg-surface3Hovered active:scale-[0.97]',
                         'focus-visible:outline-1 focus-visible:outline-neutral3Hovered',
                       )}
                     >
@@ -294,7 +300,6 @@ function CurrencyPanel({
                 className={cn(
                   'w-full min-w-0 border-0 bg-transparent p-0 outline-none',
                   'font-uni tracking-[-0.01em] [font-weight:485] placeholder:text-neutral3',
-                  'transition-[font-size] duration-100',
                   amountColor,
                   isReadOnly ? 'cursor-default' : 'cursor-text',
                 )}

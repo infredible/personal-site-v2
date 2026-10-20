@@ -2,7 +2,15 @@
 
 import * as React from 'react'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
-import { UniModal, UniModalContent, popoverSurfaceClassName, uniswapScopeClassName } from '@/components/uniswap'
+import {
+  UniModal,
+  UniModalContent,
+  modalContentClassName,
+  modalOverlayClassName,
+  modalSurfaceClassName,
+  popoverSurfaceClassName,
+  uniswapScopeClassName,
+} from '@/components/uniswap'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { DialogOverlay, DialogPortal } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
@@ -46,6 +54,15 @@ function requote(state: SwapFormState): SwapFormState {
   return { ...state, input: { ...input, amount: formatDerivedAmount(amount / rate, input.token.decimals) }, quote }
 }
 
+interface ReviewSnapshot {
+  status: SwapReviewStatus
+  stage: 'wallet' | 'submitted'
+  input: { token: Token; amount: string }
+  output: { token: Token; amount: string }
+  quote: SwapFormState['quote']
+  slippage: SwapFormState['slippage']
+}
+
 export interface SwapBoxProps {
   initialState: SwapFormState
   /** Simulate a page load: wallet balances start loading and resolve after a short delay. */
@@ -67,6 +84,20 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, class
   const [deadline, setDeadline] = React.useState(30)
   const [review, setReview] = React.useState<{ status: SwapReviewStatus; stage: 'wallet' | 'submitted' } | null>(null)
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  // What the review modal shows. Kept after close so the exit animation plays on
+  // the last content instead of an empty card (closing a success also clears the form).
+  const lastReview = React.useRef<ReviewSnapshot | null>(null)
+  if (review && state.input.token && state.output.token) {
+    lastReview.current = {
+      ...review,
+      input: { token: state.input.token, amount: state.input.amount },
+      output: { token: state.output.token, amount: state.output.amount },
+      quote: state.quote,
+      slippage: state.slippage,
+    }
+  }
+  const shownReview = lastReview.current
 
   React.useEffect(() => () => clearTimeout(timer.current), [])
 
@@ -186,7 +217,11 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, class
             className={cn(
               uniswapScopeClassName,
               popoverSurfaceClassName,
-              'z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98]',
+              // Grows from the gear (Radix's computed origin), 150ms in / 100ms out
+              'z-50 origin-(--radix-popover-content-transform-origin) ease-[cubic-bezier(0.23,1,0.32,1)]',
+              'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.97] data-[state=open]:duration-150',
+              'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.97] data-[state=closed]:duration-100',
+              'motion-reduce:data-[state=open]:zoom-in-100 motion-reduce:data-[state=closed]:zoom-out-100',
             )}
           >
             <SwapSettingsPanel
@@ -217,29 +252,25 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, class
       {/* Review draws its own header, so it uses the bare dialog parts rather than UniModalContent */}
       <DialogPrimitive.Root open={review !== null} onOpenChange={(open) => !open && closeReview()}>
         <DialogPortal>
-          <DialogOverlay className="bg-scrim" />
+          <DialogOverlay className={modalOverlayClassName} />
+          {/* The surface classes live on Content itself: the scope class gives its element a
+              surface1 background, so a separate inner card left square corners behind it. */}
           <DialogPrimitive.Content
             aria-describedby={undefined}
-            className={cn(
-              uniswapScopeClassName,
-              'fixed top-1/2 left-1/2 z-50 w-[calc(100%-32px)] max-w-[420px] -translate-x-1/2 -translate-y-1/2 outline-none',
-              'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98]',
-            )}
+            className={cn(uniswapScopeClassName, modalSurfaceClassName, modalContentClassName)}
           >
             <DialogPrimitive.Title className="sr-only">Review swap</DialogPrimitive.Title>
-            {review && state.input.token && state.output.token && (
-              <div className="rounded-uni-24 border border-surface3 bg-surface1 p-uni-16 shadow-uni-medium">
-                <SwapReviewPanel
-                  input={{ token: state.input.token, amount: state.input.amount }}
-                  output={{ token: state.output.token, amount: state.output.amount }}
-                  quote={state.quote}
-                  slippage={state.slippage}
-                  status={review.status}
-                  pendingStage={review.stage}
-                  onConfirm={confirm}
-                  onClose={closeReview}
-                />
-              </div>
+            {shownReview && (
+              <SwapReviewPanel
+                input={shownReview.input}
+                output={shownReview.output}
+                quote={shownReview.quote}
+                slippage={shownReview.slippage}
+                status={shownReview.status}
+                pendingStage={shownReview.stage}
+                onConfirm={confirm}
+                onClose={closeReview}
+              />
             )}
           </DialogPrimitive.Content>
         </DialogPortal>

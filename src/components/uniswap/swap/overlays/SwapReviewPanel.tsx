@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowDownIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, XIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Pill } from '../../Pill'
@@ -361,7 +361,7 @@ function StepRow({
         {/* 40px layout box around a 24px icon, room for the ripple / spinner */}
         <span className="relative flex size-uni-40 shrink-0 items-center justify-center">
           {status === 'active' && (
-            <span aria-hidden className="absolute size-uni-24 animate-ping rounded-uni-full bg-accent1 opacity-30" />
+            <span aria-hidden className="absolute size-uni-24 animate-ping rounded-uni-full bg-accent1 opacity-30 motion-reduce:animate-none" />
           )}
           {status === 'inProgress' && (
             <span
@@ -463,8 +463,10 @@ function SwapSuccess({
 
 /** Success glyph: ring and check draw in, as Uniswap's AnimatedConfirmation does. */
 function AnimatedCheck() {
+  // Reduced motion: show the finished glyph rather than drawing it
+  const reduceMotion = useReducedMotion()
   const draw = (delay: number) => ({
-    initial: { pathLength: 0 },
+    initial: { pathLength: reduceMotion ? 1 : 0 },
     animate: { pathLength: 1 },
     transition: { duration: 0.5, delay, ease: [0.65, 0, 0.35, 1] as const },
   })

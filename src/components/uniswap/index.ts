@@ -15,6 +15,8 @@ export {
   ModalSurface,
   PopoverSurface,
   modalSurfaceClassName,
+  modalContentClassName,
+  modalOverlayClassName,
   popoverSurfaceClassName,
 } from './UniModal'
 export type { ModalSurfaceProps } from './UniModal'

@@ -54,7 +54,7 @@ function SwitchButton({ onClick, disabled = false, hovered = false, className }:
       <ArrowDown
         aria-hidden
         strokeWidth={2}
-        className="size-uni-24 transition-transform duration-300 ease-[cubic-bezier(0.17,0.67,0.45,1)]"
+        className="size-uni-24 transition-transform duration-[250ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
         style={{ transform: `rotate(${turns * 360}deg)` }}
       />
     </button>

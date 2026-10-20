@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google'
 import { cn } from '@/lib/utils'
+import { UniTooltipProvider } from './UniTooltipProvider'
 
 // Stand-in for Basel Grotesk (commercial). Inter's variable axis covers
 // Uniswap's web weights (485 book, 535 medium).
@@ -32,12 +33,10 @@ interface UniswapScopeProps extends React.ComponentProps<'div'> {
 }
 
 /** Applies the Uniswap theme to its children. Works as a page wrapper or inline in any page. */
-export function UniswapScope({ fullPage = false, theme, className, ...props }: UniswapScopeProps) {
+export function UniswapScope({ fullPage = false, theme, className, children, ...props }: UniswapScopeProps) {
   return (
-    <div
-      data-theme={theme}
-      className={cn(uniswapScopeClassName, fullPage && 'min-h-dvh', className)}
-      {...props}
-    />
+    <div data-theme={theme} className={cn(uniswapScopeClassName, fullPage && 'min-h-dvh', className)} {...props}>
+      <UniTooltipProvider>{children}</UniTooltipProvider>
+    </div>
   )
 }

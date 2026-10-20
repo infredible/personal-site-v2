@@ -25,6 +25,23 @@ const modalSurfaceClassName =
 const popoverSurfaceClassName =
   'flex w-[320px] max-w-full flex-col rounded-uni-24 border border-surface3 bg-surface1 px-uni-12 py-uni-4 shadow-uni-short outline-none'
 
+/**
+ * Positioning + motion for modal content in a portal. Top-aligned (not centered)
+ * so the modal lands over the top of the swap box rather than mid-screen, and
+ * scales from that top edge. Enter 200ms, exit faster (150ms), strong ease-out.
+ */
+const modalContentClassName = cn(
+  'fixed left-1/2 top-[clamp(16px,10vh,96px)] z-50 w-[calc(100%-32px)] -translate-x-1/2',
+  'max-h-[calc(100dvh-32px)] overflow-y-auto overscroll-contain origin-top',
+  'ease-[cubic-bezier(0.23,1,0.32,1)] data-[state=open]:duration-200 data-[state=closed]:duration-150',
+  'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.97] data-[state=open]:slide-in-from-top-2',
+  'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.97]',
+  'motion-reduce:data-[state=open]:zoom-in-100 motion-reduce:data-[state=open]:slide-in-from-top-0 motion-reduce:data-[state=closed]:zoom-out-100',
+)
+
+/** Scrim behind modals: fades with the content, exit a touch faster. */
+const modalOverlayClassName = 'bg-scrim data-[state=open]:duration-200 data-[state=closed]:duration-150'
+
 const closeButtonClassName =
   'flex size-uni-28 shrink-0 cursor-pointer items-center justify-center rounded-uni-full text-neutral2 outline-none transition-colors hover:bg-surface2 hover:text-neutral1 focus-visible:bg-surface2 focus-visible:text-neutral1'
 
@@ -62,18 +79,11 @@ function UniModalContent({
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay className="bg-scrim" />
+      <DialogOverlay className={modalOverlayClassName} />
       <DialogPrimitive.Content
         data-slot="uni-modal-content"
         aria-describedby={undefined}
-        className={cn(
-          uniswapScopeClassName,
-          modalSurfaceClassName,
-          'fixed top-1/2 left-1/2 z-50 w-[calc(100%-32px)] -translate-x-1/2 -translate-y-1/2',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:zoom-out-[0.98] data-[state=open]:zoom-in-[0.98] duration-200',
-          className,
-        )}
+        className={cn(uniswapScopeClassName, modalSurfaceClassName, modalContentClassName, className)}
         {...props}
       >
         <SurfaceHeader
@@ -156,6 +166,8 @@ export {
   ModalSurface,
   PopoverSurface,
   modalSurfaceClassName,
+  modalContentClassName,
+  modalOverlayClassName,
   popoverSurfaceClassName,
 }
 export type { ModalSurfaceProps }
