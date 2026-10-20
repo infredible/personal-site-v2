@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Canvas, CanvasFrame, CanvasSection, type CanvasController } from '@/components/showcase/canvas'
-import { ModalSurface, PopoverSurface, UniswapScope } from '@/components/uniswap'
+import { ModalSurface, PaletteSurface, PopoverSurface, UniswapScope } from '@/components/uniswap'
 import { getSwapAction } from '@/components/uniswap/swap/getSwapAction'
 import { SwapReviewPanel, SwapSettingsPanel, TokenSelectorPanel } from '@/components/uniswap/swap/overlays'
 import {
@@ -262,10 +262,10 @@ export function SwapCanvas({ controller }: { controller: CanvasController }) {
           </Stage>
         </CanvasFrame>
         <CanvasFrame id="loading-token-list" title="Token selector · loading" note="Rows fade out down the list, as Uniswap's Loader.Token">
-          <Stage width={452} className="bg-transparent p-0">
-            <ModalSurface title="Select a token" onClose={() => {}}>
-              <TokenSelectorPanel tokens={TOKEN_LIST} balances={MOCK_WALLET.balances} loading />
-            </ModalSurface>
+          <Stage width={680} className="bg-transparent p-0">
+            <PaletteSurface title="Select a token">
+              <TokenSelectorPanel tokens={TOKEN_LIST} balances={MOCK_WALLET.balances} onClose={() => {}} loading />
+            </PaletteSurface>
           </Stage>
         </CanvasFrame>
       </CanvasSection>
@@ -275,11 +275,21 @@ export function SwapCanvas({ controller }: { controller: CanvasController }) {
         title="Overlays"
         description="Rendered inline here; the live swap shows the same panels in a modal or popover."
       >
-        <CanvasFrame id="token-selector" title="Token selector" note="Search and arrow keys work">
-          <Stage width={452} className="bg-transparent p-0">
-            <ModalSurface title="Select a token" onClose={() => {}}>
-              <TokenSelectorPanel tokens={TOKEN_LIST} balances={MOCK_WALLET.balances} selectedSymbol="ETH" />
-            </ModalSurface>
+        <CanvasFrame
+          id="token-selector"
+          title="Token selector"
+          note="A command palette: type, ↑↓ ↵, ⇥ for category, ⌘K for network. ETH selected; USDC is on the other side"
+        >
+          <Stage width={680} className="bg-transparent p-0">
+            <PaletteSurface title="Select a token">
+              <TokenSelectorPanel
+                tokens={TOKEN_LIST}
+                balances={MOCK_WALLET.balances}
+                selectedSymbol="ETH"
+                otherSymbol="USDC"
+                onClose={() => {}}
+              />
+            </PaletteSurface>
           </Stage>
         </CanvasFrame>
         <CanvasFrame id="settings" title="Settings" note="Try a custom slippage like 25">

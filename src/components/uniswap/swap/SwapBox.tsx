@@ -4,7 +4,7 @@ import * as React from 'react'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import {
   UniModal,
-  UniModalContent,
+  UniPaletteContent,
   modalContentClassName,
   modalOverlayClassName,
   modalSurfaceClassName,
@@ -235,18 +235,22 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, class
       </PopoverPrimitive.Root>
 
       <UniModal open={selecting !== null} onOpenChange={(open) => !open && setSelecting(null)}>
-        <UniModalContent title="Select a token">
+        <UniPaletteContent title="Select a token">
           {selecting && (
             <TokenSelectorPanel
               tokens={TOKEN_LIST}
               balances={state.wallet.balances}
               selectedSymbol={state[selecting].token?.symbol}
+              // Picking the other side's token flips the pair (selectToken), so it stays selectable
+              otherSymbol={state[selecting === 'input' ? 'output' : 'input'].token?.symbol}
+              otherAction="switch"
               onSelect={selectToken}
+              onClose={() => setSelecting(null)}
               loading={!tokenListLoaded || balancesLoading}
               autoFocus
             />
           )}
-        </UniModalContent>
+        </UniPaletteContent>
       </UniModal>
 
       {/* Review draws its own header, so it uses the bare dialog parts rather than UniModalContent */}
