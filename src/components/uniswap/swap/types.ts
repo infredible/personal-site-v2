@@ -1,6 +1,17 @@
 // Shared contracts for the swap recreation. Display parts (parts/, overlays/)
 // render from these shapes; SwapBox (phase 3) owns and updates them.
 
+export type ChainId = 'ethereum' | 'base' | 'arbitrum' | 'optimism' | 'polygon'
+
+export interface Chain {
+  id: ChainId
+  name: string
+  /** Path under /public */
+  logo: string
+}
+
+export type TokenCategory = 'stablecoin' | 'defi' | 'layer2' | 'meme' | 'wrapped' | 'native'
+
 export interface Token {
   symbol: string
   name: string
@@ -9,6 +20,12 @@ export interface Token {
   logo: string
   /** Fake spot price, used by the mock quote engine */
   priceUsd: number
+  /** For token selector filtering */
+  category?: TokenCategory
+  /** Networks the token is listed on (mock) */
+  chains?: ChainId[]
+  /** Fake 24h price change, as a fraction (0.0123 = +1.23%) */
+  change24h?: number
 }
 
 export type SwapField = 'input' | 'output'
