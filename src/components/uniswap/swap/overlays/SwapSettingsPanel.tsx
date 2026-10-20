@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { ChevronRightIcon } from 'lucide-react'
+import { ChevronRight } from '../../icons'
 import { cn } from '@/lib/utils'
 import { UniTooltip } from '../../UniTooltip'
 import { DEFAULT_SLIPPAGE } from '../tokens'
@@ -97,7 +97,7 @@ export function SwapSettingsPanel({
             <span className="text-subheading2 text-neutral2 transition-colors group-hover/control:text-neutral2Hovered">
               {tradeOptionsLabel}
             </span>
-            <ChevronRightIcon aria-hidden className="size-uni-24 text-neutral3" />
+            <ChevronRight aria-hidden className="size-uni-24 text-neutral3" />
           </>
         }
       />

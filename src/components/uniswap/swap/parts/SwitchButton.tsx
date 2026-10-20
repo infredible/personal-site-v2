@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { ArrowDown } from 'lucide-react'
+import { ArrowDown } from '../../icons'
 import { cn } from '@/lib/utils'
 
 /*
@@ -53,7 +53,6 @@ function SwitchButton({ onClick, disabled = false, hovered = false, className }:
     >
       <ArrowDown
         aria-hidden
-        strokeWidth={2}
         className="size-uni-24 transition-transform duration-[250ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
         style={{ transform: `rotate(${turns * 360}deg)` }}
       />

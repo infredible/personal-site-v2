@@ -34,12 +34,27 @@ export function CanvasFrame({ id, title, note, width, className, children }: Can
       data-canvas-frame=""
       className={cn("flex flex-col gap-2.5", isCanvas ? "min-w-40 shrink-0" : "w-full min-w-0", className)}
     >
-      {/* w-0 + min-w-full: the label takes the frame's width without widening it. */}
-      <div className={cn("flex select-none flex-col gap-0.5", isCanvas && "w-0 min-w-full")}>
-        <h3 id={headingId} className="text-[13px] leading-[18px] font-medium text-foreground/75">
+      {/*
+        w-0 + min-w-full: the label takes the frame's width without widening it.
+        On the canvas the label has a fixed two-line height (title + one note line,
+        truncated with the full text on hover), so frame bodies in a row share a
+        top edge whether or not a frame has a note.
+      */}
+      <div className={cn("flex select-none flex-col gap-0.5", isCanvas && "h-9 w-0 min-w-full")}>
+        <h3
+          id={headingId}
+          className={cn("text-[13px] leading-[18px] font-medium text-foreground/75", isCanvas && "truncate")}
+        >
           {title}
         </h3>
-        {note ? <p className="text-xs leading-4 text-pretty text-muted-foreground">{note}</p> : null}
+        {note ? (
+          <p
+            title={isCanvas && typeof note === "string" ? note : undefined}
+            className={cn("text-xs leading-4 text-muted-foreground", isCanvas ? "truncate" : "text-pretty")}
+          >
+            {note}
+          </p>
+        ) : null}
       </div>
       <div
         data-canvas-frame-body=""

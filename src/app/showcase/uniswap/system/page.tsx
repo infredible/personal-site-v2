@@ -195,6 +195,23 @@ export default function DesignSystemPage() {
             </div>
           </div>
         </Section>
+        <footer className="border-t border-surface3 pt-uni-24 text-body3 text-neutral2">
+          Design tokens and icons from Uniswap Labs&rsquo; open-source{' '}
+          <a
+            href="https://github.com/Uniswap/interface"
+            className="text-neutral1 underline decoration-surface3 underline-offset-4 hover:decoration-neutral2"
+          >
+            interface repository
+          </a>
+          ; token logos from Trust Wallet&rsquo;s{' '}
+          <a
+            href="https://github.com/trustwallet/assets"
+            className="text-neutral1 underline decoration-surface3 underline-offset-4 hover:decoration-neutral2"
+          >
+            assets
+          </a>
+          . A non-commercial recreation, not affiliated with or endorsed by Uniswap Labs.
+        </footer>
       </main>
     </UniswapScope>
   )

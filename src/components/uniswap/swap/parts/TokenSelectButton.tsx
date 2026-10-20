@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown } from '../../icons'
 import { cn } from '@/lib/utils'
 import type { Token } from '../types'
 import { TokenLogo } from './TokenLogo'
@@ -51,7 +51,6 @@ function TokenSelectButton({ token, onClick, compact = false, className }: Token
       {!compact && (
         <ChevronDown
           aria-hidden
-          strokeWidth={2.25}
           className={cn('-mx-uni-2 size-uni-24', token ? 'text-neutral2' : 'text-white')}
         />
       )}

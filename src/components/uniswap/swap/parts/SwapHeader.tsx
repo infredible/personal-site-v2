@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Settings } from 'lucide-react'
+import { Settings } from '../../icons'
 import { cn } from '@/lib/utils'
 import { SegmentedControl } from '../../SegmentedControl'
 import { UniTooltip } from '../../UniTooltip'
@@ -82,7 +82,6 @@ function SwapSettingsButton({
       {hasCustom && <span className="text-buttonLabel3">{formatPercent(customSlippage, 4)}</span>}
       <Settings
         aria-hidden
-        strokeWidth={2}
         className={cn(
           'size-uni-20 transition-[transform,translate,scale,rotate,color] duration-[80ms] ease-out',
           'group-hover/gear:rotate-90',

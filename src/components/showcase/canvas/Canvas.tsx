@@ -39,7 +39,7 @@ function useMediaQuery(query: string) {
 // so pans never go through React.
 const CANVAS_CSS = `
 [data-canvas-viewport] {
-  background-image: radial-gradient(circle at center, color-mix(in oklch, var(--muted-foreground) 38%, transparent) 0.9px, transparent 1.4px);
+  background-image: radial-gradient(circle at center, color-mix(in oklch, var(--muted-foreground) 18%, transparent) 0.8px, transparent 1.3px);
   background-size: 24px 24px;
 }
 [data-canvas-viewport][data-mode="canvas"] { cursor: grab; overscroll-behavior: contain; }

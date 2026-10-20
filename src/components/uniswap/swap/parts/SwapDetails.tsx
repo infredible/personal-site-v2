@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { ChevronsDownUp, ChevronsUpDown, Fuel } from 'lucide-react'
+import { AlertTriangleFilled, ChevronsIn, ChevronsOut, Gas } from '../../icons'
 import { cn } from '@/lib/utils'
 import { Shimmer, TextSkeleton } from '../../Skeleton'
 import { UniTooltip } from '../../UniTooltip'
@@ -56,19 +56,6 @@ interface SwapDetailsProps {
   className?: string
 }
 
-/** Uniswap's AlertTriangleFilled: a solid triangle with the mark knocked out. */
-function AlertTriangleFilled({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className={cn('shrink-0', className)}>
-      <path
-        d="M10.27 3.98a2 2 0 0 1 3.46 0l8.17 14.02A2 2 0 0 1 20.17 21H3.83a2 2 0 0 1-1.73-3l8.17-14.02Z"
-        fill="currentColor"
-      />
-      <path d="M12 9v4.5" stroke="var(--color-surface1)" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="17" r="1.15" fill="var(--color-surface1)" />
-    </svg>
-  )
-}
 
 function Label({ children, tooltip }: { children: React.ReactNode; tooltip?: React.ReactNode }) {
   const label = <span className="text-body3 text-neutral2 select-none">{children}</span>
@@ -168,13 +155,13 @@ function SwapDetails({
               )}
               aria-hidden={isExpanded || undefined}
             >
-              <Fuel aria-hidden strokeWidth={2} className="size-uni-16" />
+              <Gas aria-hidden className="size-uni-16" />
               <span className="text-body3">{networkCost}</span>
             </span>
             {isExpanded ? (
-              <ChevronsDownUp aria-hidden strokeWidth={2} className="size-uni-20 group-hover/toggle:text-neutral2Hovered" />
+              <ChevronsIn aria-hidden className="size-uni-20 group-hover/toggle:text-neutral2Hovered" />
             ) : (
-              <ChevronsUpDown aria-hidden strokeWidth={2} className="size-uni-20 group-hover/toggle:text-neutral2Hovered" />
+              <ChevronsOut aria-hidden className="size-uni-20 group-hover/toggle:text-neutral2Hovered" />
             )}
           </button>
         </div>

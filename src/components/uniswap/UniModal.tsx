@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { XIcon } from 'lucide-react'
+import { X } from './icons'
 import { Dialog, DialogClose, DialogOverlay, DialogPortal, DialogTrigger } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { uniswapScopeClassName } from './UniswapScope'
@@ -60,7 +60,7 @@ const titleClassName = 'text-subheading1 text-neutral1'
 function CloseGlyph() {
   return (
     <>
-      <XIcon className="size-uni-20" />
+      <X className="size-uni-20" />
       <span className="sr-only">Close</span>
     </>
   )

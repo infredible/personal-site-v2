@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowDownIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, XIcon } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, ArrowsLeftRight, ChevronsIn, ChevronsOut, X } from '../../icons'
 import { cn } from '@/lib/utils'
 import { Pill } from '../../Pill'
 import { UniButton } from '../../UniButton'
@@ -101,7 +101,7 @@ export function SwapReviewPanel({
           {onClose && <CloseButton onClick={onClose} />}
         </div>
         <AmountRow token={input.token} amount={inAmount} />
-        <ArrowDownIcon aria-hidden className="size-uni-20 text-neutral3" />
+        <ArrowDown aria-hidden className="size-uni-20 text-neutral3" />
         <AmountRow token={output.token} amount={outAmount} />
       </div>
 
@@ -148,7 +148,7 @@ function CloseButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="-mr-uni-4 flex size-uni-28 shrink-0 cursor-pointer items-center justify-center rounded-uni-full text-neutral2 outline-none transition-colors hover:bg-surface2 hover:text-neutral1 focus-visible:bg-surface2 focus-visible:text-neutral1"
     >
-      <XIcon className="size-uni-20" />
+      <X className="size-uni-20" />
       <span className="sr-only">Close</span>
     </button>
   )
@@ -235,9 +235,9 @@ function SwapDetails({
         <span className="flex items-center gap-uni-4 pl-uni-4 text-body3 text-neutral2 transition-colors group-hover/toggle:text-neutral2Hovered">
           {expanded ? 'Show less' : 'Show more'}
           {expanded ? (
-            <ChevronsDownUpIcon aria-hidden className="size-uni-16" />
+            <ChevronsIn aria-hidden className="size-uni-16" />
           ) : (
-            <ChevronsUpDownIcon aria-hidden className="size-uni-16" />
+            <ChevronsOut aria-hidden className="size-uni-16" />
           )}
         </span>
         <Separator />
@@ -256,7 +256,7 @@ function SwapDetails({
                 1 {base.symbol} = {formatTokenAmount(ratio)} {quoteToken.symbol}
               </span>
               <span className="text-neutral2">({formatUsd(base.priceUsd)})</span>
-              <ArrowRightLeftIcon
+              <ArrowsLeftRight
                 aria-hidden
                 className="size-uni-12 text-neutral3 transition-colors group-hover/rate:text-neutral2"
               />
@@ -302,7 +302,7 @@ function PendingSteps({ input, approval, stage }: { input: Token; approval: bool
       icon: (
         // Uniswap's swap step glyph: white arrows on a fixed blue disc
         <span className="flex size-uni-24 items-center justify-center rounded-uni-full bg-[#4C82FB] text-white">
-          <ArrowRightLeftIcon aria-hidden className="size-uni-12" strokeWidth={2.5} />
+          <ArrowsLeftRight aria-hidden className="size-uni-12" />
         </span>
       ),
       title: swapStatus === 'active' ? 'Confirm swap in wallet' : 'Swap pending...',
@@ -449,7 +449,7 @@ function SwapSuccess({
           className="flex items-center gap-uni-4 rounded-uni-8 text-buttonLabel3 text-accent1 outline-none transition-colors hover:text-accent1Hovered focus-visible:ring-1 focus-visible:ring-accent1"
         >
           View on Explorer
-          <ArrowUpRightIcon aria-hidden className="size-uni-16" />
+          <ArrowUpRight aria-hidden className="size-uni-16" />
         </a>
       </div>
       <div className="flex pt-uni-4">
