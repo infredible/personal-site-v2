@@ -20,5 +20,12 @@ export {
   popoverSurfaceClassName,
 } from './UniModal'
 export type { ModalSurfaceProps } from './UniModal'
+export {
+  UniPaletteContent,
+  PaletteSurface,
+  paletteSurfaceClassName,
+  paletteContentClassName,
+  paletteOverlayClassName,
+} from './UniModal'
 export { UniTooltip } from './UniTooltip'
 export { Shimmer, TextSkeleton, BlockSkeleton, TokenRowSkeleton, TokenListSkeleton } from './Skeleton'

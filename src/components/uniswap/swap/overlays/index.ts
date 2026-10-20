@@ -2,7 +2,8 @@
 // <ModalSurface> / <PopoverSurface> for static frames, or in <UniModalContent>
 // for the real dialog.
 export { TokenSelectorPanel } from './TokenSelectorPanel'
-export type { TokenSelectorPanelProps } from './TokenSelectorPanel'
+export type { TokenSelectorPanelProps, TokenSelectorCategory, TokenSelectorChain } from './TokenSelectorPanel'
+export { NetworkMenu, ChainLogo, AllNetworksIcon } from './NetworkMenu'
 export { SwapSettingsPanel } from './SwapSettingsPanel'
 export type { SwapSettingsPanelProps } from './SwapSettingsPanel'
 export { SwapReviewPanel } from './SwapReviewPanel'

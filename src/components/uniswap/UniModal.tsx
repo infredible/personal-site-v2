@@ -158,6 +158,92 @@ function PopoverSurface({
   )
 }
 
+/* ---------------------------------------------------------------------------
+ * Palette: a wide, command-palette variant of the modal (the token selector).
+ * No padding or title row: the content draws its own search header, body and
+ * footer. Fixed height, so filtering doesn't make the card jump.
+ * ------------------------------------------------------------------------- */
+
+/** Palette card styling shared by the dialog content and the inline surface. */
+const paletteSurfaceClassName =
+  'flex h-[560px] w-full max-w-[680px] flex-col overflow-hidden rounded-uni-20 border border-surface3 bg-surface1 shadow-uni-medium outline-none'
+
+/**
+ * Positioning + motion for palette content in a portal. Sits in the upper
+ * third like Raycast / Linear's ⌘K and fits short viewports. Motion is nearly
+ * none, since a palette opens many times a day: 150ms fade + 0.98 scale in,
+ * 100ms fade out, no scale under reduced motion.
+ */
+const paletteContentClassName = cn(
+  'fixed left-1/2 top-[clamp(16px,12vh,120px)] z-50 w-[calc(100%-32px)] -translate-x-1/2 origin-top',
+  'h-[min(560px,calc(100dvh-clamp(16px,12vh,120px)-16px))]',
+  'ease-[cubic-bezier(0.23,1,0.32,1)] data-[state=open]:duration-150 data-[state=closed]:duration-100',
+  'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98]',
+  'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
+  'motion-reduce:data-[state=open]:zoom-in-100',
+)
+
+const paletteOverlayClassName = 'bg-scrim data-[state=open]:duration-150 data-[state=closed]:duration-100'
+
+/**
+ * Palette dialog. `title` is the accessible name only (the content's search
+ * field is the visible header). Content that owns Escape (clear the search
+ * first, then close itself) marks its root `data-palette-escape`; Escape
+ * pressed inside it is left to the content instead of closing the dialog.
+ */
+function UniPaletteContent({
+  className,
+  children,
+  title,
+  onEscapeKeyDown,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & { title: React.ReactNode }) {
+  return (
+    <DialogPortal>
+      <DialogOverlay className={paletteOverlayClassName} />
+      <DialogPrimitive.Content
+        data-slot="uni-palette-content"
+        aria-describedby={undefined}
+        className={cn(uniswapScopeClassName, paletteSurfaceClassName, paletteContentClassName, className)}
+        onEscapeKeyDown={(e) => {
+          onEscapeKeyDown?.(e)
+          if (e.target instanceof Element && e.target.closest('[data-palette-escape]')) e.preventDefault()
+        }}
+        {...props}
+      >
+        <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
+        {children}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+}
+
+/** The palette card, inline (no portal, overlay, or positioning), for canvas frames and previews. */
+function PaletteSurface({
+  title,
+  scoped = false,
+  className,
+  ...props
+}: Omit<React.ComponentProps<'div'>, 'title'> & { title?: string; scoped?: boolean }) {
+  return (
+    <div
+      data-slot="uni-palette-surface"
+      role="dialog"
+      aria-label={title}
+      className={cn(scoped && uniswapScopeClassName, paletteSurfaceClassName, className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  UniPaletteContent,
+  PaletteSurface,
+  paletteSurfaceClassName,
+  paletteContentClassName,
+  paletteOverlayClassName,
+}
+
 export {
   Dialog as UniModal,
   DialogTrigger as UniModalTrigger,
