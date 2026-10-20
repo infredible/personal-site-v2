@@ -49,6 +49,8 @@ export interface SwapFormState {
     address?: string
     /** Keyed by token symbol, in whole-token units */
     balances: Record<string, number>
+    /** Balances are still being fetched (page load): panels show skeletons */
+    balancesLoading?: boolean
   }
   slippage: SlippageSettings
 }

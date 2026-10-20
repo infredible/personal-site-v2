@@ -5,6 +5,7 @@ import { Command as CommandPrimitive } from 'cmdk'
 import { CheckIcon, CoinsIcon, SearchIcon } from 'lucide-react'
 import { Command, CommandList } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
+import { TokenListSkeleton } from '../../Skeleton'
 import { SearchInput } from '../../SearchInput'
 import { formatTokenAmount, formatUsd } from '../format'
 import { COMMON_TOKENS, TOKEN_LIST } from '../tokens'
@@ -40,6 +41,8 @@ export interface TokenSelectorPanelProps {
   defaultQuery?: string
   onQueryChange?: (query: string) => void
   autoFocus?: boolean
+  /** List still loading: skeleton rows in place of the sections (search and chips stay usable) */
+  loading?: boolean
   className?: string
   /** Sizing for the scrolling list (default max-h 400px). */
   listClassName?: string
@@ -72,6 +75,7 @@ export function TokenSelectorPanel({
   defaultQuery = '',
   onQueryChange,
   autoFocus,
+  loading = false,
   className,
   listClassName,
 }: TokenSelectorPanelProps) {
@@ -167,7 +171,10 @@ export function TokenSelectorPanel({
           listClassName,
         )}
       >
-        {sections.length === 0 ? (
+        {loading ? (
+          // Uniswap's TOKEN_SELECTOR_LOADING_ROWS
+          <TokenListSkeleton rows={7} withValue className="px-uni-4 pt-uni-8" />
+        ) : sections.length === 0 ? (
           <div className="flex flex-col items-center gap-uni-8 px-uni-16 py-uni-32 text-center">
             <SearchIcon aria-hidden className="size-uni-24 text-neutral3" />
             <p className="text-body2 text-neutral2">

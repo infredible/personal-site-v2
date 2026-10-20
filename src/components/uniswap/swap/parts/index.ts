@@ -13,7 +13,7 @@ export { SwapActionButton } from './SwapActionButton'
 export type { SwapActionButtonProps } from './SwapActionButton'
 export { SwapRateRow, getRateText } from './SwapRateRow'
 export type { SwapRateRowProps } from './SwapRateRow'
-export { SwapDetails } from './SwapDetails'
+export { SwapDetails, SwapDetailsSkeleton } from './SwapDetails'
 export type { SwapDetailsProps } from './SwapDetails'
 export {
   sanitizeAmountInput,

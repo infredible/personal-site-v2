@@ -9,6 +9,7 @@ import {
   CurrencyPanel,
   SwapActionButton,
   SwapDetails,
+  SwapDetailsSkeleton,
   SwapHeader,
   SwapRateRow,
   SwitchButton,
@@ -226,6 +227,45 @@ export function SwapCanvas({ controller }: { controller: CanvasController }) {
               slippage={DEFAULT_SLIPPAGE}
               defaultExpanded
             />
+          </Stage>
+        </CanvasFrame>
+      </CanvasSection>
+
+      <CanvasSection
+        id="loading"
+        title="Loading"
+        description="Skeletons where data hasn't arrived yet: a surface3 pill sized to the text it replaces, under a sweeping shimmer. A refetch keeps old values on screen and pulses them instead."
+      >
+        <CanvasFrame id="loading-page" title="Form · page load" note="Balances loading; Max presets hidden until they land">
+          <Stage>
+            <SwapFormView state={preset('page-load')} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="loading-first-quote" title="Form · first quote" note="Nothing to pulse yet, so Buy and the footer are skeletons">
+          <Stage>
+            <SwapFormView state={preset('first-quote')} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="loading-balance" title="Sell · balance loading">
+          <Stage>
+            <CurrencyPanel field="input" label="Sell" token={eth} amount="" balance={MOCK_WALLET.balances.ETH} balanceLoading focused />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="loading-buy" title="Buy · first quote">
+          <Stage>
+            <CurrencyPanel field="output" label="Buy" token={usdc} amount="" balance={MOCK_WALLET.balances.USDC} loading />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="loading-details" title="Details · first quote">
+          <Stage>
+            <SwapDetailsSkeleton />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="loading-token-list" title="Token selector · loading" note="Rows fade out down the list, as Uniswap's Loader.Token">
+          <Stage width={452} className="bg-transparent p-0">
+            <ModalSurface title="Select a token" onClose={() => {}}>
+              <TokenSelectorPanel tokens={TOKEN_LIST} balances={MOCK_WALLET.balances} loading />
+            </ModalSurface>
           </Stage>
         </CanvasFrame>
       </CanvasSection>

@@ -11,6 +11,10 @@ const links = [{ href: '/showcase/uniswap/system', label: 'Design system', icon:
 
 const presets = SWAP_PRESETS.map(({ id, label }) => ({ id, label }))
 
+// The reset count whose load we last simulated. Loading plays on the first
+// page load and after Reset, not on every preset switch.
+let simulatedForReset: number | null = null
+
 export function SwapShowcase() {
   const controller = useCanvasController()
 
@@ -26,7 +30,16 @@ export function SwapShowcase() {
       renderComponent={({ preset, resetKey }) => {
         const state = (preset && getPreset(preset)?.state) || SWAP_PRESETS[0].state
         // Remount on preset change or Reset so the live state starts from the preset
-        return <SwapBox key={`${preset}-${resetKey}`} initialState={state} />
+        return (
+          <SwapBox
+            key={`${preset}-${resetKey}`}
+            initialState={state}
+            simulateLoading={simulatedForReset !== resetKey}
+            onLoaded={() => {
+              simulatedForReset = resetKey
+            }}
+          />
+        )
       }}
       renderCanvas={() => <SwapCanvas controller={controller} />}
     />

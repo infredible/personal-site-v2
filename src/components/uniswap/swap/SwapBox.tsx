@@ -21,6 +21,8 @@ import type { SwapField, SwapFormState, Token } from './types'
  */
 
 const QUOTE_LATENCY_MS = 450
+const BALANCES_LATENCY_MS = 900
+const TOKEN_LIST_LATENCY_MS = 600
 
 /** Fake price impact: grows with trade size so large swaps show warnings. */
 function priceImpactFor(usdValue: number) {
@@ -46,11 +48,20 @@ function requote(state: SwapFormState): SwapFormState {
 
 export interface SwapBoxProps {
   initialState: SwapFormState
+  /** Simulate a page load: wallet balances start loading and resolve after a short delay. */
+  simulateLoading?: boolean
+  /** Called once simulated loading finishes. */
+  onLoaded?: () => void
   className?: string
 }
 
-export function SwapBox({ initialState, className }: SwapBoxProps) {
-  const [state, setState] = React.useState(initialState)
+export function SwapBox({ initialState, simulateLoading = false, onLoaded, className }: SwapBoxProps) {
+  const [state, setState] = React.useState<SwapFormState>(() =>
+    simulateLoading && initialState.wallet.connected
+      ? { ...initialState, wallet: { ...initialState.wallet, balancesLoading: true } }
+      : initialState,
+  )
+  const [tokenListLoaded, setTokenListLoaded] = React.useState(false)
   const [selecting, setSelecting] = React.useState<SwapField | null>(null)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [deadline, setDeadline] = React.useState(30)
@@ -58,6 +69,26 @@ export function SwapBox({ initialState, className }: SwapBoxProps) {
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   React.useEffect(() => () => clearTimeout(timer.current), [])
+
+  // Balances resolve after a delay (page load simulation, or the page-load preset)
+  const balancesLoading = Boolean(state.wallet.balancesLoading)
+  const onLoadedRef = React.useRef(onLoaded)
+  onLoadedRef.current = onLoaded
+  React.useEffect(() => {
+    if (!balancesLoading) return
+    const id = setTimeout(() => {
+      setState((s) => ({ ...s, wallet: { ...s.wallet, balancesLoading: false } }))
+      onLoadedRef.current?.()
+    }, BALANCES_LATENCY_MS)
+    return () => clearTimeout(id)
+  }, [balancesLoading])
+
+  // The token list loads the first time the selector opens
+  React.useEffect(() => {
+    if (selecting === null || tokenListLoaded) return
+    const id = setTimeout(() => setTokenListLoaded(true), TOKEN_LIST_LATENCY_MS)
+    return () => clearTimeout(id)
+  }, [selecting, tokenListLoaded])
 
   /** Applies a change, then shows a loading quote and resolves it after the fake latency. */
   const update = React.useCallback((change: (s: SwapFormState) => SwapFormState) => {
@@ -176,6 +207,7 @@ export function SwapBox({ initialState, className }: SwapBoxProps) {
               balances={state.wallet.balances}
               selectedSymbol={state[selecting].token?.symbol}
               onSelect={selectToken}
+              loading={!tokenListLoaded || balancesLoading}
               autoFocus
             />
           )}

@@ -105,7 +105,29 @@ export const SWAP_PRESETS: SwapPreset[] = [
     state: {
       ...filled,
       input: { token: TOKENS.ETH, amount: '1.5' },
+      // A refetch keeps the previous quote on screen (dimmed) until the new one lands
+      quote: { ...filled.quote, status: 'loading' },
+    },
+  },
+  {
+    id: 'first-quote',
+    label: 'First quote',
+    description: 'An amount was just typed with no quote yet: the Buy side and details are skeletons.',
+    state: {
+      ...base,
+      input: { token: TOKENS.ETH, amount: '1' },
+      output: { token: TOKENS.USDC, amount: '' },
       quote: { status: 'loading' },
+    },
+  },
+  {
+    id: 'page-load',
+    label: 'Page load',
+    description: 'Wallet balances are still loading: balances are skeletons and Max is hidden.',
+    state: {
+      ...base,
+      output: { token: TOKENS.USDC, amount: '' },
+      wallet: { ...MOCK_WALLET, balancesLoading: true },
     },
   },
   {

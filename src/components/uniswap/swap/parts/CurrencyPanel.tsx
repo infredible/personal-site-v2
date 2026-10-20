@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { Shimmer, TextSkeleton } from '../../Skeleton'
 import { UniButton } from '../../UniButton'
 import { UniTooltip } from '../../UniTooltip'
 import { formatTokenAmount, formatUsd } from '../format'
@@ -47,8 +48,13 @@ interface CurrencyPanelProps {
   balance?: number
   /** Distinct focused frame. Uncontrolled (tracks the input's own focus) when omitted. */
   focused?: boolean
-  /** The derived side while a quote loads: the amount pulses */
+  /**
+   * The derived side while a quote loads. With an amount already shown (refetch)
+   * it pulses; without one (first quote) the amount and fiat value are skeletons.
+   */
   loading?: boolean
+  /** Balances still loading (page load): the balance is a skeleton */
+  balanceLoading?: boolean
   /** Insufficient balance: amount and balance turn statusCritical */
   error?: boolean
   /** Renders a static input (for canvas displays). Defaults to true when there's no onAmountChange. */
@@ -99,6 +105,7 @@ function CurrencyPanel({
   balance,
   focused,
   loading = false,
+  balanceLoading = false,
   error = false,
   readOnly,
   hovered = false,
@@ -147,11 +154,14 @@ function CurrencyPanel({
     else if (!isReadOnly) localInputRef.current?.focus()
   }
 
-  const showPresets = isInput && Boolean(token) && hasBalance && maxPlacement === 'header' && Boolean(onMax || onPercent)
+  const showPresets = isInput && Boolean(token) && hasBalance && !balanceLoading && maxPlacement === 'header' && Boolean(onMax || onPercent)
   const presets = onPercent ? PRESETS : PRESETS.filter((p) => p === 100)
   const showQuickSelect = !isInput && !token && Boolean(quickSelectTokens?.length)
   const showBalance = Boolean(token) && balance !== undefined && !(!isInput && balance === 0)
   const balanceClickable = showBalance && hasBalance && Boolean(onMax)
+
+  // First quote: nothing to pulse yet, so show skeletons where the result will land
+  const firstQuote = loading && !hasAmount && Boolean(token)
 
   const fiatText = !hasAmount ? '$0' : usdValue !== undefined ? formatUsd(usdValue) : '-'
   const amountColor = error ? 'text-statusCritical' : 'text-neutral1'
@@ -202,7 +212,7 @@ function CurrencyPanel({
                       size="xxsmall"
                       emphasis="secondary"
                       disabled={isMax && isMaxSet}
-                      className="border-surface3 py-uni-4 hover:scale-[1.02] active:scale-[0.99] disabled:border-transparent"
+                      className="border-0 py-uni-4 hover:scale-[1.02] active:scale-[0.99]"
                       onClick={(event) => {
                         event.stopPropagation()
                         if (isMax) onMax?.()
@@ -252,7 +262,7 @@ function CurrencyPanel({
         <div className="flex min-h-[60px] items-center justify-between py-uni-8">
           <div
             ref={amountAreaRef}
-            className="mr-uni-8 flex min-h-uni-24 min-w-0 flex-1 items-center"
+            className="relative mr-uni-8 flex min-h-uni-24 min-w-0 flex-1 items-center"
             style={loading && hasAmount ? { animation: 'uni-refetch-pulse 800ms ease-in-out infinite' } : undefined}
           >
             {token ? (
@@ -266,7 +276,7 @@ function CurrencyPanel({
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="0"
+                placeholder={firstQuote ? '' : '0'}
                 aria-label={`${label} amount`}
                 aria-invalid={error || undefined}
                 readOnly={isReadOnly}
@@ -299,6 +309,15 @@ function CurrencyPanel({
                 0
               </span>
             )}
+            {firstQuote && (
+              <Shimmer className="pointer-events-none absolute inset-y-0 left-0 flex items-center">
+                <TextSkeleton
+                  placeholder="0.0000"
+                  className="font-uni [font-weight:485]"
+                  style={{ fontSize, lineHeight: `${fontSize * 1.2}px` }}
+                />
+              </Shimmer>
+            )}
           </div>
           <TokenSelectButton token={token} onClick={onTokenClick} />
         </div>
@@ -308,13 +327,25 @@ function CurrencyPanel({
           className={cn('flex min-h-[18px] items-center', !token && 'pointer-events-none opacity-0')}
           aria-hidden={!token || undefined}
         >
-          <span
-            className="min-w-0 flex-1 truncate text-body3 text-neutral2 select-none"
-            style={loading && hasAmount ? { animation: 'uni-refetch-pulse 800ms ease-in-out infinite' } : undefined}
-          >
-            {fiatText}
-          </span>
-          {showBalance && token && (
+          {firstQuote ? (
+            <span className="min-w-0 flex-1">
+              <TextSkeleton placeholder="$0,000.00" className="text-body3" shimmer />
+            </span>
+          ) : (
+            <span
+              className="min-w-0 flex-1 truncate text-body3 text-neutral2 select-none"
+              style={loading && hasAmount ? { animation: 'uni-refetch-pulse 800ms ease-in-out infinite' } : undefined}
+            >
+              {fiatText}
+            </span>
+          )}
+          {balanceLoading && token ? (
+            <TextSkeleton
+              placeholder={`0.0000 ${token.symbol}`}
+              className="ml-auto text-body3"
+              shimmer
+            />
+          ) : showBalance && token && (
             <div className="ml-auto flex items-center gap-uni-4">
               {balanceClickable ? (
                 <button

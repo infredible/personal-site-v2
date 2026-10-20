@@ -5,6 +5,9 @@ import { ArrowDownIcon, ChevronDownIcon, InfoIcon } from 'lucide-react'
 import {
   Pill,
   SearchInput,
+  Shimmer,
+  TextSkeleton,
+  TokenListSkeleton,
   SegmentedControl,
   UniButton,
   UniModal,
@@ -13,7 +16,6 @@ import {
   UniTooltip,
 } from '@/components/uniswap'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Command as CommandPrimitive } from 'cmdk'
 
 const variants = ['default', 'branded', 'critical', 'warning'] as const
@@ -189,13 +191,16 @@ export function ComponentGallery() {
           </UniModal>
         </Demo>
 
-        <Demo title="Skeleton" description="Stock shadcn Skeleton; --accent maps to surface2Hovered.">
-          <div className="flex items-center gap-uni-12">
-            <Skeleton className="size-uni-36 rounded-uni-full" />
-            <div className="flex flex-col gap-uni-8">
-              <Skeleton className="h-uni-12 w-[120px]" />
-              <Skeleton className="h-uni-12 w-[72px]" />
-            </div>
+        <Demo
+          title="Skeleton"
+          description="Uniswap's loaders: TextSkeleton takes the size of the text it replaces; Shimmer sweeps a gradient mask over its children."
+        >
+          <div className="flex flex-col gap-uni-12">
+            <Shimmer className="flex flex-col items-start gap-uni-4">
+              <TextSkeleton placeholder="1,699.24" className="text-heading2" />
+              <TextSkeleton placeholder="$1,699.24" className="text-body3" />
+            </Shimmer>
+            <TokenListSkeleton rows={3} withValue className="-mx-uni-8" />
           </div>
         </Demo>
       </div>

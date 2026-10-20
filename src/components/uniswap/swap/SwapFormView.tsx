@@ -8,6 +8,7 @@ import {
   CurrencyPanel,
   SwapActionButton,
   SwapDetails,
+  SwapDetailsSkeleton,
   SwapHeader,
   SwitchButton,
   SwitchButtonSeam,
@@ -85,7 +86,9 @@ function SwapFormView({
 
   const inputAmount = parseAmount(input.amount)
   const inputBalance = balanceOf(input.token)
+  const balancesLoading = Boolean(state.wallet.balancesLoading)
   const insufficient =
+    !balancesLoading &&
     inputBalance !== undefined && Number.isFinite(inputAmount) && inputAmount > inputBalance
 
   const quoting = quote.status === 'loading'
@@ -95,8 +98,12 @@ function SwapFormView({
   const focusControlled = state.focusedField !== undefined || Boolean(onFocusField)
   const focusedFor = (field: SwapField) => (focusControlled ? state.focusedField === field : undefined)
 
+  const hasPair = Boolean(input.token && output.token)
+  // Keep the details through a refetch (dimmed) instead of collapsing and jumping;
+  // the first quote has nothing to show yet, so it gets a skeleton footer.
   const showDetails =
-    quote.status === 'ready' && Boolean(input.token && output.token) && parseAmount(output.amount) > 0 && quote.rate
+    (quote.status === 'ready' || quoting) && hasPair && parseAmount(output.amount) > 0 && Boolean(quote.rate)
+  const showDetailsSkeleton = quoting && hasPair && !showDetails
 
   const quickSelectTokens = React.useMemo(
     () => COMMON_TOKENS.filter((token) => token.symbol !== input.token?.symbol),
@@ -125,6 +132,7 @@ function SwapFormView({
             balance={inputBalance}
             focused={focusedFor('input')}
             loading={quoting && derivedField === 'input'}
+            balanceLoading={balancesLoading}
             error={insufficient}
             onAmountChange={onAmountChange && ((amount) => onAmountChange('input', amount))}
             onFocus={onFocusField && (() => onFocusField('input'))}
@@ -144,6 +152,7 @@ function SwapFormView({
             balance={balanceOf(output.token)}
             focused={focusedFor('output')}
             loading={quoting && derivedField === 'output'}
+            balanceLoading={balancesLoading}
             onAmountChange={onAmountChange && ((amount) => onAmountChange('output', amount))}
             onFocus={onFocusField && (() => onFocusField('output'))}
             onTokenClick={onTokenClick && (() => onTokenClick('output'))}
@@ -166,8 +175,10 @@ function SwapFormView({
               onExpandedChange={onDetailsExpandedChange}
               rateInverted={rateInverted}
               onRateInvertedChange={onRateInvertedChange}
+              loading={quoting}
             />
           )}
+          {showDetailsSkeleton && <SwapDetailsSkeleton />}
         </div>
       </div>
     </div>

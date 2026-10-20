@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { ChevronsDownUp, ChevronsUpDown, Fuel } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Shimmer, TextSkeleton } from '../../Skeleton'
 import { UniTooltip } from '../../UniTooltip'
 import { getPriceImpactSeverity } from '../getSwapAction'
 import { formatPercent, formatTokenAmount, formatUsd } from '../format'
@@ -250,3 +251,17 @@ function SwapDetails({
 
 export { SwapDetails }
 export type { SwapDetailsProps }
+
+/** Collapsed footer while the first quote loads: rate and network cost as skeletons. */
+function SwapDetailsSkeleton({ className }: { className?: string }) {
+  return (
+    <div data-slot="swap-details-skeleton" role="status" aria-label="Loading quote details" className={cn('min-h-uni-40 pt-uni-12', className)}>
+      <Shimmer className="flex items-center justify-between gap-uni-8 px-uni-8 py-uni-4">
+        <TextSkeleton placeholder="1 USDC = 0.000294 ETH ($1.00)" className="text-body3" />
+        <TextSkeleton placeholder="$0.00 ⇕" className="text-body3" />
+      </Shimmer>
+    </div>
+  )
+}
+
+export { SwapDetailsSkeleton }

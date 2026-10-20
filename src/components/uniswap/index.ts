@@ -19,3 +19,4 @@ export {
 } from './UniModal'
 export type { ModalSurfaceProps } from './UniModal'
 export { UniTooltip } from './UniTooltip'
+export { Shimmer, TextSkeleton, BlockSkeleton, TokenRowSkeleton, TokenListSkeleton } from './Skeleton'
