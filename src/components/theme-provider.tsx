@@ -45,10 +45,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme(prev => prev === "light" ? "dark" : "light");
   };
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
+  // Always render the provider: swapping a bare fragment for it after mount
+  // would remount the whole tree and wipe client state.
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}

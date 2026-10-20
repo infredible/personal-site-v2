@@ -75,6 +75,8 @@ export class CanvasEngine {
   readonly minZoom = MIN_ZOOM
   readonly maxZoom = MAX_ZOOM
   fitPadding = 64
+  /** Section or frame id to open on when the URL has no #hash (instead of fitting everything). */
+  initialFocus: string | undefined = undefined
 
   private t: Transform = { x: 0, y: 0, z: 1 }
   private mode: CanvasMode = "unbound"
@@ -90,6 +92,7 @@ export class CanvasEngine {
   /** True until the user pans/zooms: resizes and late layout (fonts) re-fit. */
   private autoFit = true
   private hashHandled = false
+  private listGuardCleanup: (() => void) | null = null
 
   private raf = 0
   private anim: Animation | null = null
@@ -233,6 +236,8 @@ export class CanvasEngine {
   }
 
   detach() {
+    this.listGuardCleanup?.()
+    this.listGuardCleanup = null
     this.cleanup?.()
     this.cleanup = null
     this.resizeObserver = null
@@ -254,7 +259,10 @@ export class CanvasEngine {
     if (!viewport || !board) return
     const prev = this.mode
     this.mode = mode
+    this.listGuardCleanup?.()
+    this.listGuardCleanup = null
     if (mode === "list") {
+      this.listGuardCleanup = this.guardListScroll(viewport)
       this.cancelAnimation()
       board.style.transform = ""
       board.style.willChange = ""
@@ -271,7 +279,7 @@ export class CanvasEngine {
       this.applyNow()
       if (!this.hashHandled) {
         this.hashHandled = true
-        const id = decodeURIComponent(window.location.hash.slice(1))
+        const id = decodeURIComponent(window.location.hash.slice(1)) || this.initialFocus
         if (id) this.reveal(id, { animate: false })
       }
     }
@@ -426,6 +434,33 @@ export class CanvasEngine {
    * the scroll and turn it into a pan instead (ignored while an animation such
    * as reveal() is in charge).
    */
+  /**
+   * List mode is a plain scroller, so content that scrolls itself into view on
+   * mount (e.g. cmdk's selected item) would drag the whole list down. Until the
+   * visitor interacts, undo those programmatic scrolls (unless a #hash asked
+   * for a position).
+   */
+  private guardListScroll(viewport: HTMLElement) {
+    if (window.location.hash) return null
+    viewport.scrollTop = 0
+    let userActive = false
+    const markActive = () => {
+      userActive = true
+      stop()
+    }
+    const onScroll = () => {
+      if (!userActive) viewport.scrollTop = 0
+    }
+    const events = ["pointerdown", "wheel", "touchstart", "keydown"] as const
+    events.forEach((e) => viewport.addEventListener(e, markActive, { capture: true, passive: true }))
+    viewport.addEventListener("scroll", onScroll, { passive: true })
+    function stop() {
+      events.forEach((e) => viewport.removeEventListener(e, markActive, { capture: true }))
+      viewport.removeEventListener("scroll", onScroll)
+    }
+    return stop
+  }
+
   private absorbScroll() {
     const vp = this.viewport
     if (!vp || this.mode !== "canvas") return false

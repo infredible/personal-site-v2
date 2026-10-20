@@ -63,6 +63,8 @@ export interface CanvasProps {
   maxRowWidth?: number
   /** Padding around content when fitting (screen px). Default 64. */
   fitPadding?: number
+  /** Section or frame id to open on when the URL has no #hash. Defaults to fitting all content. */
+  initialFocus?: string
   "aria-label"?: string
 }
 
@@ -73,6 +75,7 @@ export function Canvas({
   style,
   maxRowWidth = 1440,
   fitPadding = 64,
+  initialFocus,
   "aria-label": ariaLabel = "Design canvas",
 }: CanvasProps) {
   const fallback = useCanvasController()
@@ -83,7 +86,8 @@ export function Canvas({
 
   useIsomorphicLayoutEffect(() => {
     engine.fitPadding = fitPadding
-  }, [engine, fitPadding])
+    engine.initialFocus = initialFocus
+  }, [engine, fitPadding, initialFocus])
 
   useIsomorphicLayoutEffect(() => {
     engine.attach(viewportRef.current!, boardRef.current!)
