@@ -320,6 +320,40 @@
     @apply text-foreground hover:opacity-70;
   }
 
+  /* Showcase index: details swapping in as the orbit's current card changes */
+  @keyframes showcase-text-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+      filter: blur(3px);
+    }
+  }
+
+  .showcase-text-in {
+    animation: showcase-text-in 320ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  }
+
+  /* Side panels fade while the focused card pushes through to its page */
+  .orbit-panel {
+    transition: opacity 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  [data-launching] .orbit-panel {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes showcase-fade-in {
+      from {
+        opacity: 0;
+      }
+    }
+
+    .showcase-text-in {
+      animation-name: showcase-fade-in;
+    }
+  }
+
   /* Project-specific image and video styles */
   .hero-image {
     @apply w-full rounded-lg my-12;
