@@ -249,11 +249,11 @@ function ShowcaseBar({
   return (
     <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background">
       {/*
-        Desktop: one row (identity, view switch, view controls, theme).
-        Mobile: identity + view switch, then view controls + theme.
+        Wide (xl+): one row (identity, view switch, view controls, theme).
+        Narrower: identity + view switch, then view controls + theme.
       */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:flex-nowrap sm:px-5">
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-5 xl:flex-nowrap">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 xl:flex-none">
           <Link
             href={backHref}
             aria-label={backLabel}
@@ -274,11 +274,11 @@ function ShowcaseBar({
           options={VIEW_OPTIONS}
           value={state.view}
           onValueChange={actions.setView}
-          className="sm:ml-2"
+          className="xl:ml-2"
         />
 
-        <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:justify-end">
+        <div className="flex w-full min-w-0 items-center gap-2 xl:w-auto xl:flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2 xl:justify-end">
             {state.view === 'component' ? (
               <>
                 {presets && presets.length > 0 && state.preset && (
