@@ -29,3 +29,5 @@ export {
 } from './UniModal'
 export { UniTooltip } from './UniTooltip'
 export { Shimmer, TextSkeleton, BlockSkeleton, TokenRowSkeleton, TokenListSkeleton } from './Skeleton'
+export { TokenPriceSparkline } from './chart'
+export type { TokenPriceSparklineProps, ChartPeriod } from './chart'
