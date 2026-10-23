@@ -521,10 +521,7 @@ export function TokenSelectorPanel({
                     token={token}
                     balance={balances[token.symbol] ?? 0}
                     owned={isOwned(token, balances)}
-                    networks={
-                      currentChain ? [currentChain] : chains.filter((c) => token.chains?.includes(c.id))
-                    }
-                    filtered={Boolean(currentChain)}
+                    chain={currentChain}
                     selected={token.symbol === selectedSymbol}
                     unavailable={isUnavailable(token)}
                     switches={otherAction === 'switch' && token.symbol === otherSymbol}
@@ -646,8 +643,7 @@ function TokenRow({
   token,
   balance,
   owned,
-  networks,
-  filtered,
+  chain,
   selected,
   unavailable,
   switches,
@@ -658,9 +654,7 @@ function TokenRow({
   token: Token
   balance: number
   owned: boolean
-  /** Networks to badge after the ticker: the filtered network, or every network the token is on */
-  networks: Chain[]
-  filtered: boolean
+  chain?: Chain
   selected: boolean
   unavailable: boolean
   switches: boolean
@@ -675,14 +669,21 @@ function TokenRow({
       onSelect={onSelect}
       aria-current={selected || undefined}
       className={cn(
-        // --row-bg lets the overlapping network badges cut their rings out of whatever the row sits on
+        // --row-bg lets the logo's chain badge cut its ring out of whatever the row sits on
         'group/row flex h-[56px] cursor-pointer items-center gap-uni-12 rounded-uni-12 px-uni-12 outline-none select-none',
         '[--row-bg:var(--uni-surface1)] data-[selected=true]:bg-surface2Hovered data-[selected=true]:[--row-bg:var(--uni-surface2Hovered)]',
         'data-[disabled=true]:cursor-default',
       )}
     >
-      <span className={cn('shrink-0', unavailable && 'opacity-40')}>
+      <span className={cn('relative shrink-0', unavailable && 'opacity-40')}>
         <TokenLogo token={token} size={36} />
+        {chain && (
+          <ChainLogo
+            chain={chain}
+            size={16}
+            className="absolute -right-uni-2 -bottom-uni-2 ring-2 ring-(color:--row-bg)"
+          />
+        )}
       </span>
 
       <span className={cn('flex min-w-0 flex-1 flex-col', unavailable && 'opacity-40')}>
@@ -701,10 +702,7 @@ function TokenRow({
             </span>
           )}
         </span>
-        <span className="flex min-w-0 items-center gap-uni-6">
-          <span className="truncate text-body3 text-neutral2">{token.symbol}</span>
-          <NetworkBadges networks={networks} showName={filtered} />
-        </span>
+        <span className="truncate text-body3 text-neutral2">{token.symbol}</span>
       </span>
 
       {/* Value column: always present and right-aligned, whatever the row's state */}
@@ -724,43 +722,6 @@ function TokenRow({
         )}
       </span>
     </CommandPrimitive.Item>
-  )
-}
-
-const MAX_BADGES = 5
-
-/**
- * Networks after the ticker: one logo + name when a network filter is on,
- * otherwise an overlapping stack (up to 5, then "+N") of every network the
- * token is listed on.
- */
-function NetworkBadges({ networks, showName }: { networks: Chain[]; showName: boolean }) {
-  if (networks.length === 0) return null
-  const label = networks.map((n) => n.name).join(', ')
-  if (showName) {
-    return (
-      <span className="flex shrink-0 items-center gap-uni-4 text-body4 text-neutral2">
-        <ChainLogo chain={networks[0]} size={12} />
-        {networks[0].name}
-      </span>
-    )
-  }
-  const shown = networks.slice(0, MAX_BADGES)
-  const rest = networks.length - shown.length
-  return (
-    <span title={label} className="flex shrink-0 items-center">
-      <span className="sr-only">On {label}</span>
-      {shown.map((network, i) => (
-        <ChainLogo
-          key={network.id}
-          chain={network}
-          size={16}
-          className={cn('ring-2 ring-(color:--row-bg)', i > 0 && '-ml-uni-4')}
-          style={{ zIndex: shown.length - i }}
-        />
-      ))}
-      {rest > 0 && <span className="ml-uni-4 text-body4 text-neutral3">+{rest}</span>}
-    </span>
   )
 }
 
