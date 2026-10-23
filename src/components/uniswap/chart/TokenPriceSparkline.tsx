@@ -222,8 +222,10 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
   }
 
   const hovered = !loading && hoverIndex !== null ? hoverIndex : null
-  const x = hovered !== null ? (xAt(hovered, n) / VIEW_W) * 100 : 0
-  const y = hovered !== null ? (model.ys[hovered] / VIEW_H) * 100 : 0
+  // The dot sits on the scrubbed point, else blips on the latest one
+  const marked = loading ? null : (hovered ?? n - 1)
+  const x = marked !== null ? (xAt(marked, n) / VIEW_W) * 100 : 0
+  const y = marked !== null ? (model.ys[marked] / VIEW_H) * 100 : 0
 
   return (
     <div
@@ -240,8 +242,8 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
           : undefined
       }
       className={cn(
-        'relative min-h-0 rounded-uni-12 outline-none select-none focus-visible:ring-1 focus-visible:ring-neutral3',
-        interactive && 'cursor-crosshair touch-pan-y',
+        'relative min-h-0 rounded-r-uni-12 outline-none select-none focus-visible:ring-1 focus-visible:ring-neutral3',
+        interactive && 'cursor-none touch-pan-y',
         loading ? 'text-neutral3' : DIRECTION_TEXT[model.direction],
         // Direction changes (e.g. switching to a down token) recolor with the morph
         'transition-colors duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]',
@@ -290,6 +292,8 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
           preserveAspectRatio="none"
           aria-hidden
           className="absolute inset-0 size-full overflow-visible"
+          // The line runs to the card's left edge and fades in from it
+          style={{ maskImage: 'linear-gradient(to right, transparent, black 20%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%)' }}
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -317,15 +321,21 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
       </Shimmer>
 
       {hovered !== null && (
-        <>
-          {/* Crosshair: Uniswap's v2 hover style, a solid surface3 vertical line, no horizontal */}
-          <span aria-hidden className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-surface3" style={{ left: `${x}%` }} />
-          {/* CustomHoverMarker: 16px halo at 20%, 10px dot with a 2px surface1 ring */}
-          <span aria-hidden className="pointer-events-none absolute" style={{ left: `${x}%`, top: `${y}%` }}>
-            <span className="absolute size-uni-16 -translate-1/2 rounded-uni-full bg-current opacity-20" />
-            <span className="absolute size-[10px] -translate-1/2 rounded-uni-full border-2 border-surface1 bg-current" />
-          </span>
-        </>
+        // Crosshair: a dotted vertical line, no horizontal
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 w-0 -translate-x-1/2 border-l border-dotted border-neutral3"
+          style={{ left: `${x}%` }}
+        />
+      )}
+      {marked !== null && (
+        <span aria-hidden className="pointer-events-none absolute" style={{ left: `${x}%`, top: `${y}%` }}>
+          {/* At rest, the latest point blips: a halo pings out from the dot */}
+          {hovered === null && (
+            <span className="absolute size-uni-16 -translate-1/2 rounded-uni-full bg-current opacity-40 motion-safe:animate-ping" />
+          )}
+          <span className="absolute size-[10px] -translate-1/2 rounded-uni-full border-2 border-white bg-current" />
+        </span>
       )}
     </div>
   )
@@ -417,7 +427,8 @@ function TokenPriceSparklineInner({
       </div>
       <div
         data-explode={explode ? 'chart' : undefined}
-        className={cn(height && 'flex min-h-0 flex-1 basis-0 flex-col')}
+        // Bleeds into the card's left padding so the line starts at the edge
+        className={cn('-ml-uni-8', height && 'flex min-h-0 flex-1 basis-0 flex-col')}
         style={height ? { minHeight: MIN_CHART_HEIGHT } : undefined}
       >
         <SparklineChart
