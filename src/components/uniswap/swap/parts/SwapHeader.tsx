@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Settings } from '../../icons'
+import { LineChartDots, Settings } from '../../icons'
 import { cn } from '@/lib/utils'
 import { SegmentedControl } from '../../SegmentedControl'
 import { UniTooltip } from '../../UniTooltip'
@@ -107,13 +107,25 @@ interface SwapHeaderProps {
   mode: SwapMode
   onModeChange?: (mode: SwapMode) => void
   onSettingsClick?: () => void
+  /** Shows the chart toggle left of the gear */
+  onChartToggle?: () => void
+  chartVisible?: boolean
   /** Fraction; shows the slippage badge on the gear */
   customSlippage?: number
   autoSlippage?: number
   className?: string
 }
 
-function SwapHeader({ mode, onModeChange, onSettingsClick, customSlippage, autoSlippage, className }: SwapHeaderProps) {
+function SwapHeader({
+  mode,
+  onModeChange,
+  onSettingsClick,
+  onChartToggle,
+  chartVisible = true,
+  customSlippage,
+  autoSlippage,
+  className,
+}: SwapHeaderProps) {
   return (
     <div data-slot="swap-header" className={cn('flex items-center justify-between', className)}>
       <SegmentedControl
@@ -126,6 +138,23 @@ function SwapHeader({ mode, onModeChange, onSettingsClick, customSlippage, autoS
         className="max-[450px]:gap-uni-8"
       />
       <div className="flex items-center gap-uni-8">
+        {onChartToggle && (
+          <button
+            type="button"
+            data-slot="swap-chart-toggle"
+            aria-label={chartVisible ? 'Hide chart' : 'Show chart'}
+            aria-pressed={chartVisible}
+            onClick={onChartToggle}
+            className={cn(
+              'flex size-uni-32 shrink-0 cursor-pointer items-center justify-center rounded-uni-full outline-none',
+              'transition-colors duration-[80ms] ease-out hover:text-neutral2Hovered',
+              'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
+              chartVisible ? 'text-neutral1' : 'text-neutral2',
+            )}
+          >
+            <LineChartDots className="size-uni-20" />
+          </button>
+        )}
         {mode === 'swap' && (
           <SwapSettingsButton customSlippage={customSlippage} autoSlippage={autoSlippage} onClick={onSettingsClick} />
         )}

@@ -5,6 +5,8 @@ import { animate, useReducedMotion, type AnimationPlaybackControls } from 'frame
 import { cn } from '@/lib/utils'
 import { SegmentedControl } from '../SegmentedControl'
 import { Shimmer, TextSkeleton } from '../Skeleton'
+import { ArrowUpRight, Heart } from '../icons'
+import { UniTooltip } from '../UniTooltip'
 import { TokenLogo } from '../swap/parts/TokenLogo'
 import type { Token } from '../swap/types'
 import { CHART_PERIODS, getMockPriceHistory, isStablecoin, type ChartPeriod, type PricePoint } from './mockPriceHistory'
@@ -28,8 +30,8 @@ import {
 /*
  * TokenPriceSparkline: the mini price chart Uniswap web shows beside the swap
  * box on wide screens (apps/web/src/pages/Swap/Swap/SlideoutChartCard):
- * token row, price + change, a line chart with a fill fading down from the
- * line, and a 1H…1Y period selector. Hover or touch-drag scrubs: a crosshair
+ * token row, price + change with a 1H…1Y period selector beside it, and a
+ * line chart with a fill fading down from the line. Hover or touch-drag scrubs: a crosshair
  * and dot follow the pointer and the header shows that point's price, change
  * from the period start, and time; leaving reverts to the latest price.
  *
@@ -121,36 +123,76 @@ export interface SparklineHeaderProps {
   hoverIndex?: number | null
   /** Price history hasn't arrived: price and change are skeletons (the token row is already known) */
   loading?: boolean
+  /** Rendered right of the price, top-aligned (the card puts the period selector here) */
+  aside?: React.ReactNode
   className?: string
 }
 
-export function SparklineHeader({ model, hoverIndex = null, loading = false, className }: SparklineHeaderProps) {
+/** 32px round icon button with a 20px icon, like the swap header's gear; tooltip names it */
+function HeaderIconButton({ label, className, children, ...props }: React.ComponentProps<'button'> & { label: string }) {
+  return (
+    <UniTooltip content={label} side="top">
+      <button
+        type="button"
+        aria-label={label}
+        className={cn(
+          'flex size-uni-32 shrink-0 cursor-pointer items-center justify-center rounded-uni-full text-neutral2 outline-none',
+          'transition-colors duration-[80ms] ease-out hover:text-neutral2Hovered [&_svg]:size-uni-20',
+          'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </button>
+    </UniTooltip>
+  )
+}
+
+export function SparklineHeader({ model, hoverIndex = null, loading = false, aside, className }: SparklineHeaderProps) {
   const { token, points, start, period } = model
   const hovered = hoverIndex !== null ? points[hoverIndex] : undefined
   const price = hovered?.value ?? model.end
   const label = hovered ? formatChartTime(hovered.timestamp, period) : CHART_PERIODS.find((p) => p.value === period)?.description
+  const [favorited, setFavorited] = React.useState(false)
 
   return (
-    <div data-slot="sparkline-header" className={cn('flex flex-col gap-uni-8 px-uni-8', className)}>
-      <div className="flex h-uni-28 min-w-0 items-center gap-uni-8">
+    <div data-slot="sparkline-header" className={cn('flex flex-col gap-uni-12', className)}>
+      {/* Token bar: spans the card edge to edge, ruled off from the price */}
+      <div className="-mx-uni-8 flex min-w-0 items-center gap-uni-8 border-b border-surface3 px-uni-16 pt-uni-8 pb-uni-12">
         <TokenLogo token={token} size={24} />
         <span className="truncate text-body2 text-neutral1">{token.name}</span>
-        <span className="shrink-0 text-body2 text-neutral2">{token.symbol}</span>
-      </div>
-      {loading ? (
-        <Shimmer role="status" aria-label="Loading price" className="flex flex-col items-start gap-uni-4">
-          <TextSkeleton placeholder="$0,000.00" className="text-heading3" />
-          <TextSkeleton placeholder="$00.00 (0.00%) Past day" className="text-body2" />
-        </Shimmer>
-      ) : (
-        <div className="flex flex-col gap-uni-4">
-          <span className="text-heading3 text-neutral1 tabular-nums">{formatTokenPrice(price)}</span>
-          <div className="flex min-w-0 flex-wrap items-center gap-x-uni-8">
-            <PriceDelta start={start} end={price} />
-            <span className="truncate text-body2 text-neutral3">{label}</span>
-          </div>
+        <div className="-mr-uni-4 ml-auto flex shrink-0 items-center gap-uni-4">
+          <HeaderIconButton
+            label={favorited ? 'Remove from favorites' : 'Favorite'}
+            aria-pressed={favorited}
+            onClick={() => setFavorited((f) => !f)}
+            className={cn(favorited && 'text-accent1 hover:text-accent1Hovered')}
+          >
+            <Heart />
+          </HeaderIconButton>
+          <HeaderIconButton label={`View ${token.symbol}`}>
+            <ArrowUpRight />
+          </HeaderIconButton>
         </div>
-      )}
+      </div>
+      <div className="flex items-start justify-between gap-uni-12 px-uni-8">
+        {loading ? (
+          <Shimmer role="status" aria-label="Loading price" className="flex min-w-0 flex-col items-start gap-uni-4">
+            <TextSkeleton placeholder="$0,000.00" className="text-heading3" />
+            <TextSkeleton placeholder="$00.00 (0.00%) Past day" className="text-body2" />
+          </Shimmer>
+        ) : (
+          <div className="flex min-w-0 flex-col gap-uni-4">
+            <span className="text-heading3 text-neutral1 tabular-nums">{formatTokenPrice(price)}</span>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-uni-8">
+              <PriceDelta start={start} end={price} />
+              <span className="truncate text-body2 text-neutral3">{label}</span>
+            </div>
+          </div>
+        )}
+        {aside && <div className="shrink-0">{aside}</div>}
+      </div>
     </div>
   )
 }
@@ -356,7 +398,16 @@ export function SparklinePeriodSelector({
 }) {
   return (
     <div data-slot="sparkline-periods" className={cn('flex items-center justify-between', className)}>
-      <SegmentedControl aria-label="Time period" options={PERIOD_OPTIONS} value={value} onValueChange={onValueChange} />
+      {/* Small and borderless, flush with the price row (no container padding) */}
+      <SegmentedControl
+        aria-label="Time period"
+        size="small"
+        outlined={false}
+        options={PERIOD_OPTIONS}
+        value={value}
+        onValueChange={onValueChange}
+        className="min-h-0 gap-uni-2 border-0 p-0"
+      />
     </div>
   )
 }
@@ -386,8 +437,8 @@ export interface TokenPriceSparklineProps {
   className?: string
 }
 
-/** Minimum chart height when the card has a fixed height (Uniswap's SWAP_CHART_AREA_HEIGHT) */
-const MIN_CHART_HEIGHT = 108
+/** Floor for the chart when the card has a fixed height; it otherwise takes whatever the header leaves */
+const MIN_CHART_HEIGHT = 64
 
 function TokenPriceSparklineInner({
   token,
@@ -423,12 +474,22 @@ function TokenPriceSparklineInner({
       style={height ? { height } : undefined}
     >
       <div data-explode={explode ? 'header' : undefined}>
-        <SparklineHeader model={model} hoverIndex={shownIndex} loading={loading} />
+        <SparklineHeader
+          model={model}
+          hoverIndex={shownIndex}
+          loading={loading}
+          aside={
+            <div data-explode={explode ? 'periods' : undefined}>
+              <SparklinePeriodSelector value={period} onValueChange={setPeriod} />
+            </div>
+          }
+        />
       </div>
       <div
         data-explode={explode ? 'chart' : undefined}
-        // Bleeds into the card's left padding so the line starts at the edge
-        className={cn('-ml-uni-8', height && 'flex min-h-0 flex-1 basis-0 flex-col')}
+        // Bleeds into the card's left padding so the line starts at the edge; the
+        // right inset keeps the latest-point blip clear of the border
+        className={cn('-ml-uni-8 mr-uni-16', height && 'flex min-h-0 flex-1 basis-0 flex-col')}
         style={height ? { minHeight: MIN_CHART_HEIGHT } : undefined}
       >
         <SparklineChart
@@ -439,9 +500,6 @@ function TokenPriceSparklineInner({
           className={height ? 'flex-1' : undefined}
           style={height ? undefined : { height: chartHeight }}
         />
-      </div>
-      <div data-explode={explode ? 'periods' : undefined}>
-        <SparklinePeriodSelector value={period} onValueChange={setPeriod} />
       </div>
     </div>
   )

@@ -71,10 +71,13 @@ export interface SwapBoxProps {
   onLoaded?: () => void
   /** Reports every state change, e.g. so a showcase can render the same state elsewhere. */
   onStateChange?: (state: SwapFormState) => void
+  /** Shows a chart toggle in the header (for a page that renders a chart beside the box) */
+  onChartToggle?: () => void
+  chartVisible?: boolean
   className?: string
 }
 
-export function SwapBox({ initialState, simulateLoading = false, onLoaded, onStateChange, className }: SwapBoxProps) {
+export function SwapBox({ initialState, simulateLoading = false, onLoaded, onStateChange, onChartToggle, chartVisible, className }: SwapBoxProps) {
   const [state, setState] = React.useState<SwapFormState>(() =>
     simulateLoading && initialState.wallet.connected
       ? { ...initialState, wallet: { ...initialState.wallet, balancesLoading: true } }
@@ -199,6 +202,8 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
             state={state}
             onModeChange={(mode) => setState((s) => ({ ...s, mode }))}
             onSettingsClick={() => setSettingsOpen((o) => !o)}
+            onChartToggle={onChartToggle}
+            chartVisible={chartVisible}
             onAmountChange={setAmount}
             onFocusField={(field) => setState((s) => ({ ...s, focusedField: field }))}
             onTokenClick={setSelecting}

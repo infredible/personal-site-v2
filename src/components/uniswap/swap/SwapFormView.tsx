@@ -36,6 +36,9 @@ interface SwapFormViewProps {
   state: SwapFormState
   onModeChange?: (mode: SwapMode) => void
   onSettingsClick?: () => void
+  /** Shows the chart toggle left of the gear; `chartVisible` sets its pressed state */
+  onChartToggle?: () => void
+  chartVisible?: boolean
   onAmountChange?: (field: SwapField, amount: string) => void
   /** Uniswap keeps the last-focused field highlighted, so this only reports focus, never blur. */
   onFocusField?: (field: SwapField) => void
@@ -74,6 +77,8 @@ function useSwapFormParts({
   state,
   onModeChange,
   onSettingsClick,
+  onChartToggle,
+  chartVisible,
   onAmountChange,
   onFocusField,
   onTokenClick,
@@ -132,6 +137,8 @@ function useSwapFormParts({
           mode={state.mode}
           onModeChange={onModeChange}
           onSettingsClick={onSettingsClick}
+          onChartToggle={onChartToggle}
+          chartVisible={chartVisible}
           customSlippage={slippage.auto ? undefined : slippage.value}
           autoSlippage={autoSlippage}
         />

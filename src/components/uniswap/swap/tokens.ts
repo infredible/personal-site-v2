@@ -6,6 +6,16 @@ export const CHAINS: Chain[] = [
   { id: 'arbitrum', name: 'Arbitrum', logo: '/showcase/tokens/chains/arbitrum.png' },
   { id: 'optimism', name: 'Optimism', logo: '/showcase/tokens/chains/optimism.png' },
   { id: 'polygon', name: 'Polygon', logo: '/showcase/tokens/chains/polygon.png' },
+  { id: 'unichain', name: 'Unichain', logo: '/showcase/tokens/chains/unichain.png' },
+  { id: 'bnb', name: 'BNB Chain', logo: '/showcase/tokens/chains/bnb.png' },
+  { id: 'avalanche', name: 'Avalanche', logo: '/showcase/tokens/chains/avalanche.png' },
+  { id: 'zksync', name: 'ZKsync', logo: '/showcase/tokens/chains/zksync.png' },
+  { id: 'blast', name: 'Blast', logo: '/showcase/tokens/chains/blast.png' },
+  { id: 'zora', name: 'Zora', logo: '/showcase/tokens/chains/zora.png' },
+  { id: 'celo', name: 'Celo', logo: '/showcase/tokens/chains/celo.png' },
+  { id: 'worldchain', name: 'World Chain', logo: '/showcase/tokens/chains/worldchain.png' },
+  { id: 'linea', name: 'Linea', logo: '/showcase/tokens/chains/linea.png' },
+  { id: 'soneium', name: 'Soneium', logo: '/showcase/tokens/chains/soneium.png' },
 ]
 
 const ALL_CHAINS: ChainId[] = CHAINS.map((c) => c.id)
