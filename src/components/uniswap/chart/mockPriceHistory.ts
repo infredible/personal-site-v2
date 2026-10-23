@@ -28,12 +28,15 @@ export const CHART_PERIODS: { value: ChartPeriod; label: string; description: st
   { value: '1Y', label: '1Y', description: 'Past year' },
 ]
 
-/** Every period has the same number of points, so a period change can morph point to point. */
+/** Points per fixed period (1D…1Y) */
 export const POINTS_PER_SERIES = 97
 
-/** Live: a new point every 1.25s; the window holds the latest POINTS_PER_SERIES (2 minutes) */
-export const LIVE_TICK_MS = 1250
-export const LIVE_WINDOW_MS = (POINTS_PER_SERIES - 1) * LIVE_TICK_MS
+/** Live: a new point every 500ms, over a 2-minute window */
+export const LIVE_TICK_MS = 500
+export const LIVE_POINTS = 241
+export const LIVE_WINDOW_MS = (LIVE_POINTS - 1) * LIVE_TICK_MS
+
+const pointsFor = (period: ChartPeriod) => (period === 'LIVE' ? LIVE_POINTS : POINTS_PER_SERIES)
 
 const DAY = 24 * 60 * 60 * 1000
 const PERIOD_DAYS: Record<ChartPeriod, number> = { LIVE: LIVE_WINDOW_MS / DAY, '1D': 1, '1W': 7, '1M': 30, '1Y': 365 }
@@ -106,7 +109,7 @@ export function getMockPriceHistory(token: Token, period: ChartPeriod): PricePoi
   if (cached) return cached
 
   const random = rng(hash(key))
-  const n = POINTS_PER_SERIES
+  const n = pointsFor(period)
   const days = PERIOD_DAYS[period]
   const totalVol = totalVolFor(token, days)
   const stepVol = totalVol / Math.sqrt(n - 1)
@@ -145,7 +148,7 @@ export function getMockPriceHistory(token: Token, period: ChartPeriod): PricePoi
  */
 export function createMockPriceStream(token: Token) {
   const random = rng(hash(`${token.symbol}:live-stream`))
-  const stepVol = totalVolFor(token, PERIOD_DAYS.LIVE) / Math.sqrt(POINTS_PER_SERIES - 1)
+  const stepVol = totalVolFor(token, PERIOD_DAYS.LIVE) / Math.sqrt(LIVE_POINTS - 1)
   const anchor = Math.log(token.priceUsd)
   const pull = isStablecoin(token) ? 0.08 : 0.01
   let step = 0

@@ -4,7 +4,7 @@ import type { ChartPeriod, PricePoint } from './mockPriceHistory'
  * Geometry and formatting for the sparkline, ported from Uniswap's
  * SparklineChart / PriceChart (apps/web/src/components/Charts) without d3 or
  * lightweight-charts: points are mapped into a fixed viewBox and drawn as a
- * cardinal spline. The SVG stretches to its box (preserveAspectRatio="none")
+ * monotone cubic spline. The SVG stretches to its box (preserveAspectRatio="none")
  * with non-scaling strokes, so no measuring is needed.
  */
 
@@ -24,10 +24,13 @@ export function xAt(index: number, count: number) {
   return count <= 1 ? VIEW_W / 2 : (index / (count - 1)) * VIEW_W
 }
 
-/** The value range the chart spans, centered on the data */
-export function valueRange(points: PricePoint[], { stablecoin = false } = {}): { lo: number; range: number } {
-  let min = Infinity
-  let max = -Infinity
+/** The value range the chart spans, centered on the data (and `include`, e.g. the live tip's eased value) */
+export function valueRange(
+  points: PricePoint[],
+  { stablecoin = false, include }: { stablecoin?: boolean; include?: number } = {},
+): { lo: number; range: number } {
+  let min = include ?? Infinity
+  let max = include ?? -Infinity
   for (const p of points) {
     if (p.value < min) min = p.value
     if (p.value > max) max = p.value
@@ -54,29 +57,69 @@ export function waveY(count: number): number[] {
   return Array.from({ length: count }, (_, i) => VIEW_H * 0.55 + Math.sin((i / (count - 1)) * Math.PI * 3) * VIEW_H * 0.08)
 }
 
-// Cardinal spline control-point factor: (1 - tension) / 6. Uniswap's sparkline
-// uses a tight cardinal; a little looser reads smoother at card size.
-const K = 0.75 / 6
-
 const r = (n: number) => Math.round(n * 10) / 10
 
-/** Smooth path through the points; evenly spaced unless `xs` places them (the live chart) */
+/**
+ * Smooth path through the points; evenly spaced unless `xs` places them (the
+ * live chart). Monotone cubic (Fritsch-Carlson), as in Liveline: the curve
+ * never overshoots a point, so peaks and troughs are the real highs and lows.
+ */
 export function linePath(ys: number[], xs?: number[]): string {
   const n = ys.length
   if (n === 0) return ''
-  const pt = (i: number) => {
-    const j = Math.min(Math.max(i, 0), n - 1)
-    return [xs ? xs[j] : xAt(j, n), ys[j]] as const
-  }
-  let d = `M${r(pt(0)[0])},${r(pt(0)[1])}`
+  const x = (i: number) => (xs ? xs[i] : xAt(i, n))
+  let d = `M${r(x(0))},${r(ys[0])}`
+  if (n === 1) return d
+  if (n === 2) return `${d}L${r(x(1))},${r(ys[1])}`
+
+  const h: number[] = []
+  const delta: number[] = []
   for (let i = 0; i < n - 1; i++) {
-    const [x0, y0] = pt(i - 1)
-    const [x1, y1] = pt(i)
-    const [x2, y2] = pt(i + 1)
-    const [x3, y3] = pt(i + 2)
-    d += `C${r(x1 + (x2 - x0) * K)},${r(y1 + (y2 - y0) * K)},${r(x2 - (x3 - x1) * K)},${r(y2 - (y3 - y1) * K)},${r(x2)},${r(y2)}`
+    h.push(x(i + 1) - x(i))
+    delta.push(h[i] === 0 ? 0 : (ys[i + 1] - ys[i]) / h[i])
+  }
+  // Tangents: zero at turning points, else the mean of the neighboring slopes
+  const m = new Array<number>(n)
+  m[0] = delta[0]
+  m[n - 1] = delta[n - 2]
+  for (let i = 1; i < n - 1; i++) m[i] = delta[i - 1] * delta[i] <= 0 ? 0 : (delta[i - 1] + delta[i]) / 2
+  // Limit them so each segment stays monotone
+  for (let i = 0; i < n - 1; i++) {
+    if (delta[i] === 0) {
+      m[i] = 0
+      m[i + 1] = 0
+      continue
+    }
+    const a = m[i] / delta[i]
+    const b = m[i + 1] / delta[i]
+    const s2 = a * a + b * b
+    if (s2 > 9) {
+      const k = 3 / Math.sqrt(s2)
+      m[i] = k * a * delta[i]
+      m[i + 1] = k * b * delta[i]
+    }
+  }
+  for (let i = 0; i < n - 1; i++) {
+    const third = h[i] / 3
+    d += `C${r(x(i) + third)},${r(ys[i] + m[i] * third)},${r(x(i + 1) - third)},${r(ys[i + 1] - m[i + 1] * third)},${r(x(i + 1))},${r(ys[i + 1])}`
   }
   return d
+}
+
+/** y of a drawn line at `x`, linearly between its points (for morphing between series of different lengths) */
+export function sampleY(xs: number[], ys: number[], x: number): number {
+  const n = xs.length
+  if (x <= xs[0]) return ys[0]
+  if (x >= xs[n - 1]) return ys[n - 1]
+  let lo = 0
+  let hi = n - 1
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1
+    if (xs[mid] <= x) lo = mid
+    else hi = mid
+  }
+  const span = xs[hi] - xs[lo]
+  return span === 0 ? ys[lo] : ys[lo] + ((ys[hi] - ys[lo]) * (x - xs[lo])) / span
 }
 
 /** The line closed down to the bottom edge, for the gradient fill */

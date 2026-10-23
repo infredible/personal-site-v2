@@ -11,7 +11,6 @@ import { TokenLogo } from '../swap/parts/TokenLogo'
 import type { Token } from '../swap/types'
 import {
   CHART_PERIODS,
-  LIVE_TICK_MS,
   LIVE_WINDOW_MS,
   getMockPriceHistory,
   isStablecoin,
@@ -34,6 +33,7 @@ import {
   toViewY,
   valueRange,
   valueToViewY,
+  sampleY,
   waveY,
   xAt,
   type PriceDirection,
@@ -45,7 +45,7 @@ import { useLivePriceHistory, type LiveClock } from './useLivePriceHistory'
  * box on wide screens (apps/web/src/pages/Swap/Swap/SlideoutChartCard):
  * token row, price + change with a Live…1Y period selector beside it, and a
  * line chart with a fill fading down from the line, over time labels. Live
- * streams a point every 1.25s and scrolls. Hover or touch-drag scrubs: a crosshair
+ * streams a point every 500ms and animates like Liveline. Hover or touch-drag scrubs: a crosshair
  * and dot follow the pointer and the header shows that point's price, change
  * from the period start, and time; leaving reverts to the latest price.
  *
@@ -232,8 +232,16 @@ export function SparklineHeader({ model, hoverIndex = null, loading = false, asi
 // Strong ease-out, under 300ms (period and token changes; never while scrubbing)
 const MORPH = { duration: 0.24, ease: [0.23, 1, 0.32, 1] as const }
 const easeOut = (t: number) => 1 - (1 - t) ** 4
-/** Live y-range easing: new highs and lows rescale the chart over ~half a second instead of jumping */
-const LIVE_RANGE_MS = 160
+
+/** Frame-rate independent ease toward a target (Liveline's lerp): `speed` is the share of the gap closed per 60fps frame */
+const approach = (current: number, target: number, speed: number, dt: number) =>
+  current + (target - current) * (1 - Math.pow(1 - speed, dt / (1000 / 60)))
+// Liveline's tuning: the live tip and y range ease at 0.08/frame, up to 0.28 when the gap is small
+const TIP_SPEED = 0.08
+const TIP_ADAPTIVE_BOOST = 0.2
+// Scrubbing fades the line ahead of the crosshair to 40%
+const SCRUB_SPEED = 0.12
+const SCRUB_DIM = 0.6
 
 const lerp = (from: number[], to: number[], t: number) => from.map((v, i) => v + (to[i] - v) * t)
 const evenXs = (n: number) => Array.from({ length: n }, (_, i) => xAt(i, n))
@@ -268,7 +276,7 @@ function SparklineAxis({
   let ticks: { t: number; x: number }[] = []
   if (mounted && !loading) {
     ticks = live
-      ? axisTicks(last - LIVE_WINDOW_MS - 30_000, last + 30_000, period).map((t) => ({ t, x: 1 - (last - t) / LIVE_WINDOW_MS }))
+      ? axisTicks(last - LIVE_WINDOW_MS - 30_000, last + 5_000, period).map((t) => ({ t, x: 1 - (last - t) / LIVE_WINDOW_MS }))
       : axisTicks(first, last, period)
           .map((t) => ({ t, x: (t - first) / (last - first) }))
           .filter(({ x }) => x > 0.06 && x < 0.94)
@@ -282,7 +290,12 @@ function SparklineAxis({
     >
       <div ref={trackRef} key={live ? 'live' : 'static'} className="absolute inset-0">
         {ticks.map(({ t, x }) => (
-          <span key={t} className="absolute top-0 -translate-x-1/2 whitespace-nowrap" style={{ left: `${x * 100}%` }}>
+          <span
+            key={t}
+            // New labels fade in (live: as they scroll in from the right; otherwise on a period change)
+            className="absolute top-0 -translate-x-1/2 whitespace-nowrap motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
+            style={{ left: `${x * 100}%` }}
+          >
             {formatAxisTime(t, period)}
           </span>
         ))}
@@ -307,6 +320,7 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
   const gradientId = `${id}-fill`
   const clipId = `${id}-clip`
   const fadeId = `${id}-fade`
+  const scrubId = `${id}-scrub`
   const reduceMotion = useReducedMotion()
   const lineRef = React.useRef<SVGPathElement>(null)
   const areaRef = React.useRef<SVGPathElement>(null)
@@ -317,6 +331,7 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
   /** x per drawn point when they aren't evenly spaced (live) */
   const drawnXs = React.useRef<number[] | null>(null)
   const morph = React.useRef<AnimationPlaybackControls | null>(null)
+  const scrubDimRef = React.useRef<SVGRectElement>(null)
 
   const n = model.points.length
   const target = React.useMemo(() => (loading ? waveY(n) : model.ys), [loading, n, model.ys])
@@ -332,16 +347,17 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
   }, [])
 
   // React renders `d` at the target; on a change, this rewinds it to what was on
-  // screen before paint and morphs point by point to the new series.
+  // screen before paint and morphs to the new series (resampled, so a series of
+  // a different length, like Live's, morphs too).
   React.useLayoutEffect(() => {
     if (clock) return
     const from = drawn.current
-    const fromXs = drawnXs.current
-    if (!from || from.length !== target.length || reduceMotion) return void draw(target)
-    const toXs = evenXs(target.length)
+    if (!from || reduceMotion) return void draw(target)
+    const fromXs = drawnXs.current ?? evenXs(from.length)
+    const start = evenXs(target.length).map((x) => sampleY(fromXs, from, x))
     const controls = animate(0, 1, {
       ...MORPH,
-      onUpdate: (t) => draw(lerp(from, target, t), fromXs ? lerp(fromXs, toXs, t) : null),
+      onUpdate: (t) => draw(lerp(start, target, t)),
       onComplete: () => {
         morph.current = null
         draw(target)
@@ -352,11 +368,14 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
   }, [target, clock, reduceMotion, draw])
 
   /*
-   * Live: drawn every frame from the feed's clock rather than by React. The
-   * line runs one tick behind the clock and slides left continuously, so the
-   * newest segment grows in at the right edge (clipped there) instead of each
-   * tick jumping a step. The y range eases toward the data's, and the dot rides
-   * the line's head. Reduced motion steps once per tick, with no easing.
+   * Live, after Liveline (benjitaylor/liveline): drawn every frame from the
+   * feed's clock rather than by React. The x axis is time, ending at the
+   * clock's now, so the line scrolls continuously and its tip always sits at
+   * the right edge. The tip's value isn't the latest point's: it eases toward
+   * it (closing small gaps faster than big ones), so each new price glides in
+   * instead of the line stepping to it. The y range eases the same way, and
+   * scrubbing dims the line ahead of the crosshair. Reduced motion draws each
+   * tick as it lands.
    */
   const live = React.useRef({ model, hovered })
   const liveFrame = React.useRef<(() => void) | null>(null)
@@ -368,62 +387,79 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
 
   React.useLayoutEffect(() => {
     if (!clock) return
-    const from = drawn.current
-    const fromXs = drawnXs.current ?? (from ? evenXs(from.length) : null)
-    const blendStart = from && !reduceMotion ? performance.now() : null
+    // Entering live (a period switch or the end of loading) morphs in from what was on screen
+    let blend =
+      drawn.current && !reduceMotion
+        ? { ys: drawn.current, xs: drawnXs.current ?? evenXs(drawn.current.length), start: performance.now() }
+        : null
+    let tip: number | null = null
     let scale: { lo: number; range: number } | null = null
+    let scrub = 0
+    let scrubX = VIEW_W
     let prev = performance.now()
 
     const frame = () => {
       const { model, hovered } = live.current
       const { points } = model
       const count = points.length
-      const latest = points[count - 1].timestamp
-      // Capped at the latest point: a late tick stalls the line rather than running past its data
-      const end = reduceMotion ? latest : Math.min(clock.now() - LIVE_TICK_MS, latest)
-      const xs = points.map((p) => (1 - (end - p.timestamp) / LIVE_WINDOW_MS) * VIEW_W)
+      const latest = points[count - 1]
+      const t = performance.now()
+      // Capped, so a frame after a stall (background tab) doesn't leap
+      const dt = Math.min(t - prev, 50)
+      prev = t
+      // A late tick extends the line flat rather than leaving a gap at the edge
+      const now = reduceMotion ? latest.timestamp : Math.max(clock.now(), latest.timestamp)
 
-      const now = performance.now()
-      const goal = valueRange(points, { stablecoin })
-      if (!scale || reduceMotion) scale = goal
-      else {
-        const k = 1 - Math.exp(-(now - prev) / LIVE_RANGE_MS)
-        scale = { lo: scale.lo + (goal.lo - scale.lo) * k, range: scale.range + (goal.range - scale.range) * k }
-      }
-      prev = now
-      let ys = points.map((p) => valueToViewY(p.value, scale!))
-      let drawXs = xs
-      // Entering live (a period switch or the end of loading) morphs in from what was on screen
-      if (blendStart !== null && from && fromXs && from.length === count) {
-        const t = Math.min((now - blendStart) / (MORPH.duration * 1000), 1)
-        if (t < 1) {
-          ys = lerp(from, ys, easeOut(t))
-          drawXs = lerp(fromXs, xs, easeOut(t))
-        }
-      }
-      draw(ys, drawXs)
-
-      let mx: number
-      let my: number
-      if (hovered !== null && hovered < count) {
-        mx = drawXs[hovered]
-        my = ys[hovered]
+      if (tip === null || scale === null || reduceMotion) {
+        tip = latest.value
+        scale = valueRange(points, { stablecoin, include: tip })
       } else {
-        // The head: where the line crosses the right edge
-        let i = count - 1
-        while (i > 0 && drawXs[i - 1] >= VIEW_W) i--
-        const x0 = drawXs[Math.max(i - 1, 0)]
-        const f = drawXs[i] === x0 ? 1 : Math.min(Math.max((VIEW_W - x0) / (drawXs[i] - x0), 0), 1)
-        mx = Math.min(drawXs[i], VIEW_W)
-        my = ys[Math.max(i - 1, 0)] + (ys[i] - ys[Math.max(i - 1, 0)]) * f
+        const gap = Math.min(Math.abs(latest.value - tip) / scale.range, 1)
+        const speed = TIP_SPEED + (1 - gap) * TIP_ADAPTIVE_BOOST
+        tip = approach(tip, latest.value, speed, dt)
+        if (Math.abs(tip - latest.value) < scale.range * 1e-3) tip = latest.value
+        const goal = valueRange(points, { stablecoin, include: tip })
+        scale = { lo: approach(scale.lo, goal.lo, speed, dt), range: approach(scale.range, goal.range, speed, dt) }
       }
+
+      // Every point at its time, the newest at the eased value, plus the tip at now
+      const xs = points.map((p) => (1 - (now - p.timestamp) / LIVE_WINDOW_MS) * VIEW_W)
+      xs.push(VIEW_W)
+      const tipY = valueToViewY(tip, scale)
+      let ys = points.map((p, i) => (i === count - 1 ? tipY : valueToViewY(p.value, scale!)))
+      ys.push(tipY)
+      if (blend) {
+        const b = Math.min((t - blend.start) / (MORPH.duration * 1000), 1)
+        if (b < 1) {
+          const { ys: fromYs, xs: fromXs } = blend
+          ys = ys.map((y, i) => {
+            const from = sampleY(fromXs, fromYs, xs[i])
+            return from + (y - from) * easeOut(b)
+          })
+        } else blend = null
+      }
+      draw(ys, xs)
+
+      const active = hovered !== null && hovered < count
+      if (active) scrubX = xs[hovered]
+      scrub = reduceMotion ? Number(active) : approach(scrub, Number(active), SCRUB_SPEED, dt)
+      if (Math.abs(scrub - Number(active)) < 0.01) scrub = Number(active)
+      if (scrubDimRef.current) {
+        scrubDimRef.current.setAttribute('x', String(scrubX))
+        scrubDimRef.current.setAttribute('fill-opacity', String(SCRUB_DIM * scrub))
+      }
+
+      const mx = active ? xs[hovered] : VIEW_W
+      const my = active ? ys[hovered] : tipY
       const left = `${(mx / VIEW_W) * 100}%`
       if (markerRef.current) {
         markerRef.current.style.left = left
         markerRef.current.style.top = `${(my / VIEW_H) * 100}%`
       }
       if (crosshairRef.current) crosshairRef.current.style.left = left
-      if (axisTrackRef.current) axisTrackRef.current.style.transform = `translateX(${((latest - end) / LIVE_WINDOW_MS) * 100}%)`
+      if (axisTrackRef.current) {
+        axisTrackRef.current.style.transform = `translateX(${(-(now - latest.timestamp) / LIVE_WINDOW_MS) * 100}%)`
+      }
     }
 
     liveFrame.current = frame
@@ -456,8 +492,8 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
     if (!xs) return Math.round(f * (n - 1))
     // Live points sit wherever the scroll left them: take the nearest one on screen
     let best = n - 1
-    for (let i = 0; i < xs.length; i++) {
-      if (xs[i] <= VIEW_W && Math.abs(xs[i] - f * VIEW_W) < Math.abs(xs[best] - f * VIEW_W)) best = i
+    for (let i = 0; i < n; i++) {
+      if (i < n && Math.abs(xs[i] - f * VIEW_W) < Math.abs(xs[best] - f * VIEW_W)) best = i
     }
     return best
   }
@@ -555,12 +591,17 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
               <mask id={fadeId} maskUnits="userSpaceOnUse" x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3}>
                 <rect x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3} fill={`url(#${fadeId}-ramp)`} />
               </mask>
-              {/* Live: the newest segment is drawn past the right edge and grows into view */}
+              {/* Live: the oldest points scroll off the left edge */}
               <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
                 <rect x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3} />
               </clipPath>
+              {/* Live scrubbing: the black rect, moved to the crosshair and faded in, dims what's ahead of it */}
+              <mask id={scrubId} maskUnits="userSpaceOnUse" x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3}>
+                <rect x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3} fill="white" />
+                <rect ref={scrubDimRef} x={VIEW_W} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3} fill="black" fillOpacity={0} />
+              </mask>
             </defs>
-            <g clipPath={clock ? `url(#${clipId})` : undefined}>
+            <g clipPath={clock ? `url(#${clipId})` : undefined} mask={clock ? `url(#${scrubId})` : undefined}>
               <path
                 ref={areaRef}
                 d={areaPath(target)}

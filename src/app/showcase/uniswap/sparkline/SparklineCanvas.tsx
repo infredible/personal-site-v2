@@ -151,7 +151,7 @@ export function SparklineCanvas({
       <CanvasSection
         id="periods"
         title="Periods"
-        description="One seeded series per token and period, ending at the current price. 1D matches the token's 24h change. Live streams a new point every 1.25s and scrolls; scrubbing pauses it."
+        description="One seeded series per token and period, ending at the current price. 1D matches the token's 24h change. Live streams a new point every 500ms; the line's tip eases toward each one as it scrolls. Scrubbing pauses it."
       >
         {CHART_PERIODS.map(({ value, label, description }) => (
           <CanvasFrame key={value} id={`period-${value}`} title={`ETH · ${label}`} note={description}>

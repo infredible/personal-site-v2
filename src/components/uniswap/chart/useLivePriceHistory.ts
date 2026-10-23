@@ -3,9 +3,9 @@
 import * as React from 'react'
 import type { Token } from '../swap/types'
 import {
+  LIVE_POINTS,
   LIVE_TICK_MS,
   MOCK_NOW,
-  POINTS_PER_SERIES,
   createMockPriceStream,
   getMockPriceHistory,
   type PricePoint,
@@ -13,13 +13,13 @@ import {
 
 /*
  * The Live period's mock feed: the seeded two-minute history, then a new point
- * every tick from createMockPriceStream, keeping the latest POINTS_PER_SERIES.
+ * every tick from createMockPriceStream, keeping the latest LIVE_POINTS.
  *
  * Time runs on the feed's own clock. It's wall time while the feed runs (the
  * history is moved to end "now" each time Live is selected) and it stops while
  * paused, so scrubbing freezes the chart in place and resuming carries on from
- * the same point. The chart reads the clock every frame to scroll smoothly
- * between ticks.
+ * the same point. The chart reads the clock every frame: the line's tip sits at
+ * the clock's time and eases toward each new value (see SparklineChart).
  */
 
 export interface LiveClock {
@@ -50,7 +50,7 @@ function createFeed(token: Token) {
       last = next(last)
       out.push(last)
     }
-    points = out.slice(-POINTS_PER_SERIES)
+    points = out.slice(-LIVE_POINTS)
     emit()
   }
 
