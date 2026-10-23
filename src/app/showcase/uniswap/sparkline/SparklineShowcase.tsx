@@ -60,7 +60,7 @@ export function SparklineShowcase() {
     <ShowcaseShell
       title="Price sparkline"
       eyebrow="Uniswap recreation"
-      backHref="/"
+      backHref="/showcase"
       links={links}
       presets={presets}
       defaultPreset={SPARKLINE_PRESETS[0].id}

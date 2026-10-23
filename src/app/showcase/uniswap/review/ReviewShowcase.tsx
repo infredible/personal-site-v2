@@ -33,7 +33,7 @@ export function ReviewShowcase() {
     <ShowcaseShell
       title="Swap review"
       eyebrow="Uniswap recreation · redesign"
-      backHref="/"
+      backHref="/showcase"
       links={links}
       presets={presets}
       defaultPreset="review"

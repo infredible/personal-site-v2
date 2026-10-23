@@ -27,7 +27,7 @@ export function TokenSelectorShowcase() {
     <ShowcaseShell
       title="Token selector"
       eyebrow="Uniswap recreation"
-      backHref="/"
+      backHref="/showcase"
       links={links}
       presets={presets}
       defaultPreset="default"

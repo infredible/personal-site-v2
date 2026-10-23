@@ -143,7 +143,7 @@ export function SwapShowcase() {
     <ShowcaseShell
       title="Swap"
       eyebrow="Uniswap recreation"
-      backHref="/"
+      backHref="/showcase"
       links={links}
       presets={presets}
       defaultPreset="empty"
