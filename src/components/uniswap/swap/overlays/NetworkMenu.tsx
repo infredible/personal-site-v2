@@ -22,13 +22,23 @@ import type { TokenSelectorChain } from './tokenSelectorFilters'
 const LOGO_SCALE: Partial<Record<Chain['id'], number>> = { base: 1.45, polygon: 1.4, ethereum: 1.1 }
 
 /** Round chain logo. `className` goes on the disc (position it, add a ring). */
-export function ChainLogo({ chain, size = 16, className }: { chain: Chain; size?: number; className?: string }) {
+export function ChainLogo({
+  chain,
+  size = 16,
+  className,
+  style,
+}: {
+  chain: Chain
+  size?: number
+  className?: string
+  style?: React.CSSProperties
+}) {
   const scale = LOGO_SCALE[chain.id] ?? 1
   return (
     <span
       aria-hidden
       className={cn('inline-block shrink-0 overflow-hidden rounded-uni-full bg-white', className)}
-      style={{ width: size, height: size }}
+      style={{ ...style, width: size, height: size }}
     >
       <Image
         src={chain.logo}
