@@ -12,6 +12,8 @@ export interface CanvasFrameProps {
   note?: ReactNode
   /** Force the body width (px number or CSS length). Default: the content's intrinsic width. */
   width?: number | string
+  /** Label above the body (default) or beside it on the left (on the canvas only). */
+  labelPlacement?: "top" | "side"
   className?: string
   children: ReactNode
 }
@@ -20,11 +22,12 @@ export interface CanvasFrameProps {
  * A labeled frame on the canvas. The body is rendered as-is (no background or
  * padding) and stays fully interactive; dragging inside it never pans.
  */
-export function CanvasFrame({ id, title, note, width, className, children }: CanvasFrameProps) {
+export function CanvasFrame({ id, title, note, width, labelPlacement = "top", className, children }: CanvasFrameProps) {
   const mode = useCanvasLayout()
   const autoId = useId()
   const headingId = `${id ?? autoId}-title`
   const isCanvas = mode === "canvas"
+  const side = isCanvas && labelPlacement === "side"
 
   return (
     <div
@@ -32,7 +35,11 @@ export function CanvasFrame({ id, title, note, width, className, children }: Can
       role="group"
       aria-labelledby={headingId}
       data-canvas-frame=""
-      className={cn("flex flex-col gap-2.5", isCanvas ? "min-w-40 shrink-0" : "w-full min-w-0", className)}
+      className={cn(
+        side ? "flex flex-row items-start gap-8" : "flex flex-col gap-2.5",
+        isCanvas ? "min-w-40 shrink-0" : "w-full min-w-0",
+        className,
+      )}
     >
       {/*
         w-0 + min-w-full: the label takes the frame's width without widening it.
@@ -40,17 +47,23 @@ export function CanvasFrame({ id, title, note, width, className, children }: Can
         truncated with the full text on hover), so frame bodies in a row share a
         top edge whether or not a frame has a note.
       */}
-      <div className={cn("flex select-none flex-col gap-0.5", isCanvas && "h-9 w-0 min-w-full")}>
+      <div
+        data-canvas-frame-label=""
+        className={cn(
+          "flex select-none flex-col gap-0.5",
+          side ? "w-40 shrink-0 pt-3 text-right" : isCanvas && "h-9 w-0 min-w-full",
+        )}
+      >
         <h3
           id={headingId}
-          className={cn("text-[13px] leading-[18px] font-medium text-foreground/75", isCanvas && "truncate")}
+          className={cn("text-[13px] leading-[18px] font-medium text-foreground/75", isCanvas && !side && "truncate")}
         >
           {title}
         </h3>
         {note ? (
           <p
-            title={isCanvas && typeof note === "string" ? note : undefined}
-            className={cn("text-xs leading-4 text-muted-foreground", isCanvas ? "truncate" : "text-pretty")}
+            title={isCanvas && !side && typeof note === "string" ? note : undefined}
+            className={cn("text-xs leading-4 text-muted-foreground", isCanvas && !side ? "truncate" : "text-pretty")}
           >
             {note}
           </p>

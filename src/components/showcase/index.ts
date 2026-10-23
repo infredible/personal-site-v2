@@ -5,9 +5,12 @@ export type {
   ShowcaseShellProps,
   ShowcaseComponentRenderArgs,
   ShowcaseLink,
+  ShowcaseCanvasRenderArgs,
+  ShowcaseViewTransition,
   ShowcasePreset,
   ShowcaseView,
   ShowcaseViewport,
 } from './ShowcaseShell'
 export { Segmented, BarButton, BarSelect, ThemeSwitch } from './ShowcaseControls'
 export type { SegmentOption } from './ShowcaseControls'
+export { useExplodedViewTransition } from './useExplodedViewTransition'

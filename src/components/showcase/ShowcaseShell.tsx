@@ -48,6 +48,22 @@ export interface ShowcaseComponentRenderArgs {
   resetKey: number
 }
 
+export interface ShowcaseCanvasRenderArgs {
+  /** Selected preset id, or undefined when the page passes no presets. */
+  preset: string | undefined
+}
+
+/**
+ * Hooks for animating between views (e.g. the exploded-view transition).
+ * `before` runs while the old view is still mounted and may delay the switch by
+ * returning a promise; `after` runs synchronously after the new view mounts,
+ * before it paints. Providing one turns off the shell's default crossfade.
+ */
+export interface ShowcaseViewTransition {
+  before?: (from: ShowcaseView, to: ShowcaseView) => void | Promise<void>
+  after?: (from: ShowcaseView, to: ShowcaseView) => void
+}
+
 export interface ShowcaseLink {
   href: string
   label: string
@@ -80,7 +96,9 @@ export interface ShowcaseShellProps {
    * fills the area under the bar (not inside a .uniswap scope); fill it with
    * `h-full w-full` or `absolute inset-0`.
    */
-  renderCanvas: () => React.ReactNode
+  renderCanvas: (args: ShowcaseCanvasRenderArgs) => React.ReactNode
+  /** Custom animation between Component and Canvas views. */
+  viewTransition?: ShowcaseViewTransition
 }
 
 interface ShellState {
@@ -156,8 +174,20 @@ function ShellWithUrlState(props: ShowcaseShellProps) {
     [pathname],
   )
 
+  const switching = React.useRef(false)
   const actions: ShellActions = {
-    setView: (view) => setParam('view', view, 'component'),
+    setView: (view) => {
+      if (view === state.view || switching.current) return
+      const before = props.viewTransition?.before?.(state.view, view)
+      if (!before) return setParam('view', view, 'component')
+      switching.current = true
+      before
+        .catch(() => {})
+        .finally(() => {
+          switching.current = false
+          setParam('view', view, 'component')
+        })
+    },
     setViewport: (viewport) => setParam('viewport', viewport, 'desktop'),
     setPreset: (preset) => setParam('preset', preset, defaultPreset),
     reset: () => setResetKey((k) => k + 1),
@@ -167,8 +197,17 @@ function ShellWithUrlState(props: ShowcaseShellProps) {
 }
 
 function ShellLayout(props: ShowcaseShellProps & { state: ShellState; actions: ShellActions }) {
-  const { state, renderComponent, renderCanvas } = props
+  const { state, renderComponent, renderCanvas, viewTransition } = props
   const reduceMotion = useReducedMotion()
+
+  // Runs after the new view's own layout effects (children first), so it can
+  // measure the mounted view and start animations before the first paint.
+  const prevView = React.useRef(state.view)
+  React.useLayoutEffect(() => {
+    const from = prevView.current
+    prevView.current = state.view
+    if (from !== state.view) viewTransition?.after?.(from, state.view)
+  }, [state.view, viewTransition])
 
   return (
     <div data-showcase-shell="" className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
@@ -176,8 +215,9 @@ function ShellLayout(props: ShowcaseShellProps & { state: ShellState; actions: S
       <div className="relative min-h-0 flex-1">
         <motion.div
           key={state.view}
+          data-showcase-view={state.view}
           className="absolute inset-0"
-          initial={reduceMotion ? false : { opacity: 0 }}
+          initial={reduceMotion || viewTransition ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.16, ease: 'easeOut' }}
         >
@@ -186,7 +226,7 @@ function ShellLayout(props: ShowcaseShellProps & { state: ShellState; actions: S
               {renderComponent({ viewport: state.viewport, preset: state.preset, resetKey: state.resetKey })}
             </ComponentStage>
           ) : (
-            <div className="absolute inset-0 overflow-hidden">{renderCanvas()}</div>
+            <div className="absolute inset-0 overflow-hidden">{renderCanvas({ preset: state.preset })}</div>
           )}
         </motion.div>
       </div>

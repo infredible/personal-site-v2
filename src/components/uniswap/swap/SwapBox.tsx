@@ -69,10 +69,12 @@ export interface SwapBoxProps {
   simulateLoading?: boolean
   /** Called once simulated loading finishes. */
   onLoaded?: () => void
+  /** Reports every state change, e.g. so a showcase can render the same state elsewhere. */
+  onStateChange?: (state: SwapFormState) => void
   className?: string
 }
 
-export function SwapBox({ initialState, simulateLoading = false, onLoaded, className }: SwapBoxProps) {
+export function SwapBox({ initialState, simulateLoading = false, onLoaded, onStateChange, className }: SwapBoxProps) {
   const [state, setState] = React.useState<SwapFormState>(() =>
     simulateLoading && initialState.wallet.connected
       ? { ...initialState, wallet: { ...initialState.wallet, balancesLoading: true } }
@@ -100,6 +102,10 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, class
   const shownReview = lastReview.current
 
   React.useEffect(() => () => clearTimeout(timer.current), [])
+
+  const onStateChangeRef = React.useRef(onStateChange)
+  onStateChangeRef.current = onStateChange
+  React.useEffect(() => onStateChangeRef.current?.(state), [state])
 
   // Balances resolve after a delay (page load simulation, or the page-load preset)
   const balancesLoading = Boolean(state.wallet.balancesLoading)

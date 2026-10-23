@@ -16,7 +16,7 @@ import {
   TokenSelectButton,
 } from '@/components/uniswap/swap/parts'
 import { getPreset, mockQuote } from '@/components/uniswap/swap/presets'
-import { SwapFormView } from '@/components/uniswap/swap/SwapFormView'
+import { SwapFormView, useSwapFormParts, type SwapPartId } from '@/components/uniswap/swap/SwapFormView'
 import { DEFAULT_SLIPPAGE, MOCK_WALLET, TOKEN_LIST, TOKENS } from '@/components/uniswap/swap/tokens'
 import type { SwapFormState } from '@/components/uniswap/swap/types'
 import { cn } from '@/lib/utils'
@@ -37,16 +37,24 @@ function preset(id: string): SwapFormState {
 function Stage({
   theme,
   width = 480,
+  card = false,
   className,
   children,
 }: {
   theme?: 'light' | 'dark'
   width?: number
+  /** Exploded-view card: its background fades in behind a part flying into it */
+  card?: boolean
   className?: string
   children: React.ReactNode
 }) {
   return (
-    <UniswapScope theme={theme} className={cn('rounded-uni-24 p-uni-16', className)} style={{ width, maxWidth: '100%' }}>
+    <UniswapScope
+      theme={theme}
+      data-explode-card={card ? '' : undefined}
+      className={cn('rounded-uni-24 p-uni-16', className)}
+      style={{ width, maxWidth: '100%' }}
+    >
       {children}
     </UniswapScope>
   )
@@ -68,9 +76,50 @@ const actionPresets = [
   'filled',
 ] as const
 
-export function SwapCanvas({ controller }: { controller: CanvasController }) {
+const PART_NOTES: Record<SwapPartId, string> = {
+  header: 'Mode tabs and the settings gear',
+  sell: 'Typed amount, token, balance',
+  switch: 'Flips the pair',
+  buy: 'Derived from the quote',
+  action: 'Label and emphasis from getSwapAction',
+  details: 'Rate, network cost, fees',
+}
+
+/**
+ * The live swap taken apart, one part per frame in an exploded vertical stack.
+ * Rendered from the Component view's current state; the exploded-view
+ * transition flies each part (data-explode-target) between here and the box.
+ */
+function SwapAnatomy({ state }: { state: SwapFormState }) {
+  const parts = useSwapFormParts({ state })
   return (
-    <Canvas controller={controller} className="h-full" maxRowWidth={2400} initialFocus="overview" aria-label="Swap component canvas">
+    <CanvasSection
+      id="anatomy"
+      title="Anatomy"
+      description="The live swap, taken apart. Each part is the same component the swap box composes, in the state you left it."
+      direction="column"
+    >
+      {parts.map((part) => {
+        const isSwitch = part.id === 'switch'
+        return (
+          <CanvasFrame key={part.id} id={`part-${part.id}`} title={part.label} note={PART_NOTES[part.id]} labelPlacement="side">
+            <Stage card width={isSwitch ? 80 : 512} className={isSwitch ? 'flex justify-center p-uni-12' : undefined}>
+              <div data-explode-target={part.id} className={isSwitch ? 'w-fit' : undefined}>
+                {part.node}
+              </div>
+            </Stage>
+          </CanvasFrame>
+        )
+      })}
+    </CanvasSection>
+  )
+}
+
+export function SwapCanvas({ controller, anatomyState }: { controller: CanvasController; anatomyState: SwapFormState }) {
+  return (
+    <Canvas controller={controller} className="h-full" maxRowWidth={2400} initialFocus="anatomy" aria-label="Swap component canvas">
+      <SwapAnatomy state={anatomyState} />
+
       <CanvasSection
         id="overview"
         title="Swap form"

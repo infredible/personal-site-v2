@@ -56,7 +56,21 @@ interface SwapFormViewProps {
   className?: string
 }
 
-function SwapFormView({
+export type SwapPartId = 'header' | 'sell' | 'switch' | 'buy' | 'action' | 'details'
+
+export interface SwapFormPart {
+  id: SwapPartId
+  label: string
+  node: React.ReactNode
+}
+
+/**
+ * The form's parts, top to bottom, each rendered with the same derived props
+ * SwapFormView uses. SwapFormView composes them; the canvas's anatomy section
+ * lays them out one per frame (and the exploded-view transition flies between
+ * the two, matching parts by id).
+ */
+function useSwapFormParts({
   state,
   onModeChange,
   onSettingsClick,
@@ -73,8 +87,7 @@ function SwapFormView({
   rateInverted,
   onRateInvertedChange,
   autoSlippage = DEFAULT_SLIPPAGE.value,
-  className,
-}: SwapFormViewProps) {
+}: SwapFormViewProps): SwapFormPart[] {
   const { input, output, quote, wallet, slippage } = state
   const action = getSwapAction(state)
 
@@ -110,80 +123,127 @@ function SwapFormView({
     [input.token?.symbol],
   )
 
+  const parts: SwapFormPart[] = [
+    {
+      id: 'header',
+      label: 'Header',
+      node: (
+        <SwapHeader
+          mode={state.mode}
+          onModeChange={onModeChange}
+          onSettingsClick={onSettingsClick}
+          customSlippage={slippage.auto ? undefined : slippage.value}
+          autoSlippage={autoSlippage}
+        />
+      ),
+    },
+    {
+      id: 'sell',
+      label: 'Sell panel',
+      node: (
+        <CurrencyPanel
+          field="input"
+          label="Sell"
+          token={input.token}
+          amount={input.amount}
+          usdValue={usdOf(input.token, input.amount)}
+          balance={inputBalance}
+          focused={focusedFor('input')}
+          loading={quoting && derivedField === 'input'}
+          balanceLoading={balancesLoading}
+          error={insufficient}
+          onAmountChange={onAmountChange && ((amount) => onAmountChange('input', amount))}
+          onFocus={onFocusField && (() => onFocusField('input'))}
+          onTokenClick={onTokenClick && (() => onTokenClick('input'))}
+          onMax={onMax}
+          onPercent={onPercent}
+        />
+      ),
+    },
+    { id: 'switch', label: 'Switch', node: <SwitchButton onClick={onSwitch} /> },
+    {
+      id: 'buy',
+      label: 'Buy panel',
+      node: (
+        <CurrencyPanel
+          field="output"
+          label="Buy"
+          token={output.token}
+          amount={output.amount}
+          usdValue={usdOf(output.token, output.amount)}
+          balance={balanceOf(output.token)}
+          focused={focusedFor('output')}
+          loading={quoting && derivedField === 'output'}
+          balanceLoading={balancesLoading}
+          onAmountChange={onAmountChange && ((amount) => onAmountChange('output', amount))}
+          onFocus={onFocusField && (() => onFocusField('output'))}
+          onTokenClick={onTokenClick && (() => onTokenClick('output'))}
+          quickSelectTokens={onQuickSelect ? quickSelectTokens : undefined}
+          onQuickSelect={onQuickSelect}
+        />
+      ),
+    },
+    { id: 'action', label: 'Action button', node: <SwapActionButton action={action} onClick={onAction} /> },
+  ]
+
+  if (showDetails) {
+    parts.push({
+      id: 'details',
+      label: 'Details',
+      node: (
+        <SwapDetails
+          inputToken={input.token!}
+          outputToken={output.token!}
+          quote={quote}
+          outputAmount={parseAmount(output.amount)}
+          slippage={slippage}
+          autoSlippage={autoSlippage}
+          expanded={detailsExpanded}
+          onExpandedChange={onDetailsExpandedChange}
+          rateInverted={rateInverted}
+          onRateInvertedChange={onRateInvertedChange}
+          loading={quoting}
+        />
+      ),
+    })
+  } else if (showDetailsSkeleton) {
+    parts.push({ id: 'details', label: 'Details', node: <SwapDetailsSkeleton /> })
+  }
+
+  return parts
+}
+
+function SwapFormView({ className, ...props }: SwapFormViewProps) {
+  const parts = useSwapFormParts(props)
+  // data-explode marks each part for the showcase's exploded-view transition
+  const part = (id: SwapPartId, className?: string) => {
+    const found = parts.find((p) => p.id === id)
+    return found ? (
+      <div data-explode={id} className={className}>
+        {found.node}
+      </div>
+    ) : null
+  }
+
   return (
     <div data-slot="swap-form" className={cn('flex w-full max-w-[480px] flex-col', className)}>
-      <SwapHeader
-        mode={state.mode}
-        onModeChange={onModeChange}
-        onSettingsClick={onSettingsClick}
-        customSlippage={slippage.auto ? undefined : slippage.value}
-        autoSlippage={autoSlippage}
-        className="mb-uni-4"
-      />
+      {part('header', 'mb-uni-4')}
 
       <div className="flex flex-col gap-uni-4">
         <div className="flex flex-col gap-uni-2">
-          <CurrencyPanel
-            field="input"
-            label="Sell"
-            token={input.token}
-            amount={input.amount}
-            usdValue={usdOf(input.token, input.amount)}
-            balance={inputBalance}
-            focused={focusedFor('input')}
-            loading={quoting && derivedField === 'input'}
-            balanceLoading={balancesLoading}
-            error={insufficient}
-            onAmountChange={onAmountChange && ((amount) => onAmountChange('input', amount))}
-            onFocus={onFocusField && (() => onFocusField('input'))}
-            onTokenClick={onTokenClick && (() => onTokenClick('input'))}
-            onMax={onMax}
-            onPercent={onPercent}
-          />
-          <SwitchButtonSeam>
-            <SwitchButton onClick={onSwitch} />
-          </SwitchButtonSeam>
-          <CurrencyPanel
-            field="output"
-            label="Buy"
-            token={output.token}
-            amount={output.amount}
-            usdValue={usdOf(output.token, output.amount)}
-            balance={balanceOf(output.token)}
-            focused={focusedFor('output')}
-            loading={quoting && derivedField === 'output'}
-            balanceLoading={balancesLoading}
-            onAmountChange={onAmountChange && ((amount) => onAmountChange('output', amount))}
-            onFocus={onFocusField && (() => onFocusField('output'))}
-            onTokenClick={onTokenClick && (() => onTokenClick('output'))}
-            quickSelectTokens={onQuickSelect ? quickSelectTokens : undefined}
-            onQuickSelect={onQuickSelect}
-          />
+          {part('sell')}
+          <SwitchButtonSeam>{part('switch')}</SwitchButtonSeam>
+          {part('buy')}
         </div>
 
         <div className="flex flex-col">
-          <SwapActionButton action={action} onClick={onAction} />
-          {showDetails && (
-            <SwapDetails
-              inputToken={input.token!}
-              outputToken={output.token!}
-              quote={quote}
-              outputAmount={parseAmount(output.amount)}
-              slippage={slippage}
-              autoSlippage={autoSlippage}
-              expanded={detailsExpanded}
-              onExpandedChange={onDetailsExpandedChange}
-              rateInverted={rateInverted}
-              onRateInvertedChange={onRateInvertedChange}
-              loading={quoting}
-            />
-          )}
-          {showDetailsSkeleton && <SwapDetailsSkeleton />}
+          {part('action')}
+          {part('details')}
         </div>
       </div>
     </div>
   )
 }
 
-export { SwapFormView }
+export { SwapFormView, useSwapFormParts }
 export type { SwapFormViewProps }

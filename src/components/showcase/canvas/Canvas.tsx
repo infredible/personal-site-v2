@@ -46,6 +46,11 @@ const CANVAS_CSS = `
 [data-canvas-viewport][data-mode="canvas"] ${FRAME_BODY_SELECTOR} { cursor: auto; }
 [data-canvas-viewport][data-mode="canvas"] > [data-canvas-board] { transition: opacity 150ms ease-out; }
 [data-canvas-viewport][data-mode="canvas"] > [data-canvas-board]:not([data-ready]) { opacity: 0; }
+/* A view transition (e.g. the showcase's exploded view) animates the board's contents itself */
+:root[data-view-transition] [data-canvas-viewport] > [data-canvas-board] { transition: none; }
+:root[data-view-transition] [data-canvas-viewport] { isolation: isolate; }
+/* List mode's frame bodies scroll sideways, which would clip parts flying in from outside */
+:root[data-view-transition] [data-canvas-frame-body] { overflow: visible; }
 [data-canvas-viewport][data-space],
 [data-canvas-viewport][data-space] * { cursor: grab !important; }
 [data-canvas-viewport][data-panning],
