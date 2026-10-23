@@ -24,9 +24,8 @@ export function xAt(index: number, count: number) {
   return count <= 1 ? VIEW_W / 2 : (index / (count - 1)) * VIEW_W
 }
 
-/** viewBox y for each point */
-export function toViewY(points: PricePoint[], { stablecoin = false } = {}): number[] {
-  if (points.length === 0) return []
+/** The value range the chart spans, centered on the data */
+export function valueRange(points: PricePoint[], { stablecoin = false } = {}): { lo: number; range: number } {
   let min = Infinity
   let max = -Infinity
   for (const p of points) {
@@ -35,8 +34,19 @@ export function toViewY(points: PricePoint[], { stablecoin = false } = {}): numb
   }
   const mid = (min + max) / 2
   const range = Math.max(max - min, stablecoin ? mid * STABLECOIN_MIN_RANGE : 0, mid * 1e-9)
-  const lo = mid - range / 2
-  return points.map((p) => PAD_Y + (1 - (p.value - lo) / range) * (VIEW_H - PAD_Y * 2))
+  return { lo: mid - range / 2, range }
+}
+
+/** viewBox y for a value within a range */
+export function valueToViewY(value: number, { lo, range }: { lo: number; range: number }) {
+  return PAD_Y + (1 - (value - lo) / range) * (VIEW_H - PAD_Y * 2)
+}
+
+/** viewBox y for each point */
+export function toViewY(points: PricePoint[], { stablecoin = false } = {}): number[] {
+  if (points.length === 0) return []
+  const scale = valueRange(points, { stablecoin })
+  return points.map((p) => valueToViewY(p.value, scale))
 }
 
 /** A gentle wave for the loading state and the first frame of the reveal (Uniswap's WaveLoader) */
@@ -50,11 +60,14 @@ const K = 0.75 / 6
 
 const r = (n: number) => Math.round(n * 10) / 10
 
-/** Smooth path through evenly spaced points */
-export function linePath(ys: number[]): string {
+/** Smooth path through the points; evenly spaced unless `xs` places them (the live chart) */
+export function linePath(ys: number[], xs?: number[]): string {
   const n = ys.length
   if (n === 0) return ''
-  const pt = (i: number) => [xAt(Math.min(Math.max(i, 0), n - 1), n), ys[Math.min(Math.max(i, 0), n - 1)]] as const
+  const pt = (i: number) => {
+    const j = Math.min(Math.max(i, 0), n - 1)
+    return [xs ? xs[j] : xAt(j, n), ys[j]] as const
+  }
   let d = `M${r(pt(0)[0])},${r(pt(0)[1])}`
   for (let i = 0; i < n - 1; i++) {
     const [x0, y0] = pt(i - 1)
@@ -67,9 +80,11 @@ export function linePath(ys: number[]): string {
 }
 
 /** The line closed down to the bottom edge, for the gradient fill */
-export function areaPath(ys: number[]): string {
+export function areaPath(ys: number[], xs?: number[]): string {
   if (ys.length === 0) return ''
-  return `${linePath(ys)}L${VIEW_W},${VIEW_H}L0,${VIEW_H}Z`
+  const first = xs ? xs[0] : 0
+  const last = xs ? xs[xs.length - 1] : VIEW_W
+  return `${linePath(ys, xs)}L${r(last)},${VIEW_H}L${r(first)},${VIEW_H}Z`
 }
 
 /* Values ------------------------------------------------------------------ */
@@ -108,9 +123,65 @@ export function formatPercentAbs(change: number): string {
   return `${(Math.abs(change) * 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 }
 
-/** Hover timestamp, Uniswap's FORMAT_DATE_MONTH_DAY_TIME ("Oct 23, 2:15 PM"); the year view adds the year */
+/** Hover timestamp, Uniswap's FORMAT_DATE_MONTH_DAY_TIME ("Oct 23, 2:15 PM"); the year view adds the year, live is the time to the second */
 export function formatChartTime(timestamp: number, period: ChartPeriod): string {
   const date = new Date(timestamp)
   if (period === '1Y') return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  if (period === 'LIVE') return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+/* X axis ------------------------------------------------------------------ */
+
+/**
+ * Axis ticks between two timestamps, on round local times: every 30 seconds
+ * (live), 6 hours (1D), day (1W), Monday (1M), quarter (1Y).
+ */
+export function axisTicks(start: number, end: number, period: ChartPeriod): number[] {
+  const ticks: number[] = []
+  if (period === 'LIVE') {
+    const step = 30_000
+    for (let t = Math.ceil(start / step) * step; t <= end; t += step) ticks.push(t)
+    return ticks
+  }
+  const d = new Date(start)
+  let onTick: () => boolean
+  let advance: () => void
+  if (period === '1D') {
+    d.setMinutes(0, 0, 0)
+    onTick = () => d.getHours() % 6 === 0
+    advance = () => d.setHours(d.getHours() + 1)
+  } else if (period === '1Y') {
+    d.setDate(1)
+    d.setHours(0, 0, 0, 0)
+    onTick = () => d.getMonth() % 3 === 0
+    advance = () => d.setMonth(d.getMonth() + 1)
+  } else {
+    d.setHours(0, 0, 0, 0)
+    onTick = () => period === '1W' || d.getDay() === 1
+    advance = () => d.setDate(d.getDate() + 1)
+  }
+  for (; d.getTime() <= end; advance()) {
+    if (d.getTime() >= start && onTick()) ticks.push(d.getTime())
+  }
+  return ticks
+}
+
+/** Axis label: "2:15:30" (live), "6 PM", "Sat", "Oct 20", "Apr" (January shows the year) */
+export function formatAxisTime(timestamp: number, period: ChartPeriod): string {
+  const date = new Date(timestamp)
+  switch (period) {
+    case 'LIVE': {
+      const pad = (n: number) => String(n).padStart(2, '0')
+      return `${date.getHours() % 12 || 12}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    }
+    case '1D':
+      return date.toLocaleTimeString('en-US', { hour: 'numeric' })
+    case '1W':
+      return date.toLocaleDateString('en-US', { weekday: 'short' })
+    case '1M':
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    case '1Y':
+      return date.getMonth() === 0 ? String(date.getFullYear()) : date.toLocaleDateString('en-US', { month: 'short' })
+  }
 }

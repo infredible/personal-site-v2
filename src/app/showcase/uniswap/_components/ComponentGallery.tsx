@@ -23,7 +23,7 @@ const emphases = ['primary', 'secondary', 'tertiary', 'text-only'] as const
 const sizes = ['xxsmall', 'xsmall', 'small', 'medium', 'large'] as const
 
 const periods = [
-  { value: '1H', label: '1H' },
+  { value: 'LIVE', label: 'Live' },
   { value: '1D', label: '1D' },
   { value: '1W', label: '1W' },
   { value: '1M', label: '1M' },

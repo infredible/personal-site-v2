@@ -13,6 +13,7 @@ export interface SparklinePreset {
 
 export const SPARKLINE_PRESETS: SparklinePreset[] = [
   { id: 'eth-1d', label: 'ETH · 1D (up)', token: TOKENS.ETH, period: '1D' },
+  { id: 'eth-live', label: 'ETH · Live', token: TOKENS.ETH, period: 'LIVE' },
   { id: 'down', label: 'SHIB · 1D (down)', token: TOKENS.SHIB, period: '1D' },
   { id: 'stablecoin', label: 'DAI · stablecoin (flat)', token: TOKENS.DAI, period: '1D' },
   { id: 'eth-1w', label: 'ETH · 1W', token: TOKENS.ETH, period: '1W' },
