@@ -9,9 +9,10 @@
  * sphere uses project() to match them exactly.
  *
  * The camera never moves: the world is offset instead. Overview puts the
- * sphere's center at (0, 0, −D); focusing slides the world most of the way to
- * the front card (WORLD_DOLLY), and the card lifts off the ring for the rest,
- * to the origin, where it renders at its own size (crisp text).
+ * sphere's center at (0, 0, −D); focusing dollies the world partway in
+ * (WORLD_DOLLY) and raises it, and the focused card lifts off the ring to the
+ * origin, where it renders at its own size (crisp text). The other cards fall
+ * back (FOCUS_RECEDE), so near and far read at a glance.
  */
 
 export const CARD_WIDTH = 440
@@ -21,7 +22,7 @@ export const CARD_HEIGHT = 560
 const PANEL_WIDTH = { lg: 300, xl: 340 }
 
 /** How large a card at the sphere's depth is, relative to focused (overview zoom) */
-const CENTER_SCALE = 0.38
+const CENTER_SCALE = 0.35
 
 export interface SceneMetrics {
   width: number
@@ -49,7 +50,8 @@ export function sceneMetrics(width: number, height: number): SceneMetrics {
   // On screen, the sphere is sized to the viewport; in the world it's larger by the overview zoom
   const screenRadius = compact ? Math.min(width * 0.3, height * 0.24) : Math.min(height * 0.21, width * 0.125)
   const sphereRadius = screenRadius / CENTER_SCALE
-  const perspective = sphereRadius * 3.2
+  // Short focal length: strong foreshortening, so the near side of the ring is far larger than the back
+  const perspective = sphereRadius * 2.1
   return {
     width,
     height,
@@ -57,7 +59,7 @@ export function sceneMetrics(width: number, height: number): SceneMetrics {
     perspective,
     distance: perspective * (1 / CENTER_SCALE - 1),
     sphereRadius,
-    orbitRadius: sphereRadius * (compact ? 1.6 : 1.85),
+    orbitRadius: sphereRadius * (compact ? 1.6 : 1.7),
     pitch: 0.2,
     cardScale: Math.max(cardScale, 0.3),
   }
@@ -83,7 +85,22 @@ export function project(p: Vec3, perspective: number) {
 }
 
 /** How far focusing moves the world toward the front card (1 would put it at the origin) */
-export const WORLD_DOLLY = 0.72
+export const WORLD_DOLLY = 0.5
+
+/** How far focusing raises the world (in sphere radii), so the sphere shows above the focused card */
+const FOCUS_RAISE = 0.35
+
+/**
+ * Extra scale on a ring card by how near it is (0 back, 1 front), on top of
+ * the perspective, to exaggerate depth. Blends to 1 as a card lifts, so a
+ * focused card still lands at exactly its own size.
+ */
+export function depthScale(nearness: number, lift: number) {
+  return lerp(lerp(0.7, 1.12, nearness), 1, lift)
+}
+
+/** How far the other cards fall back while one is focused, as a fraction of the perspective */
+export const FOCUS_RECEDE = 1.1
 
 /** How far a launch pushes toward the viewer, as a fraction of the perspective */
 export const LAUNCH_PUSH = 0.3
@@ -96,7 +113,11 @@ export const LAUNCH_PUSH = 0.3
 export function worldOffset(m: SceneMetrics, focus: number, launch: number): Vec3 {
   const front = tilt(0, 0, m.orbitRadius, m.pitch)
   const t = focus * WORLD_DOLLY
-  return { x: 0, y: lerp(0, -front.y, t), z: lerp(-m.distance, -front.z, t) + launch * m.perspective * LAUNCH_PUSH }
+  return {
+    x: 0,
+    y: lerp(0, -front.y, t) - focus * m.sphereRadius * FOCUS_RAISE,
+    z: lerp(-m.distance, -front.z, t) + launch * m.perspective * LAUNCH_PUSH,
+  }
 }
 
 /** Evenly spread unit vectors (Fibonacci lattice) */

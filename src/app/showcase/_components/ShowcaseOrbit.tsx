@@ -10,8 +10,10 @@ import { SHOWCASES, type Showcase } from '../_lib/showcases'
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
+  FOCUS_RECEDE,
   LAUNCH_PUSH,
   clamp,
+  depthScale,
   lerp,
   project,
   sceneMetrics,
@@ -333,17 +335,20 @@ export function ShowcaseOrbit() {
         const lift = m.lift[i]
         const x = lerp(p.x + offset.x, 0, lift)
         const y = lerp(p.y + offset.y, 0, lift)
-        const z = lerp(p.z + offset.z, launch * geo.perspective * LAUNCH_PUSH, lift)
         const isCurrent = i === m.current
+        // Zoomed in, the others fall back into the distance behind the focused card
+        const recede = isCurrent ? 0 : zoom * geo.perspective * FOCUS_RECEDE
+        const z = lerp(p.z + offset.z - recede, launch * geo.perspective * LAUNCH_PUSH, lift)
         if (isCurrent) lit = { x: p.x, y: p.y, z: p.z }
 
         // Nearer is brighter; focus dims the others; entrance staggers them in
         const nearness = (Math.cos(theta) + 1) / 2
         const stagger = clamp((m.intro * INTRO_S - 0.1 - i * 0.07) / 0.5, 0, 1)
         let opacity = lerp(0.38, 1, nearness) * easeOutCubic(stagger)
-        if (!isCurrent) opacity *= 1 - 0.93 * zoom - 0.07 * launch
+        if (!isCurrent) opacity *= 1 - 0.5 * zoom - 0.5 * launch
+        const scale = geo.cardScale * depthScale(nearness, lift)
         // Always square to the camera: only position and depth change, never the card's angle
-        el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(2)}px) scale(${geo.cardScale})`
+        el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(2)}px) scale(${scale.toFixed(4)})`
         el.style.opacity = opacity.toFixed(3)
         el.style.zIndex = String(Math.round(z + 100000))
         el.style.pointerEvents = opacity < 0.05 ? 'none' : ''
