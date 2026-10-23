@@ -178,6 +178,7 @@ function useSwapFormParts({
           token={output.token}
           amount={output.amount}
           usdValue={usdOf(output.token, output.amount)}
+          priceDifference={hasPair ? quote.priceImpact : undefined}
           balance={balanceOf(output.token)}
           focused={focusedFor('output')}
           loading={quoting && derivedField === 'output'}
