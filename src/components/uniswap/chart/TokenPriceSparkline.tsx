@@ -285,7 +285,7 @@ function SparklineAxis({
   return (
     <div
       aria-hidden
-      className="relative h-uni-16 shrink-0 overflow-hidden text-body4 text-neutral3 tabular-nums"
+      className="relative h-uni-12 shrink-0 overflow-hidden text-body5 text-neutral3 tabular-nums"
       style={{ maskImage: AXIS_MASK, WebkitMaskImage: AXIS_MASK }}
     >
       <div ref={trackRef} key={live ? 'live' : 'static'} className="absolute inset-0">
