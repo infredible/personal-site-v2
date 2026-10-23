@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
 import { cn } from '@/lib/utils'
-import { ArrowsLeftRight, CheckCircleFilled, Coins, Search, X } from '../../icons'
+import { ArrowsLeftRight, Check, CheckCircleFilled, Coins, Search, X } from '../../icons'
 import { BlockSkeleton, Shimmer, TextSkeleton } from '../../Skeleton'
 import { formatTokenAmount, formatUsd } from '../format'
 import { CHAINS, COMMON_TOKENS, TOKEN_LIST } from '../tokens'
@@ -34,7 +34,7 @@ import {
  *   ↑ ↓         move the highlight (instant, no animation); ⌘↑/⌘↓ jump to ends
  *   ↵           select the highlighted token
  *   ⇥ / ⇧⇥      next / previous category
- *   ⌘K / Ctrl+K open the network menu (↑↓ ↵ inside it, esc closes it)
+ *   ⌘K / Ctrl+K open the network menu (type to filter, ↑↓ ↵ inside it, esc closes it)
  *   esc         clear the search; when empty, close (calls onClose)
  *
  * Presentational and inline: place it in <PaletteSurface> (canvas frames) or
@@ -312,8 +312,6 @@ export function TokenSelectorPanel({
     [chain],
   )
 
-  const menuOptions: TokenSelectorChain[] = ['all', ...chains.map((c) => c.id)]
-
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing) return
     const mod = e.metaKey || e.ctrlKey
@@ -321,39 +319,14 @@ export function TokenSelectorPanel({
     if (mod && e.key.toLowerCase() === 'k') {
       e.preventDefault()
       setMenuOpen(!menu.open, 'keyboard')
+      // Closing from the menu's filter field: focus would go down with it
+      if (menu.open) inputRef.current?.focus({ preventScroll: true })
       return
     }
 
-    if (menu.open) {
-      const i = menuOptions.indexOf(menu.highlighted)
-      switch (e.key) {
-        case 'ArrowDown':
-        case 'ArrowUp': {
-          e.preventDefault()
-          const step = e.key === 'ArrowDown' ? 1 : -1
-          const next = menuOptions[(i + step + menuOptions.length) % menuOptions.length]
-          setMenu((m) => ({ ...m, highlighted: next }))
-          return
-        }
-        case 'Enter':
-          e.preventDefault()
-          setChain(menu.highlighted)
-          setMenuOpen(false)
-          return
-        case 'Escape':
-          e.preventDefault()
-          e.stopPropagation()
-          setMenuOpen(false)
-          return
-        case 'Tab':
-          e.preventDefault()
-          setMenuOpen(false)
-          return
-        default:
-          // Typing goes back to the search
-          setMenuOpen(false)
-      }
-    }
+    // The open network menu handles its own keys in its filter field; one typed
+    // into the token search while it's open (after a click away) closes it
+    if (menu.open) setMenuOpen(false)
 
     if (e.key === 'Tab' && !mod && !e.altKey) {
       e.preventDefault()
@@ -386,6 +359,8 @@ export function TokenSelectorPanel({
     if (pointerType.current !== 'mouse') return
     const target = e.target as HTMLElement
     if (target === inputRef.current) return
+    // The network menu's filter field takes focus of its own
+    if (target.closest('[data-network-search]')) return
     const scroller = scrollRef.current
     // Let the list's own scrollbar be dragged
     if (scroller && target === scroller && e.nativeEvent.offsetX >= scroller.clientWidth) return
@@ -437,6 +412,7 @@ export function TokenSelectorPanel({
           counts={chainCounts}
           animate={menu.animate}
           menuId={menuId}
+          onDismiss={() => inputRef.current?.focus({ preventScroll: true })}
         />
         {onClose && (
           <button
@@ -493,35 +469,41 @@ export function TokenSelectorPanel({
         )}
       >
         {quickPicks.length > 0 && (
-          <div
-            {...region('quick-picks')}
-            role="group"
-            aria-label="Common tokens"
-            className={cn('-mx-uni-8 flex gap-uni-6 overflow-x-auto px-uni-16 pt-uni-8 pb-uni-4', fadeRightClassName)}
-          >
-            {quickPicks.map((token) => {
-              const unavailable = isUnavailable(token)
-              const selected = token.symbol === selectedSymbol
-              return (
-                <button
-                  key={token.symbol}
-                  type="button"
-                  disabled={unavailable}
-                  aria-current={selected || undefined}
-                  onClick={() => onSelect?.(token)}
-                  className={cn(
-                    'flex h-uni-32 shrink-0 cursor-pointer items-center gap-uni-6 rounded-uni-full border border-surface3 py-uni-4 pr-uni-12 pl-uni-4',
-                    'text-buttonLabel3 text-neutral1 outline-none select-none hover:bg-surface2 active:scale-[0.98]',
-                    'transition-[scale] duration-100 ease-out',
-                    'disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:active:scale-100',
-                    selected && 'border-accent1/40 bg-accent2 hover:bg-accent2Hovered',
-                  )}
-                >
-                  <TokenLogo token={token} size={24} />
-                  {token.symbol}
-                </button>
-              )
-            })}
+          <div {...region('quick-picks')} role="group" aria-label="Commonly swapped" className="pb-uni-4">
+            <SectionHeading title="Commonly swapped" sticky={false} />
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-uni-6 px-uni-4">
+              {quickPicks.map((token) => {
+                const unavailable = isUnavailable(token)
+                const selected = token.symbol === selectedSymbol
+                return (
+                  <button
+                    key={token.symbol}
+                    type="button"
+                    disabled={unavailable}
+                    aria-current={selected || undefined}
+                    onClick={() => onSelect?.(token)}
+                    className={cn(
+                      'relative flex cursor-pointer flex-col items-center gap-uni-6 rounded-uni-16 border border-surface3 bg-surface2 px-uni-8 pt-uni-12 pb-uni-8',
+                      'text-buttonLabel3 text-neutral1 outline-none select-none hover:bg-surface2Hovered active:scale-[0.97]',
+                      'transition-[scale,background-color] duration-100 ease-out',
+                      'focus-visible:ring-2 focus-visible:ring-accent1/40',
+                      'disabled:cursor-default disabled:opacity-40 disabled:hover:bg-surface2 disabled:active:scale-100',
+                      selected && 'border-accent1/40 bg-accent2 hover:bg-accent2Hovered',
+                    )}
+                  >
+                    <TokenLogo token={token} size={32} />
+                    <span className="max-w-full truncate">{token.symbol}</span>
+                    {selected && (
+                      // Straddles the tile's corner; the ring cuts it out of the surface behind
+                      <span className="absolute -top-uni-6 -right-uni-6 flex rounded-uni-full bg-surface1 ring-2 ring-surface1">
+                        <CheckCircleFilled className="size-uni-20 text-accent1" />
+                        <span className="sr-only">(selected)</span>
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
@@ -565,6 +547,7 @@ export function TokenSelectorPanel({
                     chain={currentChain}
                     selected={token.symbol === selectedSymbol}
                     unavailable={isUnavailable(token)}
+                    otherSelected={token.symbol === otherSymbol}
                     switches={otherAction === 'switch' && token.symbol === otherSymbol}
                     onSelect={() => onSelect?.(token)}
                     rowRef={keepRowInList}
@@ -624,6 +607,7 @@ export function TokenSelectorRowPreview({
   chain,
   active = false,
   selected = false,
+  otherSelected = false,
   unavailable = false,
   switches = false,
   className,
@@ -635,6 +619,8 @@ export function TokenSelectorRowPreview({
   chain?: Chain
   active?: boolean
   selected?: boolean
+  /** Chosen for the opposite field: a muted "Selected" badge. */
+  otherSelected?: boolean
   unavailable?: boolean
   switches?: boolean
   className?: string
@@ -659,6 +645,7 @@ export function TokenSelectorRowPreview({
           owned={balance > 0}
           chain={chain}
           selected={selected}
+          otherSelected={otherSelected}
           unavailable={unavailable}
           switches={switches}
           onSelect={() => {}}
@@ -703,11 +690,14 @@ function Hint({ keys, trailing = false, children }: { keys: string[]; trailing?:
 }
 
 /** Compact section header, sticky at the top of the results while its section is in view. */
-function SectionHeading({ title, aside }: { title: string; aside?: string }) {
+function SectionHeading({ title, aside, sticky = true }: { title: string; aside?: string; sticky?: boolean }) {
   return (
     <div
       aria-hidden
-      className="sticky top-0 z-10 flex h-uni-32 items-center justify-between gap-uni-8 bg-surface1 px-uni-12 text-body4 text-neutral2"
+      className={cn(
+        sticky && 'sticky top-0 z-10',
+        'flex items-center justify-between gap-uni-8 bg-surface1 px-uni-12 pt-uni-16 pb-uni-8 text-body3 text-neutral2',
+      )}
     >
       <span className="flex items-center gap-uni-6">
         <Coins className="size-uni-16" />
@@ -715,6 +705,22 @@ function SectionHeading({ title, aside }: { title: string; aside?: string }) {
       </span>
       {aside && <span className="text-neutral3">{aside}</span>}
     </div>
+  )
+}
+
+/** "Selected" tag: accent for this field's token, muted for the opposite field's. */
+function SelectedBadge({ muted = false }: { muted?: boolean }) {
+  return (
+    <span
+      className={cn(
+        'flex shrink-0 items-center gap-uni-2 rounded-uni-full py-uni-1 pr-uni-6 pl-uni-4 text-buttonLabel4',
+        muted ? 'bg-surface3 text-neutral3' : 'bg-accent2 text-accent1',
+      )}
+    >
+      <Check className="size-uni-12" />
+      Selected
+      {muted && <span className="sr-only"> for the other field</span>}
+    </span>
   )
 }
 
@@ -747,6 +753,7 @@ function TokenRow({
   owned,
   chain,
   selected,
+  otherSelected = false,
   unavailable,
   switches,
   onSelect,
@@ -758,6 +765,7 @@ function TokenRow({
   owned: boolean
   chain?: Chain
   selected: boolean
+  otherSelected?: boolean
   unavailable: boolean
   switches: boolean
   onSelect: () => void
@@ -788,15 +796,11 @@ function TokenRow({
         )}
       </span>
 
-      <span className={cn('flex min-w-0 flex-1 flex-col', unavailable && 'opacity-40')}>
+      {/* Dimming sits on the text, not the column, so the badges keep their own contrast */}
+      <span className="flex min-w-0 flex-1 flex-col">
         <span className="flex min-w-0 items-center gap-uni-6">
-          <span className="truncate text-body2 text-neutral1">{token.name}</span>
-          {selected && (
-            <>
-              <CheckCircleFilled className="size-uni-16 shrink-0 text-accent1" />
-              <span className="sr-only">(selected)</span>
-            </>
-          )}
+          <span className={cn('truncate text-body2 text-neutral1', unavailable && 'opacity-40')}>{token.name}</span>
+          {selected ? <SelectedBadge /> : otherSelected && <SelectedBadge muted />}
           {switches && (
             <span className="flex shrink-0 items-center gap-uni-4 rounded-uni-full bg-surface3 px-uni-6 py-uni-1 text-buttonLabel4 text-neutral2">
               <ArrowsLeftRight className="size-uni-12" />
@@ -804,7 +808,7 @@ function TokenRow({
             </span>
           )}
         </span>
-        <span className="truncate text-body3 text-neutral2">{token.symbol}</span>
+        <span className={cn('truncate text-body3 text-neutral2', unavailable && 'opacity-40')}>{token.symbol}</span>
       </span>
 
       {/* Value column: always present and right-aligned, whatever the row's state */}

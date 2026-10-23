@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Palette } from 'lucide-react'
 import { ShowcaseShell, useExplodedViewTransition, type ShowcaseViewTransition } from '@/components/showcase'
 import { CanvasZoomControls, useCanvasController } from '@/components/showcase/canvas'
@@ -84,9 +85,15 @@ function offsetWithin(el: HTMLElement, root: HTMLElement) {
  * the height of, the Sell + Buy panels. Hidden below ~1000px of stage width
  * (container query on the viewport frame), so the Mobile viewport never shows it.
  */
+// Strong ease-out for the chart entering/leaving; ease-in-out for the box moving on screen
+const CHART_EASE_OUT = [0.23, 1, 0.32, 1] as const
+const CHART_EASE_IN_OUT = [0.77, 0, 0.175, 1] as const
+
 function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
   const [chart, setChart] = useState<ChartState>(() => chartStateOf(boxProps.initialState, boxProps.simulateLoading))
   const [panels, setPanels] = useState<{ top: number; height: number } | null>(null)
+  const [chartVisible, setChartVisible] = useState(true)
+  const reduceMotion = useReducedMotion()
   const boxRef = useRef<HTMLDivElement>(null)
 
   const onStateChangeRef = useRef(onStateChange)
@@ -118,13 +125,56 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
   }, [])
 
   return (
-    <div className="flex w-full items-start justify-center gap-uni-24">
-      <div data-swap-chart="" className="hidden w-[480px] min-w-0 shrink @min-[1000px]/viewport:block" style={{ marginTop: panels?.top ?? 40 }}>
-        <TokenPriceSparkline token={chart.token} loading={chart.loading} height={panels?.height ?? 288} />
-      </div>
-      <div ref={boxRef} className="relative w-full min-w-0 max-w-[480px]">
-        <SwapBox {...boxProps} onStateChange={handleStateChange} />
-      </div>
+    // The chart toggle only shows where the chart fits
+    <div className="relative flex w-full items-start justify-center gap-uni-24 [&_[data-slot=swap-chart-toggle]]:hidden @min-[1000px]/viewport:[&_[data-slot=swap-chart-toggle]]:flex">
+      {/* popLayout lifts the leaving chart out of the flow at once, so the box
+          glides to center while the chart is still sliding out, not after */}
+      <AnimatePresence initial={false} mode="popLayout">
+        {chartVisible && (
+          <motion.div
+            key="chart"
+            data-swap-chart=""
+            className="hidden w-[480px] min-w-0 shrink @min-[1000px]/viewport:block"
+            // Padding, not margin: popLayout pins the leaving chart at its offsetTop,
+            // which already includes a margin, so a margin would drop it on exit
+            style={{ paddingTop: panels?.top ?? 40 }}
+            // Emerges from the box's side, sliding right to left, and retreats the same
+            // way; reduced motion keeps only the fade
+            initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateX(24px)' }}
+            animate={{ opacity: 1, transform: 'translateX(0px)' }}
+            exit={{
+              opacity: 0,
+              transform: reduceMotion ? 'none' : 'translateX(24px)',
+              // Exit is quicker than enter: the system is responding, not presenting
+              transition: { duration: 0.18, ease: CHART_EASE_OUT },
+            }}
+            // Enter waits for the box to start sliding over (its ease-in-out starts slow),
+            // so the room opens up first and the card follows into it
+            transition={{ duration: 0.24, ease: CHART_EASE_OUT, delay: reduceMotion ? 0 : 0.12 }}
+            // Keeps this animation on Motion's JS driver instead of WAAPI. Beside the
+            // box's layout animation, the WAAPI path cancels a frame before it commits
+            // the end values, flashing the card back to opacity 0 as it lands.
+            onUpdate={() => {}}
+          >
+            <TokenPriceSparkline token={chart.token} loading={chart.loading} height={panels?.height ?? 288} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.div
+        ref={boxRef}
+        // Only the chart toggle moves the box; other re-renders never animate it
+        layout={reduceMotion ? false : 'position'}
+        layoutDependency={chartVisible}
+        transition={{ layout: { duration: 0.26, ease: CHART_EASE_IN_OUT } }}
+        className="relative w-full min-w-0 max-w-[480px]"
+      >
+        <SwapBox
+          {...boxProps}
+          onStateChange={handleStateChange}
+          chartVisible={chartVisible}
+          onChartToggle={() => setChartVisible((v) => !v)}
+        />
+      </motion.div>
     </div>
   )
 }

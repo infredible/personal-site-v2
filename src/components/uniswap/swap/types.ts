@@ -1,13 +1,30 @@
 // Shared contracts for the swap recreation. Display parts (parts/, overlays/)
 // render from these shapes; SwapBox (phase 3) owns and updates them.
 
-export type ChainId = 'ethereum' | 'base' | 'arbitrum' | 'optimism' | 'polygon'
+export type ChainId =
+  | 'ethereum'
+  | 'base'
+  | 'arbitrum'
+  | 'optimism'
+  | 'polygon'
+  | 'unichain'
+  | 'bnb'
+  | 'avalanche'
+  | 'zksync'
+  | 'blast'
+  | 'zora'
+  | 'celo'
+  | 'worldchain'
+  | 'linea'
+  | 'soneium'
 
 export interface Chain {
   id: ChainId
   name: string
-  /** Path under /public */
-  logo: string
+  /** Path under /public. Without one, ChainLogo draws a monogram on `color`. */
+  logo?: string
+  /** Brand color for the monogram fallback. */
+  color?: string
 }
 
 export type TokenCategory = 'stablecoin' | 'defi' | 'layer2' | 'meme' | 'wrapped' | 'native'
