@@ -650,7 +650,29 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
 
 /* Period selector --------------------------------------------------------- */
 
-const PERIOD_OPTIONS = CHART_PERIODS.map(({ value, label }) => ({ value, label }))
+/** Live gets its own treatment: green, with a dot that blinks while it's selected (steady under reduced motion) */
+function LivePeriodLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-uni-4 text-statusSuccess transition-colors duration-100 group-hover/option:text-statusSuccessHovered">
+      <span
+        aria-hidden
+        className="size-[6px] shrink-0 rounded-uni-full bg-current group-data-[state=on]/option:motion-safe:animate-uni-live-blink"
+      />
+      {children}
+    </span>
+  )
+}
+
+const PERIOD_OPTIONS = CHART_PERIODS.map(({ value, label }) =>
+  value === 'LIVE'
+    ? {
+        value,
+        label: <LivePeriodLabel>{label}</LivePeriodLabel>,
+        // A green-tinted pill in place of the gray one
+        indicatorClassName: 'bg-statusSuccess/12 group-hover/option:bg-statusSuccess/16',
+      }
+    : { value, label },
+)
 
 export function SparklinePeriodSelector({
   value,
