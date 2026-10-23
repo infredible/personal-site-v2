@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import { AlertTriangleFilled, ChevronsIn, ChevronsOut, Gas } from '../../icons'
 import { cn } from '@/lib/utils'
 import { Shimmer, TextSkeleton } from '../../Skeleton'
@@ -23,8 +24,8 @@ import { TokenLogo } from './TokenLogo'
  *   (Rate, when price impact warns), Fee, Network cost, Max slippage, Route.
  *   Labels body3 neutral2 (tooltip triggers on hover), values body3 neutral1.
  *   Max slippage gets Uniswap's "Auto" chip (surface3, rounded6, 20px tall).
- * - A "Price difference" row (Uniswap's PriceDifferenceRow from the review
- *   screen) is added last so impact is visible in every state.
+ *   Route leads with the Uniswap logo in a 16px squircle.
+ *   Price difference isn't repeated here: the Buy panel shows it by its fiat value.
  */
 
 const TOOLTIPS = {
@@ -220,13 +221,14 @@ function SwapDetails({
             </Row>
             {quote.route && (
               <Row label="Route" tooltip={TOOLTIPS.route}>
+                <Image
+                  src="/icons/uniswap.png"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="size-uni-16 shrink-0 rounded-[40%] [corner-shape:squircle]"
+                />
                 <span className="truncate">{quote.route}</span>
-              </Row>
-            )}
-            {quote.priceImpact !== undefined && (
-              <Row label="Price difference">
-                {severity !== 'none' && <AlertTriangleFilled className={cn('size-uni-16', impactColor)} />}
-                <span className={impactColor}>{formatPercent(quote.priceImpact)}</span>
               </Row>
             )}
           </div>
