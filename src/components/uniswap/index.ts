@@ -7,5 +7,27 @@ export { SegmentedControl } from './SegmentedControl'
 export type { SegmentedControlOption, SegmentedControlProps } from './SegmentedControl'
 export { Pill, pillVariants } from './Pill'
 export { SearchInput } from './SearchInput'
-export { UniModal, UniModalTrigger, UniModalClose, UniModalContent } from './UniModal'
+export {
+  UniModal,
+  UniModalTrigger,
+  UniModalClose,
+  UniModalContent,
+  ModalSurface,
+  PopoverSurface,
+  modalSurfaceClassName,
+  modalContentClassName,
+  modalOverlayClassName,
+  popoverSurfaceClassName,
+} from './UniModal'
+export type { ModalSurfaceProps } from './UniModal'
+export {
+  UniPaletteContent,
+  PaletteSurface,
+  paletteSurfaceClassName,
+  paletteContentClassName,
+  paletteOverlayClassName,
+} from './UniModal'
 export { UniTooltip } from './UniTooltip'
+export { Shimmer, TextSkeleton, BlockSkeleton, TokenRowSkeleton, TokenListSkeleton } from './Skeleton'
+export { TokenPriceSparkline } from './chart'
+export type { TokenPriceSparklineProps, ChartPeriod } from './chart'

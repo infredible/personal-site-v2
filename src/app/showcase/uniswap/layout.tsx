@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { UniswapScope } from '@/components/uniswap'
 
 export const metadata: Metadata = {
   title: {
@@ -10,6 +9,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// No Uniswap scope here: showcase pages keep site chrome (the ShowcaseShell
+// controls bar) outside the scope, so each page applies <UniswapScope> itself.
 export default function UniswapLayout({ children }: { children: React.ReactNode }) {
-  return <UniswapScope fullPage>{children}</UniswapScope>
+  return children
 }

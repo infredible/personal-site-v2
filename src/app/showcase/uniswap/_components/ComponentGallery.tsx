@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowDownIcon, ChevronDownIcon, InfoIcon } from 'lucide-react'
+import { ArrowDown, ChevronDown, InfoCircle } from '@/components/uniswap/icons'
 import {
   Pill,
   SearchInput,
+  Shimmer,
+  TextSkeleton,
+  TokenListSkeleton,
   SegmentedControl,
   UniButton,
   UniModal,
@@ -13,7 +16,6 @@ import {
   UniTooltip,
 } from '@/components/uniswap'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Command as CommandPrimitive } from 'cmdk'
 
 const variants = ['default', 'branded', 'critical', 'warning'] as const
@@ -94,10 +96,10 @@ export function ComponentGallery() {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-uni-12">
-          <UniButton icon={<ArrowDownIcon />} emphasis="secondary">
+          <UniButton icon={<ArrowDown />} emphasis="secondary">
             With icon
           </UniButton>
-          <UniButton icon={<ChevronDownIcon />} iconPosition="after" emphasis="tertiary">
+          <UniButton icon={<ChevronDown />} iconPosition="after" emphasis="tertiary">
             Icon after
           </UniButton>
           <UniButton disabled>Disabled</UniButton>
@@ -143,7 +145,7 @@ export function ComponentGallery() {
             Price impact
             <UniTooltip content="The impact your trade has on the market price of this pool.">
               <button type="button" className="text-neutral3 hover:text-neutral2 cursor-pointer" aria-label="About price impact">
-                <InfoIcon className="size-uni-16" />
+                <InfoCircle className="size-uni-16" />
               </button>
             </UniTooltip>
           </div>
@@ -154,7 +156,7 @@ export function ComponentGallery() {
         <Demo title="UniModal + Command" description="Preview of the token selector: shadcn dialog parts and cmdk.">
           <UniModal>
             <UniModalTrigger asChild>
-              <UniButton emphasis="secondary" icon={<ChevronDownIcon />} iconPosition="after" className="self-start">
+              <UniButton emphasis="secondary" icon={<ChevronDown />} iconPosition="after" className="self-start">
                 Select token
               </UniButton>
             </UniModalTrigger>
@@ -189,13 +191,16 @@ export function ComponentGallery() {
           </UniModal>
         </Demo>
 
-        <Demo title="Skeleton" description="Stock shadcn Skeleton; --accent maps to surface2Hovered.">
-          <div className="flex items-center gap-uni-12">
-            <Skeleton className="size-uni-36 rounded-uni-full" />
-            <div className="flex flex-col gap-uni-8">
-              <Skeleton className="h-uni-12 w-[120px]" />
-              <Skeleton className="h-uni-12 w-[72px]" />
-            </div>
+        <Demo
+          title="Skeleton"
+          description="Uniswap's loaders: TextSkeleton takes the size of the text it replaces; Shimmer sweeps a gradient mask over its children."
+        >
+          <div className="flex flex-col gap-uni-12">
+            <Shimmer className="flex flex-col items-start gap-uni-4">
+              <TextSkeleton placeholder="1,699.24" className="text-heading2" />
+              <TextSkeleton placeholder="$1,699.24" className="text-body3" />
+            </Shimmer>
+            <TokenListSkeleton rows={3} withValue className="-mx-uni-8" />
           </div>
         </Demo>
       </div>

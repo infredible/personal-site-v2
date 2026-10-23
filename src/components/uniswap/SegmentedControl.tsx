@@ -3,7 +3,7 @@
 import * as React from 'react'
 import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group'
 import { cva } from 'class-variance-authority'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 /*
@@ -83,6 +83,7 @@ function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   // Unique per instance so multiple controls on a page animate independently
   const indicatorId = React.useId()
+  const reduceMotion = useReducedMotion()
 
   return (
     <ToggleGroupPrimitive.Root
@@ -104,7 +105,7 @@ function SegmentedControl<T extends string>({
             <motion.span
               layoutId={indicatorId}
               className="absolute inset-0 rounded-uni-full bg-surface3 group-hover/option:bg-surface3Hovered"
-              transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
+              transition={reduceMotion ? { duration: 0 } : { type: 'spring', bounce: 0.15, duration: 0.3 }}
             />
           )}
           <span className="relative">{opt.label}</span>

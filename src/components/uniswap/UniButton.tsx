@@ -54,7 +54,7 @@ const uniButtonVariants = cva(
     'border border-solid border-transparent bg-transparent',
     'whitespace-nowrap text-center [font-weight:535]',
     // Legacy 'fast' animation: 100ms, transform + color only; press scales to 0.98
-    'transition-[transform,background-color,border-color,color] duration-100 ease-[cubic-bezier(0.17,0.67,0.45,1)]',
+    'transition-[transform,translate,scale,rotate,background-color,border-color,color] duration-100 ease-[cubic-bezier(0.17,0.67,0.45,1)]',
     'active:scale-[0.98]',
     'focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-solid',
     '[&_svg]:shrink-0',

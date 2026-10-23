@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { SearchIcon } from 'lucide-react'
+import { Search } from './icons'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 function SearchInput({ className, ...props }: React.ComponentProps<typeof Input>) {
   return (
     <div className="relative w-full">
-      <SearchIcon
+      <Search
         aria-hidden
         className="pointer-events-none absolute left-uni-12 top-1/2 size-uni-20 -translate-y-1/2 text-neutral2"
       />
