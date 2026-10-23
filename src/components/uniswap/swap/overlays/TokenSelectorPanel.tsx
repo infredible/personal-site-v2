@@ -81,7 +81,31 @@ export interface TokenSelectorPanelProps {
   /** Accessible name for the palette. */
   label?: string
   className?: string
+  /** Opens with the network menu showing (canvas frames). */
+  defaultNetworkMenuOpen?: boolean
+  /**
+   * Render only these regions (default: all), for showcase anatomy frames. The
+   * others stay mounted but hidden, so state and keyboard handling don't change.
+   */
+  parts?: TokenSelectorPartId[]
+  /**
+   * Marks each shown region for the showcase's exploded-view transition: "part"
+   * adds `data-explode="<id>"` (the assembled palette), "target" adds
+   * `data-explode-target="<id>"` (its anatomy frames). Off by default.
+   */
+  explode?: 'part' | 'target'
 }
+
+/** The palette's top-level regions, top to bottom. */
+export type TokenSelectorPartId = 'search' | 'filters' | 'quick-picks' | 'list' | 'footer'
+
+export const TOKEN_SELECTOR_PARTS: { id: TokenSelectorPartId; label: string }[] = [
+  { id: 'search', label: 'Search header' },
+  { id: 'filters', label: 'Category filters' },
+  { id: 'quick-picks', label: 'Quick picks' },
+  { id: 'list', label: 'Token list' },
+  { id: 'footer', label: 'Footer' },
+]
 
 export type { TokenSelectorCategory, TokenSelectorChain }
 
@@ -142,15 +166,28 @@ export function TokenSelectorPanel({
   loading = false,
   label = 'Select a token',
   className,
+  defaultNetworkMenuOpen = false,
+  parts,
+  explode,
 }: TokenSelectorPanelProps) {
+  const show = (id: TokenSelectorPartId) => !parts || parts.includes(id)
+  /** Props for a top-level region: hidden when left out of `parts`, else its exploded-view marker. */
+  const region = (id: TokenSelectorPartId) =>
+    !show(id)
+      ? { hidden: true }
+      : explode === 'part'
+        ? { 'data-explode': id }
+        : explode === 'target'
+          ? { 'data-explode-target': id }
+          : {}
   const [query, setQueryState] = useControllable(queryProp, defaultQuery, onQueryChange)
   const [category, setCategoryState] = useControllable(categoryProp, defaultCategory, onCategoryChange)
   const [chain, setChainState] = useControllable(chainProp, defaultChain, onChainChange)
   const [active, setActive] = React.useState('')
   const [menu, setMenu] = React.useState<{ open: boolean; animate: boolean; highlighted: TokenSelectorChain }>({
-    open: false,
+    open: defaultNetworkMenuOpen,
     animate: false,
-    highlighted: 'all',
+    highlighted: chainProp ?? defaultChain,
   })
   const isMac = useIsMac()
   const menuId = React.useId()
@@ -376,7 +413,7 @@ export function TokenSelectorPanel({
       className={cn('@container relative flex h-full min-h-0 w-full flex-col text-neutral1 outline-none', className)}
     >
       {/* Header: the search field is the palette's title bar */}
-      <div className="flex h-[60px] shrink-0 items-center gap-uni-12 border-b border-surface3 pr-uni-12 pl-uni-20">
+      <div {...region('search')} className="flex h-[60px] shrink-0 items-center gap-uni-12 border-b border-surface3 pr-uni-12 pl-uni-20">
         <Search className="size-uni-20 shrink-0 text-neutral2" />
         <CommandPrimitive.Input
           ref={inputRef}
@@ -415,6 +452,7 @@ export function TokenSelectorPanel({
 
       {/* Category filters */}
       <div
+        {...region('filters')}
         ref={chipsRef}
         role="toolbar"
         aria-label="Filter by category"
@@ -445,6 +483,8 @@ export function TokenSelectorPanel({
 
       {/* Results */}
       <div
+        hidden={!show('quick-picks') && !show('list')}
+        data-slot="token-selector-results"
         ref={scrollRef}
         className={cn(
           // Keyboard scrolling is handled per row (keepRowInList), clear of the sticky headings
@@ -454,6 +494,7 @@ export function TokenSelectorPanel({
       >
         {quickPicks.length > 0 && (
           <div
+            {...region('quick-picks')}
             role="group"
             aria-label="Common tokens"
             className={cn('-mx-uni-8 flex gap-uni-6 overflow-x-auto px-uni-16 pt-uni-8 pb-uni-4', fadeRightClassName)}
@@ -484,7 +525,7 @@ export function TokenSelectorPanel({
           </div>
         )}
 
-        <CommandPrimitive.List label="Tokens" className="outline-none">
+        <CommandPrimitive.List {...region('list')} label="Tokens" className="outline-none">
           {loading ? (
             <PaletteListSkeleton />
           ) : empty ? (
@@ -537,6 +578,7 @@ export function TokenSelectorPanel({
 
       {/* Footer: keyboard hints, for pointer devices with room for them */}
       <div
+        {...region('footer')}
         aria-hidden
         className={cn(
           'flex h-uni-40 shrink-0 items-center justify-between gap-uni-16 border-t border-surface3 bg-surface2 px-uni-16',
@@ -564,6 +606,66 @@ export function TokenSelectorPanel({
           </Hint>
         ) : null}
       </div>
+    </CommandPrimitive>
+  )
+}
+
+const keepInPlace = (row: HTMLDivElement | null) => {
+  if (row) row.scrollIntoView = () => {}
+}
+
+/**
+ * One token row on its own, for showcase frames of row states. `active` is
+ * the keyboard highlight; hovering the row shows it too.
+ */
+export function TokenSelectorRowPreview({
+  token,
+  balance = 0,
+  chain,
+  active = false,
+  selected = false,
+  unavailable = false,
+  switches = false,
+  className,
+}: {
+  token: Token
+  /** Whole-token balance: above 0 shows value and balance instead of price and 24h change. */
+  balance?: number
+  /** Network filter in effect: its badge on the logo. */
+  chain?: Chain
+  active?: boolean
+  selected?: boolean
+  unavailable?: boolean
+  switches?: boolean
+  className?: string
+}) {
+  // Highlight from props and hover only: cmdk's own picks (it selects the first row on mount) are ignored
+  const [hovered, setHovered] = React.useState(false)
+  const highlighted = (active || hovered) && !unavailable
+  return (
+    <CommandPrimitive
+      shouldFilter={false}
+      value={highlighted ? token.symbol : ''}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      label={`${token.name} row`}
+      className={cn('w-full text-neutral1', className)}
+    >
+      <CommandPrimitive.List>
+        <TokenRow
+          value={token.symbol}
+          token={token}
+          balance={balance}
+          owned={balance > 0}
+          chain={chain}
+          selected={selected}
+          unavailable={unavailable}
+          switches={switches}
+          onSelect={() => {}}
+          // A lone row never needs scrolling into view; cmdk's would pan a canvas around it
+          rowRef={keepInPlace}
+        />
+      </CommandPrimitive.List>
     </CommandPrimitive>
   )
 }
