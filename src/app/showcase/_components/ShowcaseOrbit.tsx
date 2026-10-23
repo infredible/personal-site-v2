@@ -19,7 +19,6 @@ import {
   springStep,
   tilt,
   worldOffset,
-  wrapAngle,
   type SceneMetrics,
   type Vec3,
 } from './orbit'
@@ -233,11 +232,9 @@ export function ShowcaseOrbit() {
     resizeObserver.observe(stage)
 
     // Theme colors for the canvas, re-read when the site theme flips
-    const colors = { fg: '#000', bg: '#fff' }
+    const colors = { fg: '#000' }
     const readColors = () => {
-      const style = getComputedStyle(document.documentElement)
-      colors.fg = style.getPropertyValue('--foreground').trim() || colors.fg
-      colors.bg = style.getPropertyValue('--background').trim() || colors.bg
+      colors.fg = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim() || colors.fg
     }
     readColors()
     const themeObserver = new MutationObserver(readColors)
@@ -345,23 +342,19 @@ export function ShowcaseOrbit() {
         const stagger = clamp((m.intro * INTRO_S - 0.1 - i * 0.07) / 0.5, 0, 1)
         let opacity = lerp(0.38, 1, nearness) * easeOutCubic(stagger)
         if (!isCurrent) opacity *= 1 - 0.93 * zoom - 0.07 * launch
-        // Partially turned toward the ring's outside, so the sides read as a curve; square to the camera once lifted
-        const turn = Math.sin(wrapAngle(theta)) * 0.5 * (1 - lift)
-
-        el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(2)}px) rotateY(${turn.toFixed(4)}rad) scale(${geo.cardScale})`
+        // Always square to the camera: only position and depth change, never the card's angle
+        el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(2)}px) scale(${geo.cardScale})`
         el.style.opacity = opacity.toFixed(3)
         el.style.zIndex = String(Math.round(z + 100000))
         el.style.pointerEvents = opacity < 0.05 ? 'none' : ''
       }
 
-      // Canvas: sphere and ring, layered between the cards behind it and those in front
+      // Canvas: sphere and ring dots, layered between the cards behind the sphere's center and those in front
       canvas.style.zIndex = String(Math.round(offset.z + 100000))
       canvas.style.opacity = String(1 - launch)
       ctx.setTransform(dpr, 0, 0, dpr, canvas.width / 2, canvas.height / 2)
       ctx.clearRect(-geo.width, -geo.height, geo.width * 2, geo.height * 2)
 
-      const center = project(offset, geo.perspective)
-      const radius = geo.sphereRadius * center.scale
       const dotSize = geo.sphereRadius * 0.0065
 
       // Light: from the sphere toward the current card, brighter when zoomed in
@@ -416,19 +409,11 @@ export function ShowcaseOrbit() {
         ctx.fill()
       }
 
-      // Halo
-      const halo = ctx.createRadialGradient(center.x, center.y, radius * 0.6, center.x, center.y, radius * 2.4)
-      halo.addColorStop(0, colors.fg)
-      halo.addColorStop(1, 'transparent')
-      ctx.globalAlpha = 0.045 * intro
-      ctx.fillStyle = halo
-      ctx.fillRect(center.x - radius * 2.4, center.y - radius * 2.4, radius * 4.8, radius * 4.8)
-
       drawRing(0, 0.16)
 
-      // Far hemisphere, seen faintly through the body
+      // The sphere is only its dots (no fill): the far hemisphere fainter and smaller, for depth
       ctx.fillStyle = colors.fg
-      ctx.globalAlpha = 0.16 * intro
+      ctx.globalAlpha = 0.12 * intro
       ctx.beginPath()
       for (let i = 0; i < dots.length; i++) {
         if (screen.facing[i] >= 0) continue
@@ -437,17 +422,6 @@ export function ShowcaseOrbit() {
         ctx.arc(screen.x[i], screen.y[i], r, 0, Math.PI * 2)
       }
       ctx.fill()
-
-      // Body: mostly opaque, so it hides the far side and the cards behind it
-      ctx.globalAlpha = 0.86 * intro
-      ctx.fillStyle = colors.bg
-      ctx.beginPath()
-      ctx.arc(center.x, center.y, radius, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.globalAlpha = 0.1 * intro
-      ctx.strokeStyle = colors.fg
-      ctx.lineWidth = 1
-      ctx.stroke()
 
       // Near hemisphere, brighter toward the viewer
       ctx.fillStyle = colors.fg

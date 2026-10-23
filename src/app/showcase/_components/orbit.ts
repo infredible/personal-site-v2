@@ -115,12 +115,6 @@ export function spherePoints(count: number): Vec3[] {
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 export const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
-/** Wraps an angle to (−π, π] */
-export function wrapAngle(a: number) {
-  const tau = Math.PI * 2
-  return a - tau * Math.floor((a + Math.PI) / tau)
-}
-
 /**
  * One step of a damped spring toward `target` (semi-implicit Euler, substepped
  * so a long frame can't blow it up). Returns the new [value, velocity].
