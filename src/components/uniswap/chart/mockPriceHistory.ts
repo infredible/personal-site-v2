@@ -6,9 +6,12 @@ import type { Token, TokenCategory } from '../swap/types'
  * space): it always ends at `token.priceUsd`, and the 1D series starts where
  * `token.change24h` says it did 24h ago, so the header's 1D change matches the
  * token list. Same inputs, same series, on the server and in every browser.
+ *
+ * Live is the past two minutes; `createMockPriceStream` continues it one tick
+ * at a time (see useLivePriceHistory).
  */
 
-export type ChartPeriod = '1H' | '1D' | '1W' | '1M' | '1Y'
+export type ChartPeriod = 'LIVE' | '1D' | '1W' | '1M' | '1Y'
 
 export interface PricePoint {
   /** Unix ms */
@@ -18,18 +21,25 @@ export interface PricePoint {
 }
 
 export const CHART_PERIODS: { value: ChartPeriod; label: string; description: string }[] = [
-  { value: '1H', label: '1H', description: 'Past hour' },
+  { value: 'LIVE', label: 'Live', description: 'Past 2 minutes' },
   { value: '1D', label: '1D', description: 'Past day' },
   { value: '1W', label: '1W', description: 'Past week' },
   { value: '1M', label: '1M', description: 'Past month' },
   { value: '1Y', label: '1Y', description: 'Past year' },
 ]
 
-/** Every period has the same number of points, so a period change can morph point to point. */
+/** Points per fixed period (1D…1Y) */
 export const POINTS_PER_SERIES = 97
 
+/** Live: a new point every 500ms, over a 2-minute window */
+export const LIVE_TICK_MS = 500
+export const LIVE_POINTS = 241
+export const LIVE_WINDOW_MS = (LIVE_POINTS - 1) * LIVE_TICK_MS
+
+const pointsFor = (period: ChartPeriod) => (period === 'LIVE' ? LIVE_POINTS : POINTS_PER_SERIES)
+
 const DAY = 24 * 60 * 60 * 1000
-const PERIOD_DAYS: Record<ChartPeriod, number> = { '1H': 1 / 24, '1D': 1, '1W': 7, '1M': 30, '1Y': 365 }
+const PERIOD_DAYS: Record<ChartPeriod, number> = { LIVE: LIVE_WINDOW_MS / DAY, '1D': 1, '1W': 7, '1M': 30, '1Y': 365 }
 
 /** "Now" for the mock: fixed, so timestamps are deterministic too. */
 export const MOCK_NOW = Date.UTC(2026, 9, 23, 18, 30)
@@ -41,7 +51,7 @@ const DAILY_VOL: Record<TokenCategory, number> = {
   defi: 0.05,
   layer2: 0.055,
   meme: 0.09,
-  stablecoin: 0.0004,
+  stablecoin: 0.0002,
 }
 
 /** FNV-1a: string -> 32-bit seed */
@@ -80,9 +90,15 @@ function periodChange(token: Token, period: ChartPeriod, random: () => number, t
   const day = token.change24h ?? 0
   if (period === '1D') return day
   if (isStablecoin(token)) return (random() - 0.5) * 0.0006
-  // Loosely correlated with the day's direction, so 1H and 1W tend to agree with 1D
-  const lean = period === '1H' ? day * 0.15 : day * 0.6
+  // Loosely correlated with the day's direction, so 1W and 1M tend to agree with 1D
+  const lean = period === 'LIVE' ? day * 0.01 : day * 0.6
   return Math.max(-0.85, lean + normal(random) * totalVol * 0.5)
+}
+
+function totalVolFor(token: Token, days: number) {
+  const dailyVol = DAILY_VOL[token.category ?? 'defi']
+  // Stablecoins stay pegged however long the window
+  return isStablecoin(token) ? Math.min(dailyVol * Math.sqrt(days), 0.0005) : dailyVol * Math.sqrt(days)
 }
 
 const cache = new Map<string, PricePoint[]>()
@@ -93,11 +109,9 @@ export function getMockPriceHistory(token: Token, period: ChartPeriod): PricePoi
   if (cached) return cached
 
   const random = rng(hash(key))
-  const n = POINTS_PER_SERIES
+  const n = pointsFor(period)
   const days = PERIOD_DAYS[period]
-  const dailyVol = DAILY_VOL[token.category ?? 'defi']
-  // Stablecoins stay pegged however long the window
-  const totalVol = isStablecoin(token) ? Math.min(dailyVol * Math.sqrt(days), 0.0012) : dailyVol * Math.sqrt(days)
+  const totalVol = totalVolFor(token, days)
   const stepVol = totalVol / Math.sqrt(n - 1)
 
   // Random walk with a little momentum, so moves come in runs like real charts
@@ -123,4 +137,24 @@ export function getMockPriceHistory(token: Token, period: ChartPeriod): PricePoi
   })
   cache.set(key, points)
   return points
+}
+
+/**
+ * The live feed after the history: each call returns the point one tick after
+ * `prev`. Same momentum walk as the history, plus a gentle pull back toward
+ * `token.priceUsd` so a long session doesn't wander off the token list's price
+ * (and a stablecoin keeps its peg). Seeded, so every stream for a token plays
+ * the same sequence.
+ */
+export function createMockPriceStream(token: Token) {
+  const random = rng(hash(`${token.symbol}:live-stream`))
+  const stepVol = totalVolFor(token, PERIOD_DAYS.LIVE) / Math.sqrt(LIVE_POINTS - 1)
+  const anchor = Math.log(token.priceUsd)
+  const pull = isStablecoin(token) ? 0.08 : 0.01
+  let step = 0
+  return (prev: PricePoint): PricePoint => {
+    const log = Math.log(prev.value)
+    step = 0.35 * step + normal(random) * stepVol - (log - anchor) * pull
+    return { timestamp: prev.timestamp + LIVE_TICK_MS, value: Math.exp(log + step) }
+  }
 }

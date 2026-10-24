@@ -28,6 +28,7 @@ export {
   paletteOverlayClassName,
 } from './UniModal'
 export { UniTooltip } from './UniTooltip'
+export { UniMenu, UniMenuTrigger, UniMenuContent, UniMenuItem, UniMenuSeparator } from './UniMenu'
 export { Shimmer, TextSkeleton, BlockSkeleton, TokenRowSkeleton, TokenListSkeleton } from './Skeleton'
 export { TokenPriceSparkline } from './chart'
 export type { TokenPriceSparklineProps, ChartPeriod } from './chart'

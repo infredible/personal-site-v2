@@ -64,7 +64,7 @@ function Stage({
 function SparklineAnatomy({ token, period: initialPeriod }: { token: Token; period: ChartPeriod }) {
   const [period, setPeriod] = useState(initialPeriod)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
-  const model = useSparklineModel(token, period)
+  const model = useSparklineModel(token, period, { paused: hoverIndex !== null })
   const stage = PART_WIDTH + 32
 
   return (
@@ -81,7 +81,7 @@ function SparklineAnatomy({ token, period: initialPeriod }: { token: Token; peri
           </div>
         </Stage>
       </CanvasFrame>
-      <CanvasFrame id="part-chart" title="Chart" note="Line + fill by direction; crosshair and dot on hover" labelPlacement="side">
+      <CanvasFrame id="part-chart" title="Chart" note="Line + fill by direction, time axis; crosshair and dot on hover" labelPlacement="side">
         <Stage card width={stage}>
           <div data-explode-target="chart">
             <SparklineChart model={model} hoverIndex={hoverIndex} onHoverIndexChange={setHoverIndex} style={{ height: CHART_HEIGHT }} />
@@ -148,9 +148,13 @@ export function SparklineCanvas({
         </CanvasFrame>
       </CanvasSection>
 
-      <CanvasSection id="periods" title="Periods" description="One seeded series per token and period, ending at the current price. 1D matches the token's 24h change.">
-        {CHART_PERIODS.map(({ value, description }) => (
-          <CanvasFrame key={value} id={`period-${value}`} title={`ETH · ${value}`} note={description}>
+      <CanvasSection
+        id="periods"
+        title="Periods"
+        description="One seeded series per token and period, ending at the current price. 1D matches the token's 24h change. Live streams a new point every 500ms; the line's tip eases toward each one as it scrolls. Scrubbing pauses it."
+      >
+        {CHART_PERIODS.map(({ value, label, description }) => (
+          <CanvasFrame key={value} id={`period-${value}`} title={`ETH · ${label}`} note={description}>
             <Stage>
               <TokenPriceSparkline token={TOKENS.ETH} defaultPeriod={value} />
             </Stage>
