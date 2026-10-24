@@ -704,8 +704,8 @@ function StepTrack({ filled }: { filled: boolean }) {
 
 /**
  * What the card becomes once the swap lands: the token you got, big, with the
- * connector turned into its check; what you gave for it underneath; and the
- * transaction folded away behind one row, for the few who want it.
+ * connector turned into its check; and the transaction (including what you
+ * gave for it) folded away behind one row, for the few who want it.
  */
 export function ReviewReceipt({
   trade,
@@ -734,23 +734,12 @@ export function ReviewReceipt({
           <LogoMark id={ids.output} token={output.token} size={64} />
           <ReceivedBadge id={ids.connector} />
         </span>
-        <div className="flex w-full flex-col items-center gap-uni-6">
-          <motion.div className="flex max-w-full flex-col items-center gap-uni-4" {...m.settle(0.1)}>
-            <span className="max-w-full truncate text-heading2 text-neutral1">
-              {formatTokenAmount(state.acceptedOutput)} {output.token.symbol}
-            </span>
-            <span className="text-body2 text-neutral2">{formatUsd(state.acceptedOutput * output.token.priceUsd)}</span>
-          </motion.div>
-          <span className="flex max-w-full items-center gap-uni-6 text-body3 text-neutral2">
-            <motion.span className="shrink-0" {...m.settle(0.16)}>
-              Swapped from
-            </motion.span>
-            <LogoMark id={ids.input} token={input.token} size={16} />
-            <motion.span className="truncate text-neutral1" {...m.settle(0.16)}>
-              {formatTokenAmount(input.amount)} {input.token.symbol}
-            </motion.span>
+        <motion.div className="flex max-w-full flex-col items-center gap-uni-4" {...m.settle(0.1)}>
+          <span className="max-w-full truncate text-heading2 text-neutral1">
+            {formatTokenAmount(state.acceptedOutput)} {output.token.symbol}
           </span>
-        </div>
+          <span className="text-body2 text-neutral2">{formatUsd(state.acceptedOutput * output.token.priceUsd)}</span>
+        </motion.div>
       </div>
       <motion.div className="flex flex-col" {...m.settle(0.2)}>
         <button
@@ -774,6 +763,12 @@ export function ReviewReceipt({
             <motion.div key="details" id={panelId} className="flex flex-col gap-uni-8 px-uni-8 pt-uni-8" {...m.region}>
               <DetailRow label="Rate">
                 <RateText trade={trade} rate={rate} />
+              </DetailRow>
+              <DetailRow label="Swapped from">
+                <TokenLogo token={input.token} size={16} />
+                <span className="truncate">
+                  {formatTokenAmount(input.amount)} {input.token.symbol}
+                </span>
               </DetailRow>
               <DetailRow label={feeRate > 0 ? `Fee (${formatPercent(feeRate)})` : 'Fee'}>
                 {feeRate > 0 ? formatUsd(feeUsd) : 'Free'}

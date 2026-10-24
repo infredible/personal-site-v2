@@ -80,7 +80,7 @@ const PARTS: { id: PartId; label: string; note: string }[] = [
   { id: 'amounts', label: 'Amounts', note: 'Sell over Buy while reviewing. Once you commit they turn side by side, smaller, with Sell flowing into Buy along the track.' },
   { id: 'details', label: 'Details', note: 'While reviewing. Collapses away when you commit: you’ve already read it.' },
   { id: 'steps', label: 'Steps', note: 'Replaces the details once you commit. Only the steps this trade needs, progressing in place.' },
-  { id: 'receipt', label: 'Receipt', note: 'Takes over the card on success: the token you got, what you gave, and the transaction folded behind one row.' },
+  { id: 'receipt', label: 'Receipt', note: 'Takes over the card on success: the token you got, and the transaction (what you gave, rate, costs) folded behind one row.' },
   { id: 'action', label: 'Action', note: 'One button for the whole flow, relabelled in place. It never unmounts.' },
 ]
 
@@ -126,8 +126,8 @@ const STATES: { id: string; title: string; note: string; receiptOpen?: boolean }
   { id: 'approve', title: 'Approve in wallet', note: 'The amounts turn side by side, Sell flowing into Buy; details give way to the steps. Approval is step one of three.' },
   { id: 'wallet', title: 'Confirm in wallet', note: 'The button is where you were looking; it says what to do and spins while the wallet is open.' },
   { id: 'pending', title: 'Pending', note: 'The track fills as each step lands. Rows have fixed heights, so waiting never resizes the card.' },
-  { id: 'success', title: 'Success', note: 'The whole card becomes the receipt: Buy grows to the middle, the connector lands on it as the check, Sell shrinks into the line below.' },
-  { id: 'success', title: 'Success · details open', note: 'The transaction, one tap away: rate, costs, timing and the explorer link, folded under the receipt.', receiptOpen: true },
+  { id: 'success', title: 'Success', note: 'The whole card becomes the receipt: Buy grows to the middle, the connector lands on it as the check; what you sold moves into the details.' },
+  { id: 'success', title: 'Success · details open', note: 'The transaction, one tap away: rate, what you sold, costs, timing and the explorer link, folded under the receipt.', receiptOpen: true },
   { id: 'rejected', title: 'Rejected', note: 'Recoverable: the declined step turns red, one line says nothing was sent, Try again resumes that step.' },
 ]
 
