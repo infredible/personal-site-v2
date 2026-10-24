@@ -178,6 +178,7 @@ export function getExploreTokens(chain: ExploreChain): ExploreTokenStats[] {
     const volumeUsd = Object.fromEntries(
       PERIODS.map((period) => [period, rows.reduce((sum, row) => sum + row.volumeUsd[period], 0)]),
     ) as Record<ExploreTimePeriod, number>
+    // `chain` stays the primary chain (logo badge); the row aggregates every chain
     return [{ ...base, id: `all:${token.symbol}`, volumeUsd }]
   })
 }

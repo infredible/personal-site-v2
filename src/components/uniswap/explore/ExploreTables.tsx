@@ -136,9 +136,13 @@ export function ExploreTables({
     if (!searchShortcut) return
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return
-      if (isEditable(document.activeElement)) return
+      const active = document.activeElement
+      if (isEditable(active) || active?.closest('[role=dialog],[role=menu],[role=listbox]')) return
+      // Focusing expands the collapsed search; skip (and keep the "/") when it's hidden
+      const input = searchRef.current
+      if (!input || input.offsetParent === null) return
       e.preventDefault()
-      searchRef.current?.focus({ preventScroll: true })
+      input.focus({ preventScroll: true })
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -169,7 +173,11 @@ export function ExploreTables({
       update({ query: '' })
       searchRef.current?.focus({ preventScroll: true })
     },
-    onSearchAllNetworks: () => refetch({ chain: 'all' }),
+    onSearchAllNetworks: () => {
+      refetch({ chain: 'all' })
+      // The button unmounts with the empty state; keep focus in the filters
+      searchRef.current?.focus({ preventScroll: true })
+    },
     skeletonRows,
     stickyTop,
     explode: true,

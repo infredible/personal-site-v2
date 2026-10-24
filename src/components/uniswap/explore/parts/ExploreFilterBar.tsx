@@ -60,7 +60,7 @@ export function TimePeriodMenu({
   return (
     <UniMenu modal={false} onOpenChange={(open) => open && readTheme()}>
       <UniMenuTrigger asChild>
-        <button ref={triggerRef} type="button" aria-label={`Volume period: ${value}`} className={cn(control, className)}>
+        <button ref={triggerRef} type="button" className={cn(control, className)}>
           {value} volume
           <ChevronDown className="size-uni-16 text-neutral2" />
         </button>
@@ -213,7 +213,7 @@ export function ExploreFilterBar({
         animate={menu.animate}
         menuId={menuId}
         onDismiss={() => rootRef.current?.querySelector<HTMLElement>('[aria-haspopup="dialog"]')?.focus()}
-        triggerClassName="h-uni-40 gap-uni-6 rounded-uni-12 bg-surface1 px-uni-12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
+        triggerClassName="h-uni-40 gap-uni-6 rounded-uni-12 bg-surface1 px-uni-12 aria-expanded:bg-surface2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
       />
       <ExploreSearch
         value={query}

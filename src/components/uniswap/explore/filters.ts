@@ -143,7 +143,9 @@ export function filterPools(rows: ExplorePoolStats[], query: string): ExplorePoo
 export function splitMatch(text: string, query: string): { before: string; match: string; after: string } | null {
   const q = normalize(query)
   if (!q) return null
-  const index = text.toLowerCase().indexOf(q)
-  if (index < 0) return null
-  return { before: text.slice(0, index), match: text.slice(index, index + q.length), after: text.slice(index + q.length) }
+  // Offsets come from the original text: toLowerCase() can change length (e.g. 'İ')
+  const found = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').exec(text)
+  if (!found) return null
+  const end = found.index + found[0].length
+  return { before: text.slice(0, found.index), match: found[0], after: text.slice(end) }
 }

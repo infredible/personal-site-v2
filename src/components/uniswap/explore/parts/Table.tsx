@@ -278,12 +278,25 @@ export function ExploreTable<F extends string>({
     return () => observer.disconnect()
   }, [stickyTop])
 
+  const echoRef = React.useRef<HTMLElement | null>(null)
+
   // Header and body scroll sideways together (production: react-scroll-sync)
   const syncFrom = (source: 'head' | 'body') => {
     const from = source === 'head' ? headRef.current : bodyRef.current
     const to = source === 'head' ? bodyRef.current : headRef.current
-    if (from && to && to.scrollLeft !== from.scrollLeft) to.scrollLeft = from.scrollLeft
     if (source === 'body') measure()
+    // The write below fires the other side's scroll event a frame later; swallow it so a stale value
+    // never bounces back and cancels smooth or momentum scrolling
+    if (from && from === echoRef.current) {
+      echoRef.current = null
+      return
+    }
+    if (from && to && to.scrollLeft !== from.scrollLeft) {
+      const before = to.scrollLeft
+      to.scrollLeft = from.scrollLeft
+      // No change (clamped) means no echo event to wait for
+      echoRef.current = to.scrollLeft !== before ? to : null
+    }
   }
 
   const focusRow = (id: string | undefined) => {

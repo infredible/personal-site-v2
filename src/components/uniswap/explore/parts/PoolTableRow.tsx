@@ -49,8 +49,7 @@ function PoolDescription({ row, query, badge }: Pick<PoolTableRowProps, 'row' | 
       <PoolLogos token0={row.token0} token1={row.token1} chain={badge} />
       <div className="flex min-w-0 flex-1 flex-col gap-uni-2">
         <span className="truncate text-body2 text-neutral1">
-          <HighlightedText text={row.token0.symbol} query={query} />/
-          <HighlightedText text={row.token1.symbol} query={query} />
+          <HighlightedText text={`${row.token0.symbol}/${row.token1.symbol}`} query={query} />
         </span>
         <PoolDetailsLine row={row} />
       </div>
@@ -126,8 +125,12 @@ function AprCell({ row }: { row: ExplorePoolStats }) {
   return (
     <UniTooltip content={<AprBreakdown apr={row.apr} rewardApr={row.rewardApr} />} className="p-uni-12">
       <span className="flex flex-col items-end gap-uni-6">
-        <span>{formatPercent(row.apr)}</span>
+        <span>
+          {formatPercent(row.apr)}
+          <span className="sr-only"> pool APR,</span>
+        </span>
         <RewardAprBadge rewardApr={row.rewardApr} />
+        <span className="sr-only">, total APR {formatPercent(row.apr + row.rewardApr)}</span>
       </span>
     </UniTooltip>
   )

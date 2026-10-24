@@ -7,7 +7,7 @@ import { formatPercent } from '../format'
  * 1H / 1D change, as production's DeltaArrow + TableText: the absolute value
  * in neutral1 and a 16px arrow carrying the direction (statusSuccess up,
  * statusCritical down, neutral3 up arrow when it rounds to zero). The arrow's
- * label ("up" / "down") gives screen readers the sign.
+ * label ("up" / "down" / "unchanged") gives screen readers the sign.
  */
 export function PriceChangeCell({ change, className }: { change: number; className?: string }) {
   if (!Number.isFinite(change)) return <span className={className}>-</span>
