@@ -247,13 +247,14 @@ const MOTION_SPEC: [string, string, string, string][] = [
   ['Island settles', '380ms', 'spring, bounce 0.16', 'Folding back barely overshoots'],
   ['Content in', '280ms after 100ms', 'ease-out (0.23, 1, 0.32, 1)', 'Scale 0.92 → 1 from the top, 6px blur. Laid out at its final size and clipped by the growing shape'],
   ['Content out', '120ms', 'ease-out', 'Scale 0.96, 4px blur. Exits beat entries'],
-  ['Face ID scan', '1.2s loop', 'ease-in-out', 'Corners breathe 1 → 0.9'],
+  ['Face ID scan', '1.6s loop', 'ease-in-out', 'The face turns left and right: nose ±4.5, eyes and mouth ±2.5 and narrowing, so it reads in depth; corners breathe 1 → 0.94'],
   ['Face ID match', '320ms draw', 'ease-in-out', 'Face out, check in; holds 750ms, then hands over to compact'],
   ['Face ID cancel', '550ms', 'ease-out', 'Sideways shake, 14px dying to 0; rests after 1.3s'],
   ['Sheet out', '420ms', 'spring, no bounce', 'Leaves as Face ID lands; the form behind it clears'],
   ['Progress', 'the ETA', 'linear', 'Ring, bar and countdown share one value; it caps at 92% until the chain confirms'],
   ['Success', '3.5s, then 3s', 'n/a', 'Alert unprompted, folds to compact with its check, then the activity ends'],
-  ['Reduced motion', '200ms', 'ease-out', 'No bounce, blur, shake or flow: shapes tween, content crossfades'],
+  ['Haptics', '60ms a tap', 'n/a', 'Face ID match and island taps: one light tap. Cancel: three even taps. Swap landed: light, then firm. The phone buzzes ±3px; real phones vibrate where allowed'],
+  ['Reduced motion', '200ms', 'ease-out', 'No bounce, blur, shake, flow or buzz (the haptic marks still flash): shapes tween, content crossfades'],
 ]
 
 const TIMINGS: [string, string][] = [

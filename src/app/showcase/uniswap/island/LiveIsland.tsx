@@ -1,11 +1,19 @@
 'use client'
 
 import * as React from 'react'
-import { Pause, Play, RotateCcw, TrendingDown } from 'lucide-react'
-import { PhoneFrame, PhoneHomeIndicator, PhoneStatusBar, phoneScaleToFit } from '@/components/showcase'
+import { Pause, Play, RotateCcw, TrendingDown, Vibrate, VibrateOff } from 'lucide-react'
+import {
+  PhoneFrame,
+  PhoneHomeIndicator,
+  PhoneStatusBar,
+  phoneScaleToFit,
+  playHaptic,
+  type HapticPattern,
+} from '@/components/showcase'
 import { SegmentedControl, UniButton } from '@/components/uniswap'
 import { PRICE_MOVE, atReview, useReviewFlow, type ReviewAction, type WalletResponse } from '@/components/uniswap/swap/review'
 import {
+  ISLAND_PRESENTATIONS,
   ISLAND_TIMINGS,
   IslandPhone,
   useIslandPresentation,
@@ -19,6 +27,12 @@ import { cn } from '@/lib/utils'
  * chain timings, the island follows it, and a demo bar above the phone
  * steers the simulation. Any preset past review holds where it starts until
  * you resume it.
+ *
+ * Haptics follow iOS's own conventions: a light tap when Face ID matches and
+ * when you open or fold the island, the error pattern when Face ID is
+ * cancelled, and the success pattern only for the swap landing (it's the
+ * outcome, so it gets the outcome's feel). The phone buzzes on screen; on a
+ * phone that allows it, the visitor's own phone does too.
  */
 
 const FACE_ID_OPTIONS = [
@@ -37,6 +51,31 @@ export function LiveIsland({ preset }: { preset: IslandPreset }) {
   const { state } = flow
   const island = useIslandPresentation(state, { paused, initial: preset.presentation })
   const scale = usePhoneScale()
+  const haptics = useHaptics()
+
+  // Fire on changes only (not on mount: a preset starting at the alert stays quiet)
+  const lastPresentation = React.useRef(island.presentation)
+  React.useEffect(() => {
+    const was = lastPresentation.current
+    lastPresentation.current = island.presentation
+    if (was === island.presentation) return
+    if (island.presentation === ISLAND_PRESENTATIONS.SIGNED) haptics.play('impact')
+    else if (island.presentation === ISLAND_PRESENTATIONS.DECLINED) haptics.play('error')
+  }, [island.presentation, haptics])
+
+  const lastPhase = React.useRef(state.phase)
+  React.useEffect(() => {
+    const was = lastPhase.current
+    lastPhase.current = state.phase
+    if (was !== state.phase && state.phase === 'success') haptics.play('success')
+  }, [state.phase, haptics])
+
+  const toggleIsland =
+    island.toggle &&
+    (() => {
+      haptics.play('impact')
+      island.toggle?.()
+    })
 
   const replay = () => {
     setPaused(false)
@@ -97,13 +136,23 @@ export function LiveIsland({ preset }: { preset: IslandPreset }) {
           >
             Move price
           </UniButton>
+          <UniButton
+            size="xsmall"
+            emphasis="secondary"
+            icon={haptics.on ? <Vibrate /> : <VibrateOff />}
+            aria-pressed={haptics.on}
+            onClick={() => haptics.setOn((on) => !on)}
+            title="Simulated haptics: the phone buzzes on screen, and on your own phone where the browser allows"
+          >
+            Haptics
+          </UniButton>
           <UniButton size="xsmall" emphasis="secondary" icon={<RotateCcw />} onClick={replay}>
             Replay
           </UniButton>
         </span>
       </div>
 
-      <PhoneFrame scale={scale}>
+      <PhoneFrame scale={scale} haptic={haptics.current}>
         <IslandPhone
           trade={preset.trade}
           state={state}
@@ -112,7 +161,7 @@ export function LiveIsland({ preset }: { preset: IslandPreset }) {
           onAction={onAction}
           onClose={onClose}
           onReopen={dismissed && state.phase === 'review' ? () => setDismissed(false) : undefined}
-          onIslandToggle={island.toggle}
+          onIslandToggle={toggleIsland}
           live={{ running: !paused }}
           chrome={phoneChrome}
         />
@@ -133,6 +182,21 @@ export function phoneChrome({ kind }: IslandPresentation) {
       <PhoneHomeIndicator className="z-30" />
     </>
   )
+}
+
+/** Plays haptics on the drawn phone (and the real one), unless turned off. */
+function useHaptics() {
+  const [on, setOn] = React.useState(true)
+  const [current, setCurrent] = React.useState<{ pattern: HapticPattern; id: number }>()
+  const play = React.useCallback(
+    (pattern: HapticPattern) => {
+      if (!on) return
+      playHaptic(pattern)
+      setCurrent((c) => ({ pattern, id: (c?.id ?? 0) + 1 }))
+    },
+    [on],
+  )
+  return React.useMemo(() => ({ on, setOn, play, current }), [on, play, current])
 }
 
 /** Fit the phone to the stage: its column's width, and the window's height less the demo chrome. */
