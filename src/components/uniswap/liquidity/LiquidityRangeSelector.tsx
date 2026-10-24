@@ -1,9 +1,11 @@
 'use client'
 
 import * as React from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { UniButton } from '../UniButton'
 import {
+  AdvancedToggle,
   MinMaxInputs,
   PriceStrategies,
   RangeActionBar,
@@ -19,13 +21,19 @@ import type { RangeSelectorState } from './types'
  * Uniswap's "Set price range" step, composed (SelectPriceRangeStep):
  *
  *   Set price range / Full range | Custom range / description
- *   ┌ chart card (surface2, rounded top) ─────────────┐ 4px
- *   │ header · chart (surface3 rules above and below) │
- *   │ period + zoom + reset                           │
- *   ├ price strategies ───────────────────────────────┤ 4px
- *   ├ min price | max price (rounded bottom) ─────────┘
+ *   ┌ price strategies (rounded top) ─────────────────┐ 4px
+ *   ├ current price · token toggle ───────────────────┤
+ *   │ Advanced ⌄                                      │
+ *   │ ┆ chart, period + zoom + reset (when open)      │
+ *   ├ min price | max price (rounded bottom) ─────────┘ 4px
  *   Invalid range
  *   [ Continue ]
+ *
+ * A redesign of the order, not a port: Uniswap leads with the chart and puts
+ * the strategies under it. Here strategies come first (the quick path), and
+ * the chart opens behind "Advanced" (state: `advanced`), easing its height
+ * open. Closed, the chart is unmounted; its view keeps tracking the range, so
+ * it opens fitted to whatever the strategies or inputs set.
  *
  * The root is a container (`@container/range`): the parts switch to their
  * narrow layouts by container width, so the 375px mobile frame (which doesn't
@@ -41,10 +49,12 @@ interface LiquidityRangeSelectorProps {
   onContinue?: () => void
 }
 
-type Part = 'mode' | 'chart-header' | 'chart' | 'actions' | 'strategies' | 'inputs' | 'continue'
+type Part = 'mode' | 'strategies' | 'chart-header' | 'advanced' | 'chart' | 'actions' | 'inputs' | 'continue'
 
 function LiquidityRangeSelector({ defaultState, explode, className, onContinue }: LiquidityRangeSelectorProps) {
   const s = useRangeSelector(defaultState)
+  const chartId = React.useId()
+  const reduceMotion = useReducedMotion()
 
   const part = (id: Part, node: React.ReactNode, partClassName?: string) => (
     <div data-explode={explode ? id : undefined} className={partClassName}>
@@ -64,7 +74,16 @@ function LiquidityRangeSelector({ defaultState, explode, className, onContinue }
 
       <div className="flex flex-col gap-uni-8">
         <div className="flex flex-col gap-uni-4">
-          <div className="flex flex-col gap-uni-16 rounded-t-uni-20 bg-surface2 @max-[440px]/range:gap-uni-8">
+          {part(
+            'strategies',
+            <PriceStrategies
+              tickSpacing={s.tickSpacing}
+              selected={s.strategy}
+              onSelect={s.selectStrategy}
+              className="rounded-t-uni-20"
+            />,
+          )}
+          <div className="flex flex-col overflow-hidden bg-surface2">
             {part(
               'chart-header',
               <RangeChartHeader
@@ -76,39 +95,52 @@ function LiquidityRangeSelector({ defaultState, explode, className, onContinue }
                 onInvertedChange={s.setInverted}
               />,
             )}
-            {part(
-              'chart',
-              <RangeChart
-                pool={s.pool}
-                inverted={s.inverted}
-                period={s.period}
-                range={s.chartRange}
-                fullRange={s.fullRange}
-                view={s.view}
-                onViewChange={s.handleViewChange}
-                onRangeChange={s.handleRangeChange}
-                showPercentTooltips={s.inputMode === 'percent'}
-                height={RANGE_CHART_HEIGHT}
-              />,
-              'relative overflow-hidden border-y border-surface3 py-uni-12 @max-[440px]/range:py-uni-4',
-            )}
-            {part(
-              'actions',
-              <RangeActionBar
-                period={s.period}
-                onPeriodChange={s.setPeriod}
-                onZoomIn={s.zoomIn}
-                onZoomOut={s.zoomOut}
-                onExpand={s.expand}
-                onReset={s.reset}
-                expandDisabled={s.fullRange}
-              />,
-            )}
+            {part('advanced', <AdvancedToggle open={s.advanced} onOpenChange={s.setAdvanced} controls={chartId} />)}
+            <AnimatePresence initial={false}>
+              {s.advanced && (
+                <motion.div
+                  key="chart"
+                  id={chartId}
+                  role="region"
+                  aria-label="Liquidity chart"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  className="overflow-hidden"
+                >
+                  {part(
+                    'chart',
+                    <RangeChart
+                      pool={s.pool}
+                      inverted={s.inverted}
+                      period={s.period}
+                      range={s.chartRange}
+                      fullRange={s.fullRange}
+                      view={s.view}
+                      onViewChange={s.handleViewChange}
+                      onRangeChange={s.handleRangeChange}
+                      showPercentTooltips={s.inputMode === 'percent'}
+                      height={RANGE_CHART_HEIGHT}
+                    />,
+                    'relative overflow-hidden border-y border-surface3 py-uni-12 @max-[440px]/range:py-uni-4',
+                  )}
+                  {part(
+                    'actions',
+                    <RangeActionBar
+                      period={s.period}
+                      onPeriodChange={s.setPeriod}
+                      onZoomIn={s.zoomIn}
+                      onZoomOut={s.zoomOut}
+                      onExpand={s.expand}
+                      onReset={s.reset}
+                      expandDisabled={s.fullRange}
+                    />,
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          {part(
-            'strategies',
-            <PriceStrategies tickSpacing={s.tickSpacing} selected={s.strategy} onSelect={s.selectStrategy} />,
-          )}
           {part(
             'inputs',
             <MinMaxInputs

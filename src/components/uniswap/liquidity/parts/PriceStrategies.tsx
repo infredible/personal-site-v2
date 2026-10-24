@@ -1,12 +1,25 @@
 import { cn } from '@/lib/utils'
+import { Check } from '../../icons'
 import { stablePercentLabel } from '../ticks'
 import type { PriceStrategyId } from '../types'
 
 /*
- * "Price strategies" (DefaultPriceStrategies): four cards on surface2, each
- * with a title, a value and a one-line use case. The selected card sits on
- * surface3; the rest on surface1 with a surface3 border. Only Stable carries
- * a hover hint ("± 3 ticks"). Four columns, two in narrow containers.
+ * "Price strategies", redesigned. Uniswap's DefaultPriceStrategies puts four
+ * narrow cards in a row (title, value, a sentence), and in a ~560px step the
+ * values and sentences wrap into ragged three-line stacks. Here each option is
+ * a wide tile in a 2×2 grid (one column in narrow containers):
+ *
+ *   Stable                    ± 0.3%
+ *   Stablecoins, low volatility
+ *
+ * - Title and value share the first line; the value is tabular and never
+ *   wraps (Wide reads "−50% to +100%" instead of a stacked dash).
+ * - The use case is a short phrase on one line, rather than a sentence.
+ * - Selection is a radio group: surface3 fill plus a check, so the selected
+ *   tile reads without relying on a subtle fill alone. A range edited by hand
+ *   selects none.
+ * - It sits first in the step, so picking a strategy is the default path and
+ *   the chart is the advanced one.
  */
 
 interface PriceStrategiesProps {
@@ -17,11 +30,11 @@ interface PriceStrategiesProps {
   className?: string
 }
 
-const STRATEGIES: { id: PriceStrategyId; title: string; description: string; hint?: string }[] = [
-  { id: 'stable', title: 'Stable', description: 'Good for stablecoins or low volatility pairs', hint: '± 3 ticks' },
-  { id: 'wide', title: 'Wide', description: 'Good for volatile pairs' },
-  { id: 'one-sided-lower', title: 'One-sided lower', description: 'Supply liquidity if price goes down' },
-  { id: 'one-sided-upper', title: 'One-sided upper', description: 'Supply liquidity if price goes up' },
+const STRATEGIES: { id: PriceStrategyId; title: string; description: string }[] = [
+  { id: 'stable', title: 'Stable', description: 'Stablecoins, low volatility' },
+  { id: 'wide', title: 'Wide', description: 'Volatile pairs' },
+  { id: 'one-sided-lower', title: 'One-sided lower', description: 'Buys in as the price falls' },
+  { id: 'one-sided-upper', title: 'One-sided upper', description: 'Sells out as the price rises' },
 ]
 
 function strategyValue(id: PriceStrategyId, tickSpacing: number) {
@@ -29,22 +42,22 @@ function strategyValue(id: PriceStrategyId, tickSpacing: number) {
     case 'stable':
       return stablePercentLabel(tickSpacing)
     case 'wide':
-      return '–50% — +100%'
+      return '−50% to +100%'
     case 'one-sided-lower':
-      return '–50%'
+      return '−50% to 0%'
     case 'one-sided-upper':
-      return '+100%'
+      return '0% to +100%'
   }
 }
 
 function PriceStrategies({ tickSpacing, selected, onSelect, className }: PriceStrategiesProps) {
   return (
-    <div data-slot="price-strategies" className={cn('flex flex-col gap-uni-16 bg-surface2 p-uni-16', className)}>
+    <div data-slot="price-strategies" className={cn('flex flex-col gap-uni-12 bg-surface2 p-uni-16', className)}>
       <span className="text-body3 text-neutral2">Price strategies</span>
       <div
-        role="group"
+        role="radiogroup"
         aria-label="Price strategies"
-        className="grid grid-cols-4 gap-uni-8 @max-[440px]/range:grid-cols-2"
+        className="grid grid-cols-2 gap-uni-8 @max-[440px]/range:grid-cols-1"
       >
         {STRATEGIES.map((strategy) => {
           const isSelected = selected === strategy.id
@@ -52,28 +65,30 @@ function PriceStrategies({ tickSpacing, selected, onSelect, className }: PriceSt
             <button
               key={strategy.id}
               type="button"
-              aria-pressed={isSelected}
+              role="radio"
+              aria-checked={isSelected}
               data-strategy={strategy.id}
               onClick={() => onSelect?.(strategy.id)}
               className={cn(
-                'group/strategy flex min-w-0 flex-col items-start gap-uni-8 rounded-uni-12 border border-surface3 p-uni-12 text-left outline-none',
-                '@max-[440px]/range:gap-uni-4 @max-[440px]/range:p-uni-8',
-                'transition-[opacity,background-color,transform,translate,scale,rotate] duration-100 ease-out',
-                'hover:opacity-80 active:scale-[0.98] focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
-                isSelected ? 'bg-surface3' : 'bg-surface1',
+                'flex min-w-0 flex-col gap-uni-2 rounded-uni-12 border px-uni-12 py-uni-12 text-left outline-none',
+                'transition-[background-color,border-color,scale] duration-100 ease-out',
+                'active:scale-[0.98] focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
+                isSelected
+                  ? 'border-transparent bg-surface3'
+                  : 'border-surface3 bg-surface1 hover:bg-surface1Hovered',
                 onSelect ? 'cursor-pointer' : 'cursor-default',
               )}
             >
-              <span className="flex w-full flex-wrap items-baseline gap-x-uni-4">
-                <span className="text-buttonLabel3 text-neutral2">{strategy.title}</span>
-                {strategy.hint && (
-                  <span className="text-body4 text-neutral2 opacity-0 transition-opacity duration-100 group-hover/strategy:opacity-100 group-focus-visible/strategy:opacity-100">
-                    {strategy.hint}
-                  </span>
-                )}
+              <span className="flex items-center justify-between gap-uni-8">
+                <span className="flex min-w-0 items-center gap-uni-4 text-buttonLabel3 text-neutral1">
+                  <span className="truncate">{strategy.title}</span>
+                  {isSelected && <Check aria-hidden className="size-uni-16 shrink-0 text-accent1" />}
+                </span>
+                <span className="shrink-0 text-body3 whitespace-nowrap text-neutral1 tabular-nums">
+                  {strategyValue(strategy.id, tickSpacing)}
+                </span>
               </span>
-              <span className="text-body2 text-neutral1">{strategyValue(strategy.id, tickSpacing)}</span>
-              <span className="mt-uni-16 text-body4 text-neutral2 @max-[440px]/range:mt-uni-4">{strategy.description}</span>
+              <span className="truncate text-body4 text-neutral2">{strategy.description}</span>
             </button>
           )
         })}

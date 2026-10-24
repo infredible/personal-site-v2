@@ -23,6 +23,8 @@ interface StateOptions {
   fullRange?: boolean
   inputMode?: RangeInputMode
   period?: RangePeriod
+  /** Opens with the liquidity chart revealed */
+  advanced?: boolean
 }
 
 /** A pool of the same pair at another fee tier (spacing follows the tier) */
@@ -34,8 +36,8 @@ export const poolAtFee = (pool: Pool, fee: FeeTier): Pool => ({
 })
 
 export function createRangeState(pool: Pool, options: StateOptions = {}): RangeSelectorState {
-  const { inverted = false, strategy, fullRange = false, inputMode = 'price', period = '1M' } = options
-  const base = { pool, inverted, period, inputMode }
+  const { inverted = false, strategy, fullRange = false, inputMode = 'price', period = '1M', advanced = false } = options
+  const base = { pool, inverted, period, inputMode, advanced }
   if (fullRange) return { ...base, range: fullRangeTicks(pool.tickSpacing), strategy: null }
   const tick = currentVisualTick(pool, inverted)
   const visual = strategy
@@ -52,6 +54,7 @@ export interface LiquidityRangePreset {
 
 export const LIQUIDITY_RANGE_PRESETS: LiquidityRangePreset[] = [
   { id: 'eth-usdc', label: 'ETH/USDC 0.05% · custom', state: createRangeState(POOLS['eth-usdc']) },
+  { id: 'advanced', label: 'ETH/USDC · advanced (chart)', state: createRangeState(POOLS['eth-usdc'], { advanced: true }) },
   { id: 'full-range', label: 'ETH/USDC · full range', state: createRangeState(POOLS['eth-usdc'], { fullRange: true }) },
   { id: 'inverted', label: 'ETH/USDC · inverted (ETH per USDC)', state: createRangeState(POOLS['eth-usdc'], { inverted: true }) },
   { id: 'wide', label: 'ETH/USDC · Wide strategy', state: createRangeState(POOLS['eth-usdc'], { strategy: 'wide' }) },

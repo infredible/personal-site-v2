@@ -77,4 +77,6 @@ export interface RangeSelectorState {
   inputMode: RangeInputMode
   /** The strategy card the range came from; null once edited by hand */
   strategy: PriceStrategyId | null
+  /** The advanced view: the liquidity chart and its zoom controls are revealed */
+  advanced?: boolean
 }
