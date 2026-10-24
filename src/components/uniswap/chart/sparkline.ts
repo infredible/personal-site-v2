@@ -15,10 +15,11 @@ const PAD_Y = 8
 
 /**
  * Stablecoins keep a minimum visible range (as a fraction of price), like
- * Uniswap's isStablecoin chart option: a peg wobbling by 0.01% should read as
- * flat, not as a mountain range.
+ * Uniswap's isStablecoin chart option: a peg wobbling by a few hundredths of a
+ * percent should read as flat, not as a mountain range. 2% of the price
+ * (±1%), so the usual drift moves the line a few pixels.
  */
-const STABLECOIN_MIN_RANGE = 0.004
+const STABLECOIN_MIN_RANGE = 0.02
 
 export function xAt(index: number, count: number) {
   return count <= 1 ? VIEW_W / 2 : (index / (count - 1)) * VIEW_W

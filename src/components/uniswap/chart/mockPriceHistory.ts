@@ -51,7 +51,7 @@ const DAILY_VOL: Record<TokenCategory, number> = {
   defi: 0.05,
   layer2: 0.055,
   meme: 0.09,
-  stablecoin: 0.0004,
+  stablecoin: 0.0002,
 }
 
 /** FNV-1a: string -> 32-bit seed */
@@ -98,7 +98,7 @@ function periodChange(token: Token, period: ChartPeriod, random: () => number, t
 function totalVolFor(token: Token, days: number) {
   const dailyVol = DAILY_VOL[token.category ?? 'defi']
   // Stablecoins stay pegged however long the window
-  return isStablecoin(token) ? Math.min(dailyVol * Math.sqrt(days), 0.0012) : dailyVol * Math.sqrt(days)
+  return isStablecoin(token) ? Math.min(dailyVol * Math.sqrt(days), 0.0005) : dailyVol * Math.sqrt(days)
 }
 
 const cache = new Map<string, PricePoint[]>()
