@@ -61,3 +61,18 @@ export interface ExplorePoolStats {
   /** Extra incentive APR as a fraction, when the pool has rewards */
   rewardApr?: number
 }
+
+/** Data status: first load (skeletons), refetch (old values pulse), ready, or failed. */
+export type ExploreStatus = 'loading' | 'refetching' | 'ready' | 'error'
+
+/** Everything the stateful ExploreTables owns; presets are snapshots of it. */
+export interface ExploreState {
+  tab: ExploreTab
+  chain: ExploreChain
+  /** Volume window (Tokens tab only) */
+  period: ExploreTimePeriod
+  query: string
+  tokenSort: SortState<TokenSortField>
+  poolSort: SortState<PoolSortField>
+  status: ExploreStatus
+}

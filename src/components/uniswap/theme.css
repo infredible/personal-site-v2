@@ -147,6 +147,7 @@
 
   --animate-uni-spin: uni-spin 1s cubic-bezier(0.83, 0, 0.17, 1) infinite;
   --animate-uni-live-blink: uni-live-blink 1.4s ease-in-out infinite;
+  --animate-uni-refetch-pulse: uni-refetch-pulse 1.2s ease-in-out infinite;
 
   --font-uni: var(--uni-font-sans);
   --font-uni-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, "Cascadia Mono", "Roboto Mono", monospace;
@@ -351,6 +352,17 @@
   }
   50% {
     opacity: 0.2;
+  }
+}
+
+/* Refetch: stale values on screen dim and brighten until fresh ones replace them */
+@keyframes uni-refetch-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 

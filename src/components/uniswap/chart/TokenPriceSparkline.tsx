@@ -108,7 +108,7 @@ const DIRECTION_TEXT: Record<PriceDirection, string> = {
 /* Delta ------------------------------------------------------------------- */
 
 /** Uniswap's ArrowChange (a rounded triangle), pointing down; rotated for up */
-function DeltaTriangle({ direction, className }: { direction: PriceDirection; className?: string }) {
+export function DeltaTriangle({ direction, className }: { direction: PriceDirection; className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
