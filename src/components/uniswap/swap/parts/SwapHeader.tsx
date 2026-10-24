@@ -11,7 +11,8 @@ import type { SwapMode } from '../types'
 /*
  * Swap page header row. Ported from Uniswap web's SwapHeaderTabRow
  * (apps/web/src/pages/Swap/SwapHeaderTabRow.tsx): a large, non-outlined
- * SegmentedControl of Swap / Limit / Buy / Sell, and on the Swap tab the
+ * SegmentedControl of Swap / Limit (Uniswap's Buy / Sell fiat tabs are left
+ * out: this recreation only trades token for token), and on both tabs the
  * settings gear (TransactionSettingsButton + TransactionSettingsButtonWithSlippage
  * in packages/uniswap/src/features/transactions/components/settings/).
  *
@@ -24,8 +25,6 @@ import type { SwapMode } from '../types'
 const MODE_OPTIONS = [
   { value: 'swap', label: 'Swap' },
   { value: 'limit', label: 'Limit' },
-  { value: 'buy', label: 'Buy' },
-  { value: 'sell', label: 'Sell' },
 ] as const satisfies readonly { value: SwapMode; label: string }[]
 
 /** Uniswap's SLIPPAGE_CRITICAL_TOLERANCE (20%), as a fraction */
@@ -160,9 +159,7 @@ function SwapHeader({
             </button>
           </UniTooltip>
         )}
-        {mode === 'swap' && (
-          <SwapSettingsButton customSlippage={customSlippage} autoSlippage={autoSlippage} onClick={onSettingsClick} />
-        )}
+        <SwapSettingsButton customSlippage={customSlippage} autoSlippage={autoSlippage} onClick={onSettingsClick} />
       </div>
     </div>
   )

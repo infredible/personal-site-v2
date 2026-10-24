@@ -31,9 +31,9 @@ import {
   formatTokenPrice,
   linePath,
   percentChange,
-  toViewY,
   valueRange,
   valueToViewY,
+  viewYToValue,
   sampleY,
   waveY,
   xAt,
@@ -50,6 +50,12 @@ import { useLivePriceHistory, type LiveClock } from './useLivePriceHistory'
  * and dot follow the pointer and the header shows that point's price, change
  * from the period start, and time; leaving reverts to the latest price.
  *
+ * With a `priceLine` (the swap's Limit tab), a dashed line marks the limit
+ * price across the chart, with its distance from market in a pill. Dragging
+ * it moves the price (snapping to the presets); the y range takes the line in,
+ * but holds still mid-drag so the line stays under the pointer, and eases to
+ * fit once it's let go.
+ *
  * Exported in parts (header, chart, period selector) so the showcase canvas can
  * lay out the same components one by one.
  */
@@ -62,6 +68,10 @@ export interface SparklineModel {
   points: PricePoint[]
   /** viewBox y per point */
   ys: number[]
+  /** The value range `ys` are drawn in */
+  scale: { lo: number; range: number }
+  /** An extra value the range takes in (a price line) */
+  include?: number
   start: number
   end: number
   /** Change over the period, as a fraction */
@@ -75,7 +85,11 @@ export interface SparklineModel {
  * `paused` holds a live feed still (pass it while scrubbing, so the point under
  * the pointer stays put); other periods ignore it.
  */
-export function useSparklineModel(token: Token, period: ChartPeriod, { paused = false }: { paused?: boolean } = {}): SparklineModel {
+export function useSparklineModel(
+  token: Token,
+  period: ChartPeriod,
+  { paused = false, include }: { paused?: boolean; include?: number } = {},
+): SparklineModel {
   const isLive = period === 'LIVE'
   const feed = useLivePriceHistory(token, { enabled: isLive, paused })
   const livePoints = isLive ? feed.points : null
@@ -84,18 +98,21 @@ export function useSparklineModel(token: Token, period: ChartPeriod, { paused = 
     const start = points[0].value
     const end = points[points.length - 1].value
     const change = percentChange(start, end)
+    const scale = valueRange(points, { stablecoin: isStablecoin(token), include })
     return {
       token,
       period,
       points,
-      ys: toViewY(points, { stablecoin: isStablecoin(token) }),
+      ys: points.map((p) => valueToViewY(p.value, scale)),
+      scale,
+      include,
       start,
       end,
       change,
       direction: directionOf(change),
       clock: livePoints ? feed.clock : undefined,
     }
-  }, [token, period, livePoints, feed.clock])
+  }, [token, period, livePoints, feed.clock, include])
 }
 
 /** Line color by direction: success up, critical down, neutral when it rounds to 0.00% */
@@ -355,8 +372,26 @@ function SparklineAxis({
   )
 }
 
+export interface SparklinePriceLine {
+  /** In the chart's units (USD per token) */
+  value: number
+  /** Pill text, e.g. "+5%" */
+  label: string
+  tone?: 'accent' | 'warning' | 'critical'
+  /** Values a drag snaps to (e.g. preset prices) when the pointer comes within a few pixels */
+  snaps?: number[]
+  /** Drag (or arrow keys) moved the line; `snap` is the index into `snaps` when it snapped */
+  onChange?: (value: number, snap?: number) => void
+  /** Accessible name, e.g. "Limit price" */
+  name?: string
+}
+
 export interface SparklineChartProps {
   model: SparklineModel
+  /** A draggable horizontal line, e.g. a limit price */
+  priceLine?: SparklinePriceLine
+  /** A price line drag started (true) or ended (false): hold the y range still meanwhile */
+  onPriceLineDragChange?: (dragging: boolean) => void
   hoverIndex?: number | null
   /** Scrubbing callback; null when the pointer leaves or the touch ends. Omit for a static chart. */
   onHoverIndexChange?: (index: number | null) => void
@@ -366,7 +401,26 @@ export interface SparklineChartProps {
   style?: React.CSSProperties
 }
 
-export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, loading = false, className, style }: SparklineChartProps) {
+const PRICE_LINE_TONE = {
+  accent: 'text-accent1',
+  warning: 'text-statusWarning',
+  critical: 'text-statusCritical',
+} as const
+/** Snap distance for a dragged price line, in CSS pixels */
+const SNAP_PX = 6
+/** Arrow keys move the price line by this share of its value (Shift: 5×) */
+const PRICE_LINE_STEP = 0.0025
+
+export function SparklineChart({
+  model,
+  priceLine,
+  onPriceLineDragChange,
+  hoverIndex = null,
+  onHoverIndexChange,
+  loading = false,
+  className,
+  style,
+}: SparklineChartProps) {
   const id = React.useId().replace(/:/g, '')
   const gradientId = `${id}-fill`
   const clipId = `${id}-clip`
@@ -383,6 +437,11 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
   const drawnXs = React.useRef<number[] | null>(null)
   const morph = React.useRef<AnimationPlaybackControls | null>(null)
   const scrubDimRef = React.useRef<SVGRectElement>(null)
+  const areaBoxRef = React.useRef<HTMLDivElement>(null)
+  const priceLineRef = React.useRef<HTMLDivElement>(null)
+  /** The scale on screen: the model's, or live's eased one */
+  const scaleRef = React.useRef(model.scale)
+  const [draggingLine, setDraggingLine] = React.useState(false)
 
   const n = model.points.length
   const target = React.useMemo(() => (loading ? waveY(n) : model.ys), [loading, n, model.ys])
@@ -428,10 +487,11 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
    * scrubbing dims the line ahead of the crosshair. Reduced motion draws each
    * tick as it lands.
    */
-  const live = React.useRef({ model, hovered })
+  const live = React.useRef({ model, hovered, priceLine })
   const liveFrame = React.useRef<(() => void) | null>(null)
   React.useLayoutEffect(() => {
-    live.current = { model, hovered }
+    if (!clock) scaleRef.current = model.scale
+    live.current = { model, hovered, priceLine }
     // React just re-rendered the paths and dot at static positions: put them back before paint
     liveFrame.current?.()
   })
@@ -450,7 +510,7 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
     let prev = performance.now()
 
     const frame = () => {
-      const { model, hovered } = live.current
+      const { model, hovered, priceLine } = live.current
       const { points } = model
       const count = points.length
       const latest = points[count - 1]
@@ -463,13 +523,13 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
 
       if (tip === null || scale === null || reduceMotion) {
         tip = latest.value
-        scale = valueRange(points, { stablecoin, include: tip })
+        scale = valueRange(points, { stablecoin, include: [tip, model.include] })
       } else {
         const gap = Math.min(Math.abs(latest.value - tip) / scale.range, 1)
         const speed = TIP_SPEED + (1 - gap) * TIP_ADAPTIVE_BOOST
         tip = approach(tip, latest.value, speed, dt)
         if (Math.abs(tip - latest.value) < scale.range * 1e-3) tip = latest.value
-        const goal = valueRange(points, { stablecoin, include: tip })
+        const goal = valueRange(points, { stablecoin, include: [tip, model.include] })
         scale = { lo: approach(scale.lo, goal.lo, speed, dt), range: approach(scale.range, goal.range, speed, dt) }
       }
 
@@ -490,6 +550,10 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
         } else blend = null
       }
       draw(ys, xs)
+      scaleRef.current = scale
+      if (priceLineRef.current && priceLine) {
+        priceLineRef.current.style.top = `${(valueToViewY(priceLine.value, scale) / VIEW_H) * 100}%`
+      }
 
       const active = hovered !== null && hovered < count
       if (active) scrubX = xs[hovered]
@@ -548,6 +612,69 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
     }
     return best
   }
+
+  /* Price line drag: pointer y → value in the scale on screen, which holds still mid-drag */
+  const lineDrag = React.useRef<{ rect: DOMRect } | null>(null)
+  const valueAtPointer = (clientY: number, rect: DOMRect) => {
+    const scale = scaleRef.current
+    const y = Math.min(Math.max(clientY - rect.top, 0), rect.height)
+    // Snap when within a few pixels of a snap value's line
+    const pxPerView = rect.height / VIEW_H
+    let snap: number | undefined
+    priceLine?.snaps?.forEach((v, i) => {
+      const dist = Math.abs(valueToViewY(v, scale) * pxPerView - y)
+      if (dist < SNAP_PX && (snap === undefined || dist < Math.abs(valueToViewY(priceLine.snaps![snap], scale) * pxPerView - y))) snap = i
+    })
+    return snap !== undefined ? { value: priceLine!.snaps![snap], snap } : { value: viewYToValue(y / pxPerView, scale) }
+  }
+  const endLineDrag = () => {
+    if (!lineDrag.current) return
+    lineDrag.current = null
+    setDraggingLine(false)
+    onPriceLineDragChange?.(false)
+  }
+  const lineHandlers: React.HTMLAttributes<HTMLDivElement> | undefined =
+    priceLine?.onChange && !loading
+      ? {
+          // Kept off the chart's own handlers: the line drags, the chart scrubs
+          onPointerDown: (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            const rect = areaBoxRef.current?.getBoundingClientRect()
+            if (!rect) return
+            e.currentTarget.setPointerCapture(e.pointerId)
+            e.currentTarget.focus({ preventScroll: true })
+            scrubTo(null)
+            lineDrag.current = { rect }
+            setDraggingLine(true)
+            onPriceLineDragChange?.(true)
+          },
+          onPointerMove: (e) => {
+            e.stopPropagation()
+            if (!lineDrag.current) return
+            const { value, snap } = valueAtPointer(e.clientY, lineDrag.current.rect)
+            priceLine.onChange?.(value, snap)
+          },
+          onPointerEnter: (e) => {
+            if (e.pointerType === 'mouse') scrubTo(null)
+          },
+          onPointerUp: (e) => {
+            e.stopPropagation()
+            endLineDrag()
+          },
+          onPointerCancel: endLineDrag,
+          onLostPointerCapture: endLineDrag,
+          onKeyDown: (e) => {
+            const step = PRICE_LINE_STEP * (e.shiftKey ? 5 : 1)
+            if (e.key === 'ArrowUp') priceLine.onChange?.(priceLine.value * (1 + step))
+            else if (e.key === 'ArrowDown') priceLine.onChange?.(priceLine.value * (1 - step))
+            else return
+            e.preventDefault()
+            e.stopPropagation()
+          },
+        }
+      : undefined
+  const lineY = priceLine ? (valueToViewY(priceLine.value, model.scale) / VIEW_H) * 100 : 0
 
   // The dot sits on the scrubbed point, else blips on the latest one
   const marked = loading ? null : (hovered ?? n - 1)
@@ -613,6 +740,7 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
       }
     >
       <div
+        ref={areaBoxRef}
         className={cn(
           'relative min-h-0 flex-1',
           loading ? 'text-neutral3' : DIRECTION_TEXT[model.direction],
@@ -692,6 +820,62 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
             )}
             <span className="absolute size-[10px] -translate-1/2 rounded-uni-full border-2 border-white bg-current" />
           </span>
+        )}
+        {priceLine && !loading && (
+          <div
+            key={`price-line-${mode}`}
+            ref={priceLineRef}
+            data-slot="sparkline-price-line"
+            className={cn(
+              'pointer-events-none absolute inset-x-0 h-0',
+              PRICE_LINE_TONE[priceLine.tone ?? 'accent'],
+              // Follows the line's rescale morph; never while dragging (it tracks the pointer) or live (set per frame)
+              !draggingLine && !clock && 'transition-[top] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
+            )}
+            style={{ top: `${lineY}%` }}
+          >
+            <div
+              role={lineHandlers ? 'slider' : undefined}
+              tabIndex={lineHandlers ? 0 : undefined}
+              aria-label={lineHandlers ? (priceLine.name ?? 'Price line') : undefined}
+              aria-orientation={lineHandlers ? 'vertical' : undefined}
+              aria-valuenow={lineHandlers ? priceLine.value : undefined}
+              aria-valuetext={lineHandlers ? `${formatTokenPrice(priceLine.value)}, ${priceLine.label}` : undefined}
+              aria-hidden={lineHandlers ? undefined : true}
+              {...lineHandlers}
+              className={cn(
+                'group/line absolute inset-x-0 -top-uni-12 h-uni-24 rounded-uni-4 outline-none',
+                lineHandlers && 'pointer-events-auto cursor-row-resize touch-none',
+              )}
+            >
+              {/* Dashed, fading in from the left like the line; solid while held */}
+              <span
+                aria-hidden
+                className={cn(
+                  'absolute inset-x-0 top-1/2 h-[1.5px] -translate-y-1/2',
+                  draggingLine ? 'bg-current' : 'bg-[repeating-linear-gradient(to_right,currentColor_0_6px,transparent_6px_10px)]',
+                )}
+                style={{ maskImage: 'linear-gradient(to right, transparent, black 20%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%)' }}
+              />
+              {/* Left of the latest-point dot, so at market it reads "Market ●" */}
+              <span
+                aria-hidden
+                className={cn(
+                  'absolute top-1/2 right-uni-16 flex h-uni-20 -translate-y-1/2 items-center gap-uni-2 rounded-uni-full bg-current pr-uni-6 pl-uni-4',
+                  'transition-[scale] duration-100 ease-out',
+                  lineHandlers && 'group-hover/line:scale-105 group-focus-visible/line:ring-2 group-focus-visible/line:ring-current/30',
+                  draggingLine && 'scale-105',
+                )}
+              >
+                {lineHandlers && (
+                  <svg viewBox="0 0 12 12" className="size-uni-12 text-white" aria-hidden>
+                    <path d="M3.5 4.5 6 2l2.5 2.5M3.5 7.5 6 10l2.5-2.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+                <span className="text-buttonLabel4 whitespace-nowrap text-white tabular-nums">{priceLine.label}</span>
+              </span>
+            </div>
+          </div>
         )}
       </div>
       <SparklineAxis model={model} loading={loading} trackRef={axisTrackRef} />
@@ -776,6 +960,8 @@ export interface TokenPriceSparklineProps {
   /** The other token in the swap pair, offered as a switch in the header (see SparklineHeader) */
   pairToken?: Token
   onPairTokenSelect?: () => void
+  /** A draggable price line over the chart (see SparklineChart) */
+  priceLine?: SparklinePriceLine
   className?: string
 }
 
@@ -794,13 +980,17 @@ function TokenPriceSparklineInner({
   explode = false,
   pairToken,
   onPairTokenSelect,
+  priceLine,
   className,
 }: TokenPriceSparklineProps) {
   const [ownPeriod, setOwnPeriod] = React.useState(defaultPeriod)
   const period = periodProp ?? ownPeriod
   const [hoverIndex, setHoverIndex] = React.useState<number | null>(null)
   const shownIndex = hoverIndex ?? scrubIndex ?? null
-  const model = useSparklineModel(token, period, { paused: shownIndex !== null })
+  // The y range takes the price line in, from where it was when a drag began until it ends
+  const [heldInclude, setHeldInclude] = React.useState<number | null>(null)
+  const include = priceLine ? (heldInclude ?? priceLine.value) : undefined
+  const model = useSparklineModel(token, period, { paused: shownIndex !== null, include })
 
   const setPeriod = (next: ChartPeriod) => {
     setHoverIndex(null)
@@ -840,6 +1030,8 @@ function TokenPriceSparklineInner({
       >
         <SparklineChart
           model={model}
+          priceLine={priceLine}
+          onPriceLineDragChange={(dragging) => setHeldInclude(dragging && priceLine ? priceLine.value : null)}
           hoverIndex={shownIndex}
           onHoverIndexChange={setHoverIndex}
           loading={loading}
