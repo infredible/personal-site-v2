@@ -11,6 +11,7 @@ export * from './parts'
 export * from './format'
 export {
   EXPLORE_NETWORKS,
+  getChain,
   exploreNetworkCounts,
   tokenNetworks,
   nextSort,
