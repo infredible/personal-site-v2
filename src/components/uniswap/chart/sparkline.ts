@@ -25,13 +25,21 @@ export function xAt(index: number, count: number) {
   return count <= 1 ? VIEW_W / 2 : (index / (count - 1)) * VIEW_W
 }
 
-/** The value range the chart spans, centered on the data (and `include`, e.g. the live tip's eased value) */
+/**
+ * The value range the chart spans, centered on the data and anything in
+ * `include` (the live tip's eased value, a limit price line)
+ */
 export function valueRange(
   points: PricePoint[],
-  { stablecoin = false, include }: { stablecoin?: boolean; include?: number } = {},
+  { stablecoin = false, include }: { stablecoin?: boolean; include?: number | (number | undefined)[] } = {},
 ): { lo: number; range: number } {
-  let min = include ?? Infinity
-  let max = include ?? -Infinity
+  let min = Infinity
+  let max = -Infinity
+  for (const v of Array.isArray(include) ? include : [include]) {
+    if (v === undefined || !Number.isFinite(v)) continue
+    if (v < min) min = v
+    if (v > max) max = v
+  }
   for (const p of points) {
     if (p.value < min) min = p.value
     if (p.value > max) max = p.value
@@ -44,6 +52,11 @@ export function valueRange(
 /** viewBox y for a value within a range */
 export function valueToViewY(value: number, { lo, range }: { lo: number; range: number }) {
   return PAD_Y + (1 - (value - lo) / range) * (VIEW_H - PAD_Y * 2)
+}
+
+/** The value at a viewBox y: valueToViewY's inverse (dragging a price line) */
+export function viewYToValue(y: number, { lo, range }: { lo: number; range: number }) {
+  return lo + (1 - (y - PAD_Y) / (VIEW_H - PAD_Y * 2)) * range
 }
 
 /** viewBox y for each point */

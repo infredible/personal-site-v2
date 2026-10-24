@@ -5,8 +5,10 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Palette } from 'lucide-react'
 import { ShowcaseShell, useExplodedViewTransition, type ShowcaseViewTransition } from '@/components/showcase'
 import { CanvasZoomControls, useCanvasController } from '@/components/showcase/canvas'
-import { TokenPriceSparkline } from '@/components/uniswap/chart'
-import { SwapBox, type SwapBoxProps } from '@/components/uniswap/swap/SwapBox'
+import { TokenPriceSparkline, type SparklinePriceLine } from '@/components/uniswap/chart'
+import { formatPercent } from '@/components/uniswap/swap/format'
+import { formatPriceInput, getLimitPrice, LIMIT_PRESETS, presetPrice, type LimitPrice } from '@/components/uniswap/swap/limit'
+import { SwapBox, type SwapBoxApi, type SwapBoxProps } from '@/components/uniswap/swap/SwapBox'
 import { SWAP_PRESETS, getPreset } from '@/components/uniswap/swap/presets'
 import { TOKENS } from '@/components/uniswap/swap/tokens'
 import type { SwapFormState, Token } from '@/components/uniswap/swap/types'
@@ -27,15 +29,59 @@ const presetState = (preset: string | undefined) => (preset && getPreset(preset)
 interface ChartState {
   input?: Token
   output?: Token
+  /** Side the chart starts on: the output token, or on the Limit tab the side the price is quoted in */
+  preferred: 'input' | 'output'
+  /** Limit tab with a price set: drawn on the chart as a draggable line */
+  limit?: LimitPrice
   loading: boolean
 }
+
+const samePrice = (a?: LimitPrice, b?: LimitPrice) =>
+  a === b || (!!a && !!b && a.base === b.base && a.quote === b.quote && a.price === b.price && a.status === b.status)
+
+
 
 /** The swap's tokens; the chart loads with the page */
 const chartStateOf = (state: SwapFormState, loading = Boolean(state.wallet.balancesLoading)): ChartState => ({
   input: state.input.token ?? undefined,
   output: state.output.token ?? undefined,
+  // "1 ETH = 3,412 USDC" charts ETH, whichever side of the order it's on
+  preferred: state.mode === 'limit' && !state.limit.inverted ? 'input' : 'output',
+  limit: state.mode === 'limit' ? limitOf(state) : undefined,
   loading,
 })
+
+function limitOf(state: SwapFormState) {
+  const price = getLimitPrice(state)
+  return price?.status ? price : undefined
+}
+
+/**
+ * The limit price as a line on the chart. The chart plots `token` in USD, so the
+ * price (quote per base) converts through the other token's USD price; either
+ * side of the pair can be charted. The pill reads the line's distance from the
+ * chart's latest price, which is market. A drag sets the price back on the box,
+ * or the preset it snapped to.
+ */
+function limitPriceLine(limit: LimitPrice, token: Token, api: React.RefObject<SwapBoxApi | null>): SparklinePriceLine | undefined {
+  const charted = token.symbol === limit.base.symbol ? 'base' : token.symbol === limit.quote.symbol ? 'quote' : undefined
+  if (!charted) return undefined
+  const toUsd = (price: number) => (charted === 'base' ? price * limit.quote.priceUsd : limit.base.priceUsd / price)
+  const fromUsd = (usd: number) => (charted === 'base' ? usd / limit.quote.priceUsd : limit.base.priceUsd / usd)
+  const value = toUsd(limit.price)
+  const delta = value / token.priceUsd - 1
+  return {
+    value,
+    label: limit.status === 'market' ? 'Market' : `${delta > 0 ? '+' : '−'}${formatPercent(Math.abs(delta))}`,
+    tone: limit.status === 'below-market' ? 'critical' : limit.status === 'far' ? 'warning' : 'accent',
+    snaps: LIMIT_PRESETS.map((preset) => toUsd(presetPrice(limit.market, preset, limit.inverted))),
+    name: `Limit price, ${limit.quote.symbol} per ${limit.base.symbol}`,
+    onChange: (usd, snap) => {
+      if (snap !== undefined) return api.current?.setLimitPreset(LIMIT_PRESETS[snap])
+      if (usd > 0) api.current?.setLimitPrice(formatPriceInput(fromUsd(usd)))
+    },
+  }
+}
 
 const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)'
 const chartCard = () => document.querySelector<HTMLElement>('[data-showcase-view="component"] [data-swap-chart]')
@@ -95,14 +141,19 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
   const [chart, setChart] = useState<ChartState>(() => chartStateOf(boxProps.initialState, boxProps.simulateLoading))
   const [panels, setPanels] = useState<{ top: number; height: number } | null>(null)
   const [chartVisible, setChartVisible] = useState(true)
-  // Which side of the pair the chart shows: the output token by default, else
+  // Which side of the pair the chart shows: the preferred side by default, else
   // whichever is set, else ETH. With both set, the header offers the other one.
-  const [side, setSide] = useState<'input' | 'output'>('output')
+  // A pick lasts until the preferred side changes (a tab switch, a flipped pair).
+  const [picked, setPicked] = useState({ for: chart.preferred, side: chart.preferred })
+  const side = picked.for === chart.preferred ? picked.side : chart.preferred
+  const setSide = (next: 'input' | 'output') => setPicked({ for: chart.preferred, side: next })
   const other = side === 'output' ? 'input' : 'output'
   const chartToken = chart[side] ?? chart[other] ?? TOKENS.ETH
   const pairToken = chart[side] && chart[other] ? chart[other] : undefined
   const reduceMotion = useReducedMotion()
   const boxRef = useRef<HTMLDivElement>(null)
+  const apiRef = useRef<SwapBoxApi>(null)
+  const priceLine = useMemo(() => (chart.limit ? limitPriceLine(chart.limit, chartToken, apiRef) : undefined), [chart.limit, chartToken])
 
   const onStateChangeRef = useRef(onStateChange)
   onStateChangeRef.current = onStateChange
@@ -110,7 +161,15 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
     onStateChangeRef.current?.(state)
     // Only a new token or the end of loading re-renders the card; typing doesn't
     const next = chartStateOf(state)
-    setChart((prev) => (prev.input === next.input && prev.output === next.output && prev.loading === next.loading ? prev : next))
+    setChart((prev) =>
+      prev.input === next.input &&
+      prev.output === next.output &&
+      prev.preferred === next.preferred &&
+      prev.loading === next.loading &&
+      samePrice(prev.limit, next.limit)
+        ? prev
+        : next,
+    )
   }, [])
 
   useLayoutEffect(() => {
@@ -170,6 +229,7 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
               height={panels?.height ?? 288}
               pairToken={pairToken}
               onPairTokenSelect={() => setSide(other)}
+              priceLine={priceLine}
             />
           </motion.div>
         )}
@@ -184,6 +244,7 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
       >
         <SwapBox
           {...boxProps}
+          apiRef={apiRef}
           onStateChange={handleStateChange}
           chartVisible={chartVisible}
           onChartToggle={() => setChartVisible((v) => !v)}

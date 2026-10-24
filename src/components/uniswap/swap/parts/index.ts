@@ -15,6 +15,10 @@ export { SwapRateRow, getRateText } from './SwapRateRow'
 export type { SwapRateRowProps } from './SwapRateRow'
 export { SwapDetails, SwapDetailsSkeleton } from './SwapDetails'
 export type { SwapDetailsProps } from './SwapDetails'
+export { LimitPricePanel } from './LimitPricePanel'
+export type { LimitPricePanelProps } from './LimitPricePanel'
+export { LimitFooter } from './LimitFooter'
+export type { LimitFooterProps } from './LimitFooter'
 export {
   sanitizeAmountInput,
   toAmountString,

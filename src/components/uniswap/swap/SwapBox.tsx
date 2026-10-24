@@ -15,6 +15,8 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { DialogOverlay, DialogPortal } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { parseAmount } from './format'
+import { CONFIRM_IN_WALLET, ORDER_PLACED } from './getSwapAction'
+import { requoteLimit, withInvertedPrice, withLimitPreset, withLimitPrice } from './limit'
 import { mockQuote } from './presets'
 import { formatDerivedAmount, toAmountString } from './parts'
 import { SwapFormView } from './SwapFormView'
@@ -26,11 +28,18 @@ import type { SwapField, SwapFormState, Token } from './types'
  * The live swap: owns SwapFormState and drives the display parts with a fake
  * quote engine (deterministic prices, short simulated latency), the token
  * selector, settings popover, and the review → wallet → success flow.
+ *
+ * On the Limit tab the derived side follows the limit price instead, with no
+ * quote to wait for. Placing an order skips the review modal: the form already
+ * says everything the review would, so the button waits on the wallet
+ * signature, reads "Order placed" for a moment, and the form clears.
  */
 
 const QUOTE_LATENCY_MS = 450
 const BALANCES_LATENCY_MS = 900
 const TOKEN_LIST_LATENCY_MS = 600
+const SIGN_LATENCY_MS = 1400
+const PLACED_MS = 1600
 
 /** Fake price impact: grows with trade size so large swaps show warnings. */
 function priceImpactFor(usdValue: number) {
@@ -63,6 +72,14 @@ interface ReviewSnapshot {
   slippage: SwapFormState['slippage']
 }
 
+/** Commands from outside the box, e.g. a chart's draggable limit line */
+export interface SwapBoxApi {
+  /** A typed-style limit price (displayed direction); focuses the price panel */
+  setLimitPrice: (price: string) => void
+  /** A preset, as the chips set it; focuses the price panel */
+  setLimitPreset: (preset: number) => void
+}
+
 export interface SwapBoxProps {
   initialState: SwapFormState
   /** Simulate a page load: wallet balances start loading and resolve after a short delay. */
@@ -74,10 +91,20 @@ export interface SwapBoxProps {
   /** Shows a chart toggle in the header (for a page that renders a chart beside the box) */
   onChartToggle?: () => void
   chartVisible?: boolean
+  apiRef?: React.Ref<SwapBoxApi>
   className?: string
 }
 
-export function SwapBox({ initialState, simulateLoading = false, onLoaded, onStateChange, onChartToggle, chartVisible, className }: SwapBoxProps) {
+export function SwapBox({
+  initialState,
+  simulateLoading = false,
+  onLoaded,
+  onStateChange,
+  onChartToggle,
+  chartVisible,
+  apiRef,
+  className,
+}: SwapBoxProps) {
   const [state, setState] = React.useState<SwapFormState>(() =>
     simulateLoading && initialState.wallet.connected
       ? { ...initialState, wallet: { ...initialState.wallet, balancesLoading: true } }
@@ -88,7 +115,9 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [deadline, setDeadline] = React.useState(30)
   const [review, setReview] = React.useState<{ status: SwapReviewStatus; stage: 'wallet' | 'submitted' } | null>(null)
+  const [placing, setPlacing] = React.useState<'signing' | 'placed' | null>(null)
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const signTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // What the review modal shows. Kept after close so the exit animation plays on
   // the last content instead of an empty card (closing a success also clears the form).
@@ -104,7 +133,13 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
   }
   const shownReview = lastReview.current
 
-  React.useEffect(() => () => clearTimeout(timer.current), [])
+  React.useEffect(
+    () => () => {
+      clearTimeout(timer.current)
+      clearTimeout(signTimer.current)
+    },
+    [],
+  )
 
   const onStateChangeRef = React.useRef(onStateChange)
   onStateChangeRef.current = onStateChange
@@ -135,6 +170,8 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
     clearTimeout(timer.current)
     setState((prev) => {
       const next = change(prev)
+      // Limit amounts are plain math on the price: nothing to fetch
+      if (next.mode === 'limit') return requoteLimit(next)
       const resolved = requote(next)
       if (resolved.quote.status === 'idle') return resolved
       timer.current = setTimeout(() => setState((s) => requote(s)), QUOTE_LATENCY_MS)
@@ -142,6 +179,15 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
       return { ...next, quote: { ...prev.quote, status: 'loading' } }
     })
   }, [])
+
+  React.useImperativeHandle(
+    apiRef,
+    () => ({
+      setLimitPrice: (price) => update((s) => ({ ...withLimitPrice(s, price), focusedField: 'price' })),
+      setLimitPreset: (preset) => update((s) => ({ ...withLimitPreset(s, preset), focusedField: 'price' })),
+    }),
+    [update],
+  )
 
   const setAmount = (field: SwapField, amount: string) =>
     update((s) => ({ ...s, exactField: field, [field]: { ...s[field], amount } }))
@@ -173,8 +219,17 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
       input: { ...s.output },
       output: { ...s.input },
       exactField: s.exactField === 'input' ? 'output' : 'input',
-      focusedField: s.focusedField === 'input' ? 'output' : 'input',
+      focusedField: s.focusedField === 'input' ? 'output' : s.focusedField === 'output' ? 'input' : s.focusedField,
     }))
+
+  const placeOrder = () => {
+    setPlacing('signing')
+    signTimer.current = setTimeout(() => {
+      setPlacing('placed')
+      setState((s) => ({ ...s, input: { ...s.input, amount: '' }, output: { ...s.output, amount: '' } }))
+      signTimer.current = setTimeout(() => setPlacing(null), PLACED_MS)
+    }, SIGN_LATENCY_MS)
+  }
 
   const confirm = () => {
     setReview({ status: 'pending', stage: 'wallet' })
@@ -200,7 +255,8 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
           <PopoverPrimitive.Anchor className="absolute top-[40px] right-0 size-0" />
           <SwapFormView
             state={state}
-            onModeChange={(mode) => setState((s) => ({ ...s, mode }))}
+            // Through update: the derived amount switches between the quote and the limit price
+            onModeChange={(mode) => update((s) => ({ ...s, mode }))}
             onSettingsClick={() => setSettingsOpen((o) => !o)}
             onChartToggle={onChartToggle}
             chartVisible={chartVisible}
@@ -211,8 +267,14 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
             onPercent={setFraction}
             onQuickSelect={(token) => update((s) => ({ ...s, output: { ...s.output, token } }))}
             onSwitch={switchTokens}
+            actionOverride={placing === 'signing' ? CONFIRM_IN_WALLET : placing === 'placed' ? ORDER_PLACED : undefined}
+            onLimitPriceChange={(price) => update((s) => withLimitPrice(s, price))}
+            onLimitPreset={(preset) => update((s) => withLimitPreset(s, preset))}
+            onLimitInvert={() => update(withInvertedPrice)}
+            onLimitExpiryChange={(expiry) => setState((s) => ({ ...s, limit: { ...s.limit, expiry } }))}
             onAction={(action) => {
               if (action.kind === 'review') setReview({ status: 'review', stage: 'wallet' })
+              if (action.kind === 'place-order') placeOrder()
               if (action.kind === 'select-token') setSelecting(state.input.token ? 'output' : 'input')
               if (action.kind === 'connect-wallet') setState((s) => ({ ...s, wallet: { ...s.wallet, connected: true } }))
             }}
