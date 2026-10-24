@@ -1,0 +1,145 @@
+'use client'
+
+import * as React from 'react'
+import { cn } from '@/lib/utils'
+import { UniButton } from '../UniButton'
+import {
+  MinMaxInputs,
+  PriceStrategies,
+  RangeActionBar,
+  RangeChartHeader,
+  RangeModeControl,
+  RangeValidation,
+} from './parts'
+import { RANGE_CHART_HEIGHT, RangeChart } from './RangeChart'
+import { useRangeSelector } from './useRangeSelector'
+import type { RangeSelectorState } from './types'
+
+/*
+ * Uniswap's "Set price range" step, composed (SelectPriceRangeStep):
+ *
+ *   Set price range / Full range | Custom range / description
+ *   ┌ chart card (surface2, rounded top) ─────────────┐ 4px
+ *   │ header · chart (surface3 rules above and below) │
+ *   │ period + zoom + reset                           │
+ *   ├ price strategies ───────────────────────────────┤ 4px
+ *   ├ min price | max price (rounded bottom) ─────────┘
+ *   Invalid range
+ *   [ Continue ]
+ *
+ * The root is a container (`@container/range`): the parts switch to their
+ * narrow layouts by container width, so the 375px mobile frame (which doesn't
+ * change viewport media queries) works too. With `explode`, each part carries
+ * data-explode for the exploded-view transition, as SwapFormView does.
+ * State lives in useRangeSelector; remount with a key to load another preset.
+ */
+
+interface LiquidityRangeSelectorProps {
+  defaultState: RangeSelectorState
+  explode?: boolean
+  className?: string
+  onContinue?: () => void
+}
+
+type Part = 'mode' | 'chart-header' | 'chart' | 'actions' | 'strategies' | 'inputs' | 'continue'
+
+function LiquidityRangeSelector({ defaultState, explode, className, onContinue }: LiquidityRangeSelectorProps) {
+  const s = useRangeSelector(defaultState)
+
+  const part = (id: Part, node: React.ReactNode, partClassName?: string) => (
+    <div data-explode={explode ? id : undefined} className={partClassName}>
+      {node}
+    </div>
+  )
+
+  return (
+    <div
+      data-slot="liquidity-range-selector"
+      className={cn('@container/range flex w-full max-w-[560px] flex-col gap-uni-20', className)}
+    >
+      {part(
+        'mode',
+        <RangeModeControl fullRange={s.fullRange} onFullRangeChange={s.setFullRange} />,
+      )}
+
+      <div className="flex flex-col gap-uni-8">
+        <div className="flex flex-col gap-uni-4">
+          <div className="flex flex-col gap-uni-16 rounded-t-uni-20 bg-surface2 @max-[440px]/range:gap-uni-8">
+            {part(
+              'chart-header',
+              <RangeChartHeader
+                pool={s.pool}
+                inverted={s.inverted}
+                price={s.price}
+                base={s.base}
+                quote={s.quote}
+                onInvertedChange={s.setInverted}
+              />,
+            )}
+            {part(
+              'chart',
+              <RangeChart
+                pool={s.pool}
+                inverted={s.inverted}
+                period={s.period}
+                range={s.chartRange}
+                fullRange={s.fullRange}
+                view={s.view}
+                onViewChange={s.handleViewChange}
+                onRangeChange={s.handleRangeChange}
+                showPercentTooltips={s.inputMode === 'percent'}
+                height={RANGE_CHART_HEIGHT}
+              />,
+              'relative overflow-hidden border-y border-surface3 py-uni-12 @max-[440px]/range:py-uni-4',
+            )}
+            {part(
+              'actions',
+              <RangeActionBar
+                period={s.period}
+                onPeriodChange={s.setPeriod}
+                onZoomIn={s.zoomIn}
+                onZoomOut={s.zoomOut}
+                onExpand={s.expand}
+                onReset={s.reset}
+                expandDisabled={s.fullRange}
+              />,
+            )}
+          </div>
+          {part(
+            'strategies',
+            <PriceStrategies tickSpacing={s.tickSpacing} selected={s.strategy} onSelect={s.selectStrategy} />,
+          )}
+          {part(
+            'inputs',
+            <MinMaxInputs
+              fullRange={s.fullRange}
+              mode={s.inputMode}
+              range={s.range}
+              tickSpacing={s.tickSpacing}
+              currentTick={s.currentTick}
+              base={s.base}
+              quote={s.quote}
+              drafts={s.drafts}
+              invalid={s.invalid}
+              onDraftChange={s.setDraft}
+              onCommit={s.commitDraft}
+              onStep={s.step}
+              onToggleMode={s.toggleInputMode}
+            />,
+          )}
+        </div>
+        <RangeValidation kind={s.invalidRange ? 'range' : s.invalidPrice ? 'price' : null} />
+      </div>
+
+      {part(
+        'continue',
+        <UniButton size="large" fill variant="branded" disabled={s.invalid} onClick={onContinue}>
+          Continue
+        </UniButton>,
+      )}
+    </div>
+  )
+}
+
+export { LiquidityRangeSelector }
+export type { LiquidityRangeSelectorProps }
