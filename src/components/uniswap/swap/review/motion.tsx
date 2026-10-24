@@ -13,6 +13,9 @@ import { cn } from '@/lib/utils'
  * - Content swaps (labels, glyphs, regions): crossfade in place with a 2-4px
  *   blur, which reads as one thing changing rather than two overlapping.
  *   Exits are faster than entries.
+ * - Layout changes (stacked → pair → receipt): the token logos and the
+ *   connector are shared elements that travel to their new place; the text
+ *   around them fades out and settles back in.
  * - Reduced motion: opacity only. No blur, no translate, heights jump.
  */
 
@@ -61,6 +64,25 @@ export function useReviewMotion() {
           transition: fadeIn(DURATION.regionIn, reduce ? 0 : 0.06 + index * DURATION.stagger),
         },
       }),
+      /**
+       * Shared-element morph (`layoutId`): logos and the connector travel to
+       * their place in the next layout on the same curve as the height, so the
+       * card and what's in it move as one.
+       */
+      morph: { layout: reduce ? { duration: 0 } : { duration: DURATION.height, ease: EASE_DRAWER } } satisfies Transition,
+      /** Text that re-lays out around a morph: out fast, in once the shapes are under way. */
+      settle: (delay = 0.08) => ({
+        initial: reduce ? { opacity: 0 } : { opacity: 0, transform: 'translateY(4px)', filter: 'blur(3px)' },
+        animate: { opacity: 1, transform: 'translateY(0px)', filter: 'blur(0px)', transition: fadeIn(DURATION.regionIn, reduce ? 0 : delay) },
+        exit: reduce
+          ? { opacity: 0, transition: fadeIn(DURATION.swapOut) }
+          : { opacity: 0, filter: 'blur(3px)', transition: fadeIn(DURATION.swapOut) },
+      }),
+      /**
+       * The layout being morphed away from: held (its shared elements are
+       * still crossfading into the new layout), then gone.
+       */
+      hold: { exit: { opacity: 0, transition: { duration: 0.1, delay: reduce ? 0 : DURATION.height - 0.1 } } },
       /** Small glyphs arriving (status icons, badges). Never from scale(0). */
       pop: {
         initial: reduce ? { opacity: 0 } : { opacity: 0, transform: 'scale(0.8)' },

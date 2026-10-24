@@ -60,7 +60,7 @@ export interface SwapQuote {
   networkFeeUsd?: number
   /** Fraction, e.g. 0.0025 = 0.25% */
   feeRate?: number
-  /** Human-readable route, e.g. "Uniswap API" */
+  /** Human-readable route, e.g. "Uniswap v4" */
   route?: string
 }
 

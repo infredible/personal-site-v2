@@ -1,7 +1,15 @@
 // The redesigned swap review → confirm flow: one surface that morphs between
 // states. ReviewSurface is presentational; useReviewFlow plays the states on
 // simulated wallet / chain timings.
-export { ReviewSurface, ReviewHeader, ReviewAmounts, ReviewDetails, ReviewSteps, ReviewButton } from './ReviewSurface'
+export {
+  ReviewSurface,
+  ReviewHeader,
+  ReviewAmounts,
+  ReviewDetails,
+  ReviewSteps,
+  ReviewReceipt,
+  ReviewButton,
+} from './ReviewSurface'
 export type { ReviewSurfaceProps } from './ReviewSurface'
 export {
   useReviewFlow,

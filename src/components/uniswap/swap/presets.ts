@@ -26,7 +26,7 @@ export function mockRate(input: Token, output: Token, { priceImpact = 0.0005, fe
 
 /** A ready quote plus the derived output amount for `amount` of `input`. */
 export function mockQuote(input: Token, output: Token, amount: number, options: QuoteOptions = {}) {
-  const { priceImpact = 0.0005, networkFeeUsd = 1.24, feeRate = 0.0025, route = 'Uniswap API' } = options
+  const { priceImpact = 0.0005, networkFeeUsd = 1.24, feeRate = 0.0025, route = 'Uniswap v4' } = options
   const rate = mockRate(input, output, { priceImpact, feeRate })
   const quote: SwapQuote = { status: 'ready', rate, priceImpact, networkFeeUsd, feeRate, route }
   return { quote, outputAmount: formatDerivedAmount(amount * rate, output.decimals) }

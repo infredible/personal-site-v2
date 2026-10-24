@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils'
 import { Shimmer, TextSkeleton } from '../../Skeleton'
 import { UniButton } from '../../UniButton'
 import { UniTooltip } from '../../UniTooltip'
-import { formatTokenAmount, formatUsd } from '../format'
+import { formatPercent, formatTokenAmount, formatUsd } from '../format'
+import { getPriceImpactSeverity } from '../getSwapAction'
 import type { SwapField, Token } from '../types'
 import { fitInputFontSize, sanitizeAmountInput } from './amount'
 import { TokenLogo } from './TokenLogo'
@@ -19,12 +20,15 @@ import { TokenSelectButton } from './TokenSelectButton'
  *
  * - Frame: rounded20, 1px border, overflow hidden. Focused → surface1 + surface3
  *   border (hover: surface3Hovered); unfocused → surface2, transparent border
- *   (hover: surface2Hovered). The Sell panel adds 4px bottom padding once a token is set.
+ *   (hover: surface2Hovered). The Sell panel adds 4px bottom padding.
  * - Content: 16px padding. Header label is neutral2 subheading2 (16px).
  * - Input row: 8px vertical padding, 60px min height; amount is 36px / 1.2
  *   line height, book weight, shrinking to 24px as it gets long; placeholder neutral3.
  * - Footer row: fiat value (body3 neutral2) left, balance (body3 neutral2, critical
- *   when insufficient) right. Hidden but laid out when no token is selected.
+ *   when insufficient) right. On Buy, the fiat value is followed by the price
+ *   difference, e.g. "(-0.05%)": neutral3, or warning / critical when impact is high.
+ *   Fixed height, and hidden but laid out when no token is
+ *   selected, so the panel never resizes as the balance, Max, or skeletons come and go.
  * - Desktop hover reveals 25% / 50% / 75% / Max presets on the Sell header, and
  *   quick-pick token chips on an empty Buy header, both with a 40ms stagger.
  * - While the derived side refetches, its amount pulses 1 → 0.4 opacity over 800ms.
@@ -44,6 +48,8 @@ interface CurrencyPanelProps {
   /** Controlled decimal string */
   amount: string
   usdValue?: number
+  /** Fraction the output is worth less than the input (price impact); shown after the fiat value */
+  priceDifference?: number
   /** Whole-token units; omit when disconnected (hides the balance) */
   balance?: number
   /** Distinct focused frame. Uncontrolled (tracks the input's own focus) when omitted. */
@@ -107,6 +113,7 @@ function CurrencyPanel({
   token,
   amount,
   usdValue,
+  priceDifference,
   balance,
   focused,
   loading = false,
@@ -170,6 +177,8 @@ function CurrencyPanel({
 
   const fiatText = !hasAmount ? '$0' : usdValue !== undefined ? formatUsd(usdValue) : '-'
   const amountColor = error ? 'text-statusCritical' : 'text-neutral1'
+  const showPriceDifference = hasAmount && usdValue !== undefined && priceDifference !== undefined
+  const priceDifferenceSeverity = getPriceImpactSeverity(priceDifference)
 
   return (
     <div
@@ -188,7 +197,7 @@ function CurrencyPanel({
           : cn('border-transparent bg-surface2 hover:bg-surface2Hovered', hovered && 'bg-surface2Hovered'),
         (token || onTokenClick) && 'cursor-text',
         !token && onTokenClick && 'cursor-pointer',
-        isInput && token && 'pb-uni-4',
+        isInput && 'pb-uni-4',
         className,
       )}
     >
@@ -329,11 +338,11 @@ function CurrencyPanel({
 
         {/* Fiat value + balance */}
         <div
-          className={cn('flex min-h-[18px] items-center', !token && 'pointer-events-none opacity-0')}
+          className={cn('flex h-[18px] items-center', !token && 'pointer-events-none opacity-0')}
           aria-hidden={!token || undefined}
         >
           {firstQuote ? (
-            <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 flex-1">
               <TextSkeleton placeholder="$0,000.00" className="text-body3" shimmer />
             </span>
           ) : (
@@ -342,6 +351,20 @@ function CurrencyPanel({
               style={loading && hasAmount ? { animation: 'uni-refetch-pulse 800ms ease-in-out infinite' } : undefined}
             >
               {fiatText}
+              {showPriceDifference && (
+                <span
+                  className={cn(
+                    priceDifferenceSeverity === 'critical'
+                      ? 'text-statusCritical'
+                      : priceDifferenceSeverity === 'warning'
+                        ? 'text-statusWarning'
+                        : 'text-neutral3',
+                  )}
+                >
+                  {' '}
+                  (-{formatPercent(priceDifference!)})
+                </span>
+              )}
             </span>
           )}
           {balanceLoading && token ? (
