@@ -5,8 +5,9 @@ import { animate, useReducedMotion, type AnimationPlaybackControls } from 'frame
 import { cn } from '@/lib/utils'
 import { SegmentedControl } from '../SegmentedControl'
 import { Shimmer, TextSkeleton } from '../Skeleton'
-import { ArrowUpRight, Heart, HeartOutline } from '../icons'
-import { UniTooltip } from '../UniTooltip'
+import { ArrowUpRight, Check, Heart, HeartOutline, LineChartDots, MoreHorizontal } from '../icons'
+import { Copy } from 'lucide-react'
+import { UniMenu, UniMenuContent, UniMenuItem, UniMenuSeparator, UniMenuTrigger } from '../UniMenu'
 import { TokenLogo } from '../swap/parts/TokenLogo'
 import type { Token } from '../swap/types'
 import {
@@ -152,24 +153,51 @@ export interface SparklineHeaderProps {
   className?: string
 }
 
-/** 32px round icon button with a 20px icon, like the swap header's gear; tooltip names it */
-function HeaderIconButton({ label, className, children, ...props }: React.ComponentProps<'button'> & { label: string }) {
+/** The token bar's "…" menu: a 32px round button with a 20px icon, like the swap header's gear. Items are mock (nothing navigates). */
+function TokenMenu({ token }: { token: Token }) {
+  const [favorited, setFavorited] = React.useState(false)
+  const [copied, setCopied] = React.useState(false)
   return (
-    <UniTooltip content={label} side="top">
-      <button
-        type="button"
-        aria-label={label}
-        className={cn(
-          'flex size-uni-32 shrink-0 cursor-pointer items-center justify-center rounded-uni-full text-neutral2 outline-none',
-          'transition-colors duration-[80ms] ease-out hover:text-neutral2Hovered [&_svg]:size-uni-20',
-          'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </button>
-    </UniTooltip>
+    <UniMenu onOpenChange={(open) => open && setCopied(false)}>
+      <UniMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`More ${token.symbol} options`}
+          className={cn(
+            'flex size-uni-32 shrink-0 cursor-pointer items-center justify-center rounded-uni-full text-neutral2 outline-none',
+            'transition-colors duration-[80ms] ease-out hover:bg-surface2 hover:text-neutral1 data-[state=open]:bg-surface2 data-[state=open]:text-neutral1',
+            'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered [&_svg]:size-uni-20',
+          )}
+        >
+          <MoreHorizontal />
+        </button>
+      </UniMenuTrigger>
+      <UniMenuContent>
+        <UniMenuItem onSelect={() => setFavorited((f) => !f)}>
+          {favorited ? <Heart className="text-accent1" /> : <HeartOutline />}
+          {favorited ? 'Remove from favorites' : 'Add to favorites'}
+        </UniMenuItem>
+        <UniMenuItem
+          // Copies this page's link; stays open to show it worked
+          onSelect={(e) => {
+            e.preventDefault()
+            void navigator.clipboard?.writeText(window.location.href).then(() => setCopied(true), () => {})
+          }}
+        >
+          {copied ? <Check className="text-statusSuccess" /> : <Copy />}
+          {copied ? 'Copied' : 'Copy link'}
+        </UniMenuItem>
+        <UniMenuSeparator />
+        <UniMenuItem>
+          <ArrowUpRight />
+          View {token.symbol} details
+        </UniMenuItem>
+        <UniMenuItem>
+          <LineChartDots />
+          Open in Explore
+        </UniMenuItem>
+      </UniMenuContent>
+    </UniMenu>
   )
 }
 
@@ -178,8 +206,6 @@ export function SparklineHeader({ model, hoverIndex = null, loading = false, asi
   const hovered = hoverIndex !== null ? points[hoverIndex] : undefined
   const price = hovered?.value ?? model.end
   const label = hovered ? formatChartTime(hovered.timestamp, period) : CHART_PERIODS.find((p) => p.value === period)?.description
-  const [favorited, setFavorited] = React.useState(false)
-
   return (
     <div data-slot="sparkline-header" className={cn('flex flex-col gap-uni-12', className)}>
       {/* Token bar: spans the card edge to edge, ruled off from the price */}
@@ -196,14 +222,7 @@ export function SparklineHeader({ model, hoverIndex = null, loading = false, asi
           />
         </div>
         <div className="-mr-uni-4 ml-auto flex shrink-0 items-center">
-          <HeaderIconButton
-            label={favorited ? 'Remove from favorites' : 'Favorite'}
-            aria-pressed={favorited}
-            onClick={() => setFavorited((f) => !f)}
-            className={cn(favorited && 'text-accent1 hover:text-accent1Hovered')}
-          >
-            {favorited ? <Heart /> : <HeartOutline />}
-          </HeaderIconButton>
+          <TokenMenu token={token} />
         </div>
       </div>
       <div className="flex items-start justify-between gap-uni-12 px-uni-8">
@@ -653,7 +672,8 @@ export function SparklineChart({ model, hoverIndex = null, onHoverIndexChange, l
 /** Live gets its own treatment: green, with a dot that blinks while it's selected (steady under reduced motion) */
 function LivePeriodLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-uni-4 text-statusSuccess transition-colors duration-100 group-hover/option:text-statusSuccessHovered">
+    // Flex (not inline-flex) so the dot doesn't set a baseline and push the text off the others' line
+    <span className="flex items-center gap-uni-4 text-statusSuccess transition-colors duration-100 group-hover/option:text-statusSuccessHovered">
       <span
         aria-hidden
         className="size-[6px] shrink-0 rounded-uni-full bg-current group-data-[state=on]/option:motion-safe:animate-uni-live-blink"
