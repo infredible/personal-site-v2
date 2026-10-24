@@ -51,7 +51,7 @@ const pairKeyOf = (state: SwapFormState) =>
   state.input.token && state.output.token ? `${state.input.token.symbol}/${state.output.token.symbol}` : undefined
 
 /** Displayed market price, moved `preset` in the trader's favor */
-function presetPrice(market: number, preset: number, inverted: boolean) {
+export function presetPrice(market: number, preset: number, inverted: boolean) {
   return inverted ? market * (1 - preset) : market * (1 + preset)
 }
 

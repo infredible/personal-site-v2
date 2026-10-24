@@ -72,6 +72,14 @@ interface ReviewSnapshot {
   slippage: SwapFormState['slippage']
 }
 
+/** Commands from outside the box, e.g. a chart's draggable limit line */
+export interface SwapBoxApi {
+  /** A typed-style limit price (displayed direction); focuses the price panel */
+  setLimitPrice: (price: string) => void
+  /** A preset, as the chips set it; focuses the price panel */
+  setLimitPreset: (preset: number) => void
+}
+
 export interface SwapBoxProps {
   initialState: SwapFormState
   /** Simulate a page load: wallet balances start loading and resolve after a short delay. */
@@ -83,10 +91,20 @@ export interface SwapBoxProps {
   /** Shows a chart toggle in the header (for a page that renders a chart beside the box) */
   onChartToggle?: () => void
   chartVisible?: boolean
+  apiRef?: React.Ref<SwapBoxApi>
   className?: string
 }
 
-export function SwapBox({ initialState, simulateLoading = false, onLoaded, onStateChange, onChartToggle, chartVisible, className }: SwapBoxProps) {
+export function SwapBox({
+  initialState,
+  simulateLoading = false,
+  onLoaded,
+  onStateChange,
+  onChartToggle,
+  chartVisible,
+  apiRef,
+  className,
+}: SwapBoxProps) {
   const [state, setState] = React.useState<SwapFormState>(() =>
     simulateLoading && initialState.wallet.connected
       ? { ...initialState, wallet: { ...initialState.wallet, balancesLoading: true } }
@@ -161,6 +179,15 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
       return { ...next, quote: { ...prev.quote, status: 'loading' } }
     })
   }, [])
+
+  React.useImperativeHandle(
+    apiRef,
+    () => ({
+      setLimitPrice: (price) => update((s) => ({ ...withLimitPrice(s, price), focusedField: 'price' })),
+      setLimitPreset: (preset) => update((s) => ({ ...withLimitPreset(s, preset), focusedField: 'price' })),
+    }),
+    [update],
+  )
 
   const setAmount = (field: SwapField, amount: string) =>
     update((s) => ({ ...s, exactField: field, [field]: { ...s[field], amount } }))
