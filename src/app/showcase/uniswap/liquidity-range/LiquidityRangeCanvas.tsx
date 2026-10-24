@@ -3,7 +3,6 @@
 import { Canvas, CanvasFrame, CanvasSection, type CanvasController } from '@/components/showcase/canvas'
 import { UniButton, UniswapScope } from '@/components/uniswap'
 import {
-  AdvancedToggle,
   FEE_TIERS,
   LiquidityRangeSelector,
   MinMaxInputs,
@@ -27,10 +26,12 @@ import { cn } from '@/lib/utils'
  * key states, fee tiers, and both themes. Frames render the real component.
  */
 
-// The selector is 560 wide; anatomy stages add 16px padding around a part, so
-// parts keep their exact Component-view width and the exploded flight lands
-// without resizing.
-const SELECTOR_WIDTH = 560
+// The selector is 1040 wide: two 508px columns, 24px apart. Anatomy stages add
+// 16px padding around a part, so parts keep their exact Component-view width
+// and the exploded flight lands without resizing.
+const SELECTOR_WIDTH = 1040
+const COLUMN_WIDTH = (SELECTOR_WIDTH - 24) / 2
+const STACKED_WIDTH = 720
 const NARROW_WIDTH = 375
 const STAGE_PAD = 32
 
@@ -94,14 +95,14 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
       direction="column"
     >
       <CanvasFrame id="part-heading" title="Heading" note="The description follows full range vs custom" labelPlacement="side">
-        <Stage card>
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
           <div data-explode-target="heading">
             <RangeHeading fullRange={s.fullRange} />
           </div>
         </Stage>
       </CanvasFrame>
       <CanvasFrame id="part-strategies" title="Range options" note="Full range, four strategies, Custom; Custom tracks hand edits" labelPlacement="side">
-        <Stage card>
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
           <div data-explode-target="strategies" className="@container/range">
             <PriceStrategies
               tickSpacing={s.tickSpacing}
@@ -109,14 +110,14 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
               range={s.range}
               currentTick={s.currentTick}
               onSelect={s.selectOption}
-              className="rounded-t-uni-20"
+              className="rounded-uni-20"
             />
           </div>
         </Stage>
       </CanvasFrame>
       <CanvasFrame id="part-chart-header" title="Chart header" note="Current price; the token toggle inverts it" labelPlacement="side">
-        <Stage card>
-          <div data-explode-target="chart-header" className="@container/range bg-surface2">
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
+          <div data-explode-target="chart-header" className="@container/range rounded-t-uni-20 bg-surface2">
             <RangeChartHeader
               pool={s.pool}
               inverted={s.inverted}
@@ -128,15 +129,8 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
           </div>
         </Stage>
       </CanvasFrame>
-      <CanvasFrame id="part-advanced" title="Advanced" note="Reveals the chart and its controls; closed by default" labelPlacement="side">
-        <Stage card>
-          <div data-explode-target="advanced" className="bg-surface2">
-            <AdvancedToggle open={s.advanced} onOpenChange={s.setAdvanced} />
-          </div>
-        </Stage>
-      </CanvasFrame>
-      <CanvasFrame id="part-chart" title="Liquidity chart" note="Advanced view: price history over liquidity; drag the bounds or the band" labelPlacement="side">
-        <Stage card>
+      <CanvasFrame id="part-chart" title="Liquidity chart" note="Price history over liquidity; drag the bounds or the band" labelPlacement="side">
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
           <div
             data-explode-target="chart"
             className="@container/range relative overflow-hidden border-y border-surface3 bg-surface2 py-uni-12 @max-[440px]/range:py-uni-4"
@@ -157,8 +151,8 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
         </Stage>
       </CanvasFrame>
       <CanvasFrame id="part-actions" title="Period and zoom" note="1D to All time, zoom, expand, reset" labelPlacement="side">
-        <Stage card>
-          <div data-explode-target="actions" className="@container/range bg-surface2">
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
+          <div data-explode-target="actions" className="@container/range rounded-b-uni-20 bg-surface2">
             <RangeActionBar
               period={s.period}
               onPeriodChange={s.setPeriod}
@@ -172,7 +166,7 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
         </Stage>
       </CanvasFrame>
       <CanvasFrame id="part-inputs" title="Min and max" note="Typed prices snap on blur; the steppers move one tick spacing" labelPlacement="side">
-        <Stage card>
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
           <div data-explode-target="inputs" className="@container/range">
             <MinMaxInputs
               fullRange={s.fullRange}
@@ -188,6 +182,7 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
               onCommit={s.commitDraft}
               onStep={s.step}
               onToggleMode={s.toggleInputMode}
+              className="rounded-uni-20"
             />
           </div>
           <div className="@container/range mt-uni-8">
@@ -196,7 +191,7 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
         </Stage>
       </CanvasFrame>
       <CanvasFrame id="part-continue" title="Continue" note="Disabled while the range is invalid" labelPlacement="side">
-        <Stage card>
+        <Stage card width={COLUMN_WIDTH + STAGE_PAD}>
           <div data-explode-target="continue">
             <UniButton size="large" fill variant="branded" disabled={s.invalid}>
               Continue
@@ -227,28 +222,28 @@ export function LiquidityRangeCanvas({
         description="Each frame is the live step. Full range shows 0 and ∞; a strategy highlights its card until a bound is edited by hand."
       >
         <CanvasFrame id="state-full-range" title="Full range" note="Min 0, Max ∞; the chart fits the price history">
-          <SelectorStage state={createRangeState(ETH_USDC, { fullRange: true, advanced: true })} />
+          <SelectorStage state={createRangeState(ETH_USDC, { fullRange: true })} />
         </CanvasFrame>
         <CanvasFrame id="state-custom" title="Custom (default)" note="Middle 60% of a window reaching the history's low and high; the Custom tile shows it">
           <SelectorStage state={createRangeState(ETH_USDC)} />
-        </CanvasFrame>
-        <CanvasFrame id="state-advanced" title="Advanced" note="Opened: the chart and its controls under the current price">
-          <SelectorStage state={createRangeState(ETH_USDC, { advanced: true })} />
         </CanvasFrame>
         <CanvasFrame id="state-strategy" title="Strategy selected" note="Wide: 0.5× to 2× the current price">
           <SelectorStage state={createRangeState(ETH_USDC, { strategy: 'wide' })} />
         </CanvasFrame>
         <CanvasFrame id="state-out-of-range" title="Out of range" note="One-sided upper: the price is below Min, so the position holds only ETH">
-          <SelectorStage state={createRangeState(ETH_USDC, { strategy: 'one-sided-upper', advanced: true })} />
+          <SelectorStage state={createRangeState(ETH_USDC, { strategy: 'one-sided-upper' })} />
         </CanvasFrame>
         <CanvasFrame id="state-percent" title="Percent mode" note="Inputs read a % from the current price; chart tooltips match">
-          <SelectorStage state={createRangeState(ETH_USDC, { inputMode: 'percent', advanced: true })} />
+          <SelectorStage state={createRangeState(ETH_USDC, { inputMode: 'percent' })} />
         </CanvasFrame>
         <CanvasFrame id="state-inverted" title="Inverted" note="ETH per USDC; ticks are negated so up is still a higher price">
-          <SelectorStage state={createRangeState(ETH_USDC, { inverted: true, advanced: true })} />
+          <SelectorStage state={createRangeState(ETH_USDC, { inverted: true })} />
         </CanvasFrame>
         <CanvasFrame id="state-stable" title="Stable pair" note="USDC/USDT 0.01%: spacing 1, Stable is ± 0.03%">
           <SelectorStage state={createRangeState(POOLS['usdc-usdt'], { strategy: 'stable' })} />
+        </CanvasFrame>
+        <CanvasFrame id="state-stacked" title="Stacked (720px)" note="Under 880px one column; the price card moves between the options and the inputs">
+          <SelectorStage state={createRangeState(ETH_USDC)} width={STACKED_WIDTH + STAGE_PAD} />
         </CanvasFrame>
         <CanvasFrame id="state-narrow" title="Narrow (375px)" note="Container queries: compact paddings and stacked inputs">
           <SelectorStage state={createRangeState(ETH_USDC)} width={NARROW_WIDTH + STAGE_PAD} />

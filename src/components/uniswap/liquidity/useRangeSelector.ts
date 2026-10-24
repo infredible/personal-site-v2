@@ -64,8 +64,6 @@ interface Core {
   period: RangePeriod
   inputMode: RangeInputMode
   strategy: PriceStrategyId | null
-  /** Liquidity chart revealed */
-  advanced: boolean
   view: RangeView
   /** Text being typed per end; null shows the formatted price */
   drafts: Record<RangeEnd, string | null>
@@ -104,7 +102,6 @@ function init(state: RangeSelectorState): Core {
     period: state.period,
     inputMode: state.inputMode,
     strategy: state.strategy,
-    advanced: state.advanced ?? false,
     view: viewFor(state.pool, state.range, state.inverted, state.period),
     drafts: NO_DRAFTS,
     live: null,
@@ -134,7 +131,7 @@ function sanitizeRangeText(raw: string, mode: RangeInputMode) {
 export function useRangeSelector(initial: RangeSelectorState) {
   const [core, setCore] = React.useState<Core>(() => init(initial))
 
-  const { pool, inverted, range, period, inputMode, strategy, advanced, view, drafts } = core
+  const { pool, inverted, range, period, inputMode, strategy, view, drafts } = core
   const { tickSpacing } = pool
 
   const visualRange = React.useMemo(() => toVisualRange(range, inverted), [range, inverted])
@@ -262,9 +259,6 @@ export function useRangeSelector(initial: RangeSelectorState) {
 
   /* Chart ----------------------------------------------------------------- */
 
-  /** Reveals or hides the chart. The view keeps tracking the range while hidden, so it opens fitted. */
-  const setAdvanced = React.useCallback((next: boolean) => setCore((c) => ({ ...c, advanced: next })), [])
-
   const handleViewChange = React.useCallback((next: RangeView) => setCore((c) => ({ ...c, view: next })), [])
 
   /** Drags: live while moving (strategy kept), detected on release. Ignored in full range. */
@@ -372,9 +366,8 @@ export function useRangeSelector(initial: RangeSelectorState) {
     fullRange: range.fullRange,
     /** The selected tile of the strategy grid */
     option,
-    advanced,
     /** Canonical state, as RangeSelectorState describes it */
-    state: { pool, inverted, range, period, inputMode, strategy, advanced } satisfies RangeSelectorState,
+    state: { pool, inverted, range, period, inputMode, strategy } satisfies RangeSelectorState,
     // Derived
     /** Committed range, visual ticks (lower = displayed Min price) */
     range: visualRange,
@@ -400,7 +393,6 @@ export function useRangeSelector(initial: RangeSelectorState) {
     selectCustom,
     selectOption,
     toggleInputMode,
-    setAdvanced,
     handleRangeChange,
     handleViewChange,
     zoomIn,

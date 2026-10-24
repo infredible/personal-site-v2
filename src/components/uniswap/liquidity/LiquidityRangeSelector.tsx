@@ -1,11 +1,9 @@
 'use client'
 
 import * as React from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { UniButton } from '../UniButton'
 import {
-  AdvancedToggle,
   MinMaxInputs,
   PriceStrategies,
   RangeActionBar,
@@ -18,29 +16,30 @@ import { useRangeSelector } from './useRangeSelector'
 import type { RangeSelectorState } from './types'
 
 /*
- * Uniswap's "Set price range" step, composed (SelectPriceRangeStep):
+ * Uniswap's "Set price range" step, recomposed as two columns:
  *
- *   Set price range / description
- *   ┌ range options: full, strategies, custom (top) ──┐ 4px
- *   ├ current price · token toggle ───────────────────┤
- *   │ Advanced ⌄                                      │
- *   │ ┆ chart, period + zoom + reset (when open)      │
- *   ├ min price | max price (rounded bottom) ─────────┘ 4px
+ *   Set price range / description     ┌ current price · token toggle ─┐
+ *   ┌ range options (2×3) ──────────┐  │ chart (surface3 rules)        │
+ *   └───────────────────────────────┘  │ period + zoom + reset         │
+ *   ┌ min price | max price ────────┐  └───────────────────────────────┘
  *   Invalid range
  *   [ Continue ]
  *
- * A redesign of the order, not a port: Uniswap leads with a Full | Custom
- * switch and the chart, and puts the strategies under it. Here one grid of
- * options (full range, the strategies, custom) comes first, and
- * the chart opens behind "Advanced" (state: `advanced`), easing its height
- * open. Closed, the chart is unmounted; its view keeps tracking the range, so
- * it opens fitted to whatever the strategies or inputs set.
+ * A redesign of the layout, not a port: Uniswap stacks a Full | Custom switch,
+ * the chart and then the strategies in one column. Here the left column is
+ * the decision (options, then the exact bounds, then Continue) and the right
+ * is the context it's made against: the current price and the chart, always
+ * open, so picking a tile or typing a bound shows its range on the chart at
+ * once. Both columns edit the same state.
  *
- * The root is a container (`@container/range`): the parts switch to their
- * narrow layouts by container width, so the 375px mobile frame (which doesn't
- * change viewport media queries) works too. With `explode`, each part carries
- * data-explode for the exploded-view transition, as SwapFormView does.
- * State lives in useRangeSelector; remount with a key to load another preset.
+ * The root is a container (`@container/range`). From 880px wide it's two
+ * equal columns; narrower (and in the 375px mobile frame, which doesn't change
+ * viewport media queries) one column, with the price card between the options
+ * and the inputs, so the current price still comes before the bounds. Parts
+ * switch to their compact layouts below 440px, also by container width.
+ * With `explode`, each part carries data-explode for the exploded-view
+ * transition, as SwapFormView does. State lives in useRangeSelector; remount
+ * with a key to load another preset.
  */
 
 interface LiquidityRangeSelectorProps {
@@ -50,12 +49,18 @@ interface LiquidityRangeSelectorProps {
   onContinue?: () => void
 }
 
-type Part = 'heading' | 'strategies' | 'chart-header' | 'advanced' | 'chart' | 'actions' | 'inputs' | 'continue'
+type Part = 'heading' | 'strategies' | 'chart-header' | 'chart' | 'actions' | 'inputs' | 'continue'
+
+/** Grid areas: stacked, then two columns with the price card spanning the right */
+const LAYOUT = cn(
+  'grid grid-cols-1 gap-x-uni-24 gap-y-uni-16',
+  "[grid-template-areas:'heading'_'options'_'price'_'inputs'_'continue']",
+  '@min-[880px]/range:grid-cols-2 @min-[880px]/range:grid-rows-[auto_auto_auto_1fr]',
+  "@min-[880px]/range:[grid-template-areas:'heading_price'_'options_price'_'inputs_price'_'continue_price']",
+)
 
 function LiquidityRangeSelector({ defaultState, explode, className, onContinue }: LiquidityRangeSelectorProps) {
   const s = useRangeSelector(defaultState)
-  const chartId = React.useId()
-  const reduceMotion = useReducedMotion()
 
   const part = (id: Part, node: React.ReactNode, partClassName?: string) => (
     <div data-explode={explode ? id : undefined} className={partClassName}>
@@ -64,83 +69,66 @@ function LiquidityRangeSelector({ defaultState, explode, className, onContinue }
   )
 
   return (
-    <div
-      data-slot="liquidity-range-selector"
-      className={cn('@container/range flex w-full max-w-[560px] flex-col gap-uni-20', className)}
-    >
-      {part('heading', <RangeHeading fullRange={s.fullRange} />)}
+    <div data-slot="liquidity-range-selector" className={cn('@container/range w-full max-w-[1040px]', className)}>
+      <div className={LAYOUT}>
+        {part('heading', <RangeHeading fullRange={s.fullRange} />, '[grid-area:heading]')}
 
-      <div className="flex flex-col gap-uni-8">
-        <div className="flex flex-col gap-uni-4">
+        {part(
+          'strategies',
+          <PriceStrategies
+            tickSpacing={s.tickSpacing}
+            selected={s.option}
+            range={s.range}
+            currentTick={s.currentTick}
+            onSelect={s.selectOption}
+            className="rounded-uni-20"
+          />,
+          '[grid-area:options]',
+        )}
+
+        <div className="flex flex-col self-start overflow-hidden rounded-uni-20 bg-surface2 [grid-area:price]">
           {part(
-            'strategies',
-            <PriceStrategies
-              tickSpacing={s.tickSpacing}
-              selected={s.option}
-              range={s.range}
-              currentTick={s.currentTick}
-              onSelect={s.selectOption}
-              className="rounded-t-uni-20"
+            'chart-header',
+            <RangeChartHeader
+              pool={s.pool}
+              inverted={s.inverted}
+              price={s.price}
+              base={s.base}
+              quote={s.quote}
+              onInvertedChange={s.setInverted}
             />,
           )}
-          <div className="flex flex-col overflow-hidden bg-surface2">
-            {part(
-              'chart-header',
-              <RangeChartHeader
-                pool={s.pool}
-                inverted={s.inverted}
-                price={s.price}
-                base={s.base}
-                quote={s.quote}
-                onInvertedChange={s.setInverted}
-              />,
-            )}
-            {part('advanced', <AdvancedToggle open={s.advanced} onOpenChange={s.setAdvanced} controls={chartId} />)}
-            <AnimatePresence initial={false}>
-              {s.advanced && (
-                <motion.div
-                  key="chart"
-                  id={chartId}
-                  role="region"
-                  aria-label="Liquidity chart"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                  className="overflow-hidden"
-                >
-                  {part(
-                    'chart',
-                    <RangeChart
-                      pool={s.pool}
-                      inverted={s.inverted}
-                      period={s.period}
-                      range={s.chartRange}
-                      fullRange={s.fullRange}
-                      view={s.view}
-                      onViewChange={s.handleViewChange}
-                      onRangeChange={s.handleRangeChange}
-                      showPercentTooltips={s.inputMode === 'percent'}
-                      height={RANGE_CHART_HEIGHT}
-                    />,
-                    'relative overflow-hidden border-y border-surface3 py-uni-12 @max-[440px]/range:py-uni-4',
-                  )}
-                  {part(
-                    'actions',
-                    <RangeActionBar
-                      period={s.period}
-                      onPeriodChange={s.setPeriod}
-                      onZoomIn={s.zoomIn}
-                      onZoomOut={s.zoomOut}
-                      onExpand={s.expand}
-                      onReset={s.reset}
-                      expandDisabled={s.fullRange}
-                    />,
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {part(
+            'chart',
+            <RangeChart
+              pool={s.pool}
+              inverted={s.inverted}
+              period={s.period}
+              range={s.chartRange}
+              fullRange={s.fullRange}
+              view={s.view}
+              onViewChange={s.handleViewChange}
+              onRangeChange={s.handleRangeChange}
+              showPercentTooltips={s.inputMode === 'percent'}
+              height={RANGE_CHART_HEIGHT}
+            />,
+            'relative overflow-hidden border-y border-surface3 py-uni-12 @max-[440px]/range:py-uni-4',
+          )}
+          {part(
+            'actions',
+            <RangeActionBar
+              period={s.period}
+              onPeriodChange={s.setPeriod}
+              onZoomIn={s.zoomIn}
+              onZoomOut={s.zoomOut}
+              onExpand={s.expand}
+              onReset={s.reset}
+              expandDisabled={s.fullRange}
+            />,
+          )}
+        </div>
+
+        <div className="flex flex-col gap-uni-8 [grid-area:inputs]">
           {part(
             'inputs',
             <MinMaxInputs
@@ -157,18 +145,20 @@ function LiquidityRangeSelector({ defaultState, explode, className, onContinue }
               onCommit={s.commitDraft}
               onStep={s.step}
               onToggleMode={s.toggleInputMode}
+              className="rounded-uni-20"
             />,
           )}
+          <RangeValidation kind={s.invalidRange ? 'range' : s.invalidPrice ? 'price' : null} />
         </div>
-        <RangeValidation kind={s.invalidRange ? 'range' : s.invalidPrice ? 'price' : null} />
-      </div>
 
-      {part(
-        'continue',
-        <UniButton size="large" fill variant="branded" disabled={s.invalid} onClick={onContinue}>
-          Continue
-        </UniButton>,
-      )}
+        {part(
+          'continue',
+          <UniButton size="large" fill variant="branded" disabled={s.invalid} onClick={onContinue}>
+            Continue
+          </UniButton>,
+          '[grid-area:continue] @min-[880px]/range:self-end',
+        )}
+      </div>
     </div>
   )
 }

@@ -14,14 +14,16 @@ import type { PriceStrategyId, RangeOption } from '../types'
  *   One-sided lower  −50% to 0%   One-sided upper  0% to +100%
  *   Stable            ± 0.3%   Custom    −10.65% to +11.90%
  *
- * - Title and value share the first line; the value is tabular and never
- *   wraps. The use case is a short phrase on one line.
+ * - Each tile is a container: from 300px wide (one column) title and value
+ *   share the first line; narrower (the two-column step's 2×3 grid) the value
+ *   gets its own line, so titles never truncate. The value is tabular and
+ *   never wraps; the use case is a short phrase on one line.
  * - Custom is the range set by hand. It's selected whenever the range matches
  *   no preset (a drag, a stepper, a typed price), and its value is the live
  *   range; picking it keeps the current range to start from.
  * - Selection: surface3 fill plus a check, so it doesn't rest on a fill alone.
- * - The group comes first in the step, so choosing a range is the default
- *   path, and the chart is the advanced one.
+ * - It leads the step's left column; the chart beside it is the other way
+ *   to set the same range.
  */
 
 interface PriceStrategiesProps {
@@ -87,28 +89,29 @@ function PriceStrategies(props: PriceStrategiesProps) {
             data-option={option.id}
             onClick={() => onSelect?.(option.id)}
             className={cn(
-              'flex min-w-0 flex-col gap-uni-2 rounded-uni-12 border px-uni-12 py-uni-12 text-left outline-none',
+              '@container/tile min-w-0 rounded-uni-12 border px-uni-12 py-uni-12 text-left outline-none',
               'transition-[background-color,border-color,scale] duration-100 ease-out',
               'active:scale-[0.98] focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
               isSelected ? 'border-transparent bg-surface3' : 'border-surface3 bg-surface1 hover:bg-surface1Hovered',
               onSelect ? 'cursor-pointer' : 'cursor-default',
             )}
           >
-            <span className="flex items-center justify-between gap-uni-8">
+            {/* Narrow tile: title / value / use case. From 300px the value moves up beside the title. */}
+            <span className="grid grid-cols-[minmax(0,1fr)] gap-x-uni-8 gap-y-uni-2 @min-[300px]/tile:grid-cols-[minmax(0,1fr)_auto]">
               <span className="flex min-w-0 items-center gap-uni-4 text-buttonLabel3 text-neutral1">
                 <span className="truncate">{option.title}</span>
                 {isSelected && <Check aria-hidden className="size-uni-16 shrink-0 text-accent1" />}
               </span>
               <span
                 className={cn(
-                  'shrink-0 text-body3 whitespace-nowrap tabular-nums',
+                  'text-body3 whitespace-nowrap tabular-nums @min-[300px]/tile:col-start-2 @min-[300px]/tile:row-start-1 @min-[300px]/tile:text-right',
                   option.id === 'custom' && !isSelected ? 'text-neutral3' : 'text-neutral1',
                 )}
               >
                 {optionValue(option.id, props)}
               </span>
+              <span className="truncate text-body4 text-neutral2 @min-[300px]/tile:col-span-2">{option.description}</span>
             </span>
-            <span className="truncate text-body4 text-neutral2">{option.description}</span>
           </button>
         )
       })}

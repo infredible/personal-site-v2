@@ -32,7 +32,7 @@ export function LiquidityRangeShowcase() {
       canvasControls={<CanvasZoomControls controller={controller} />}
       viewTransition={viewTransition}
       renderComponent={({ preset, resetKey }) => (
-        <div className="w-full max-w-[560px]">
+        <div className="w-full max-w-[1040px]">
           <LiquidityRangeSelector
             key={`${preset}-${resetKey}`}
             defaultState={getLiquidityRangePreset(preset).state}
