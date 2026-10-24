@@ -31,6 +31,11 @@ const showcases = [
     description: 'The mini price chart beside the swap: scrubbing, periods, and loading.',
   },
   {
+    href: '/showcase/uniswap/liquidity-range',
+    title: 'Liquidity range',
+    description: 'The price range step of adding liquidity: the liquidity chart with draggable bounds, strategies, and min/max inputs.',
+  },
+  {
     href: '/showcase/uniswap/system',
     title: 'Design system',
     description: 'The Uniswap tokens and components these are built from.',
