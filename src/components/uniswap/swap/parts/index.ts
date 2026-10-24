@@ -19,8 +19,6 @@ export { LimitPricePanel } from './LimitPricePanel'
 export type { LimitPricePanelProps } from './LimitPricePanel'
 export { LimitFooter } from './LimitFooter'
 export type { LimitFooterProps } from './LimitFooter'
-export { LimitOrderList } from './LimitOrderList'
-export type { LimitOrderListProps } from './LimitOrderList'
 export {
   sanitizeAmountInput,
   toAmountString,

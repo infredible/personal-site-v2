@@ -75,19 +75,6 @@ export interface SlippageSettings {
 
 export type LimitExpiry = '1d' | '1w' | '1m' | '1y'
 
-export interface LimitOrder {
-  id: string
-  input: { token: Token; amount: number }
-  output: { token: Token; amount: number }
-  /** The price as it was shown: 1 `base` = `price` `quote` */
-  base: Token
-  quote: Token
-  price: number
-  /** How much more output than market the order asks for, as a fraction */
-  gain: number
-  expiry: LimitExpiry
-}
-
 export interface LimitSettings {
   /** Typed limit price, as displayed: `quote` tokens per 1 `base` token */
   price: string
@@ -101,8 +88,6 @@ export interface LimitSettings {
   expiry: LimitExpiry
   /** Pair the price was set for ("ETH/USDC"); a different pair resets it */
   pairKey?: string
-  /** Placed and still open */
-  orders: LimitOrder[]
 }
 
 export interface SwapFormState {

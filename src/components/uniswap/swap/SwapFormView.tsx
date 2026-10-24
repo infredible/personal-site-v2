@@ -8,7 +8,6 @@ import { getLimitPrice } from './limit'
 import {
   CurrencyPanel,
   LimitFooter,
-  LimitOrderList,
   LimitPricePanel,
   SwapActionButton,
   SwapDetails,
@@ -35,7 +34,7 @@ import type { LimitExpiry, SwapField, SwapFocusField, SwapFormState, SwapMode, T
  *
  *   [Sell] [switch] [Buy]  4px  [Limit price]
  *   4px
- *   Place order button, footer (expiry · no network cost), open orders
+ *   Place order button, footer (expiry · no network cost)
  *
  * Purely presentational: renders from a SwapFormState and reports events. With
  * no callbacks it's a static snapshot (inputs read-only). The only internal
@@ -63,12 +62,11 @@ interface SwapFormViewProps {
   onAction?: (action: SwapAction) => void
   /** Replaces the derived button state, e.g. while a limit order waits on the wallet */
   actionOverride?: SwapAction
-  /** Limit tab: typed price, preset chip, unit flip, expiry, cancelling an open order */
+  /** Limit tab: typed price, preset chip, unit flip, expiry */
   onLimitPriceChange?: (price: string) => void
   onLimitPreset?: (preset: number) => void
   onLimitInvert?: () => void
   onLimitExpiryChange?: (expiry: LimitExpiry) => void
-  onCancelOrder?: (id: string) => void
   detailsExpanded?: boolean
   onDetailsExpandedChange?: (expanded: boolean) => void
   rateInverted?: boolean
@@ -78,7 +76,7 @@ interface SwapFormViewProps {
   className?: string
 }
 
-export type SwapPartId = 'header' | 'sell' | 'switch' | 'buy' | 'price' | 'action' | 'details' | 'footer' | 'orders'
+export type SwapPartId = 'header' | 'sell' | 'switch' | 'buy' | 'price' | 'action' | 'details' | 'footer'
 
 export interface SwapFormPart {
   id: SwapPartId
@@ -111,7 +109,6 @@ function useSwapFormParts({
   onLimitPreset,
   onLimitInvert,
   onLimitExpiryChange,
-  onCancelOrder,
   detailsExpanded,
   onDetailsExpandedChange,
   rateInverted,
@@ -246,9 +243,6 @@ function useSwapFormParts({
       label: 'Footer',
       node: <LimitFooter expiry={limit.expiry} onExpiryChange={onLimitExpiryChange} />,
     })
-    if (limit.orders.length > 0) {
-      parts.push({ id: 'orders', label: 'Open orders', node: <LimitOrderList orders={limit.orders} onCancel={onCancelOrder} /> })
-    }
   } else if (showDetails) {
     parts.push({
       id: 'details',
@@ -306,7 +300,6 @@ function SwapFormView({ className, ...props }: SwapFormViewProps) {
           {part('footer')}
         </div>
       </div>
-      {part('orders', 'mt-uni-16')}
     </div>
   )
 }

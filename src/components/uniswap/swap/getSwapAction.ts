@@ -44,6 +44,7 @@ export type SwapActionKind =
   | 'below-market'
   | 'place-order'
   | 'confirm-in-wallet'
+  | 'order-placed'
 
 export interface SwapAction {
   kind: SwapActionKind
@@ -70,6 +71,9 @@ const blocked = (kind: SwapActionKind, label: string): SwapAction => ({
 
 /** Shown while a limit order waits on the wallet signature */
 export const CONFIRM_IN_WALLET: SwapAction = { ...blocked('confirm-in-wallet', 'Confirm in wallet'), loading: true }
+
+/** Shown for a moment once the order is signed, as the form clears */
+export const ORDER_PLACED: SwapAction = blocked('order-placed', 'Order placed')
 
 const connectWallet: SwapAction = {
   kind: 'connect-wallet',

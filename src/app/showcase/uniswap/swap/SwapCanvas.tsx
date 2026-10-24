@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import { Canvas, CanvasFrame, CanvasSection, type CanvasController } from '@/components/showcase/canvas'
 import { ModalSurface, PaletteSurface, PopoverSurface, UniswapScope } from '@/components/uniswap'
-import { CONFIRM_IN_WALLET, getSwapAction } from '@/components/uniswap/swap/getSwapAction'
+import { CONFIRM_IN_WALLET, ORDER_PLACED, getSwapAction } from '@/components/uniswap/swap/getSwapAction'
 import { getLimitPrice, withInvertedPrice, withLimitPreset, withLimitPrice } from '@/components/uniswap/swap/limit'
 import { SwapReviewPanel, SwapSettingsPanel, TokenSelectorPanel } from '@/components/uniswap/swap/overlays'
 import {
   CurrencyPanel,
   LimitFooter,
-  LimitOrderList,
   LimitPricePanel,
   SwapActionButton,
   SwapDetails,
@@ -89,7 +88,6 @@ const PART_NOTES: Record<SwapPartId, string> = {
   action: 'Label and emphasis from getSwapAction',
   details: 'Rate, network cost, fees',
   footer: 'Expiry and network cost',
-  orders: 'Placed and waiting to fill',
 }
 
 const limitActionPresets = ['limit', 'limit-below-market', 'limit-ready'] as const
@@ -163,7 +161,7 @@ export function SwapCanvas({ controller, anatomyState }: { controller: CanvasCon
       <CanvasSection
         id="limit"
         title="Limit"
-        description="Sell and Buy stay where the Swap tab has them; the price goes under Buy, with no second token picker. Expiry and cost share the footer, and placed orders list below."
+        description="Sell and Buy stay where the Swap tab has them; the price goes under Buy, with no second token picker. Expiry and cost share the footer."
       >
         <CanvasFrame id="limit-light" title="Ready · light">
           <Stage theme="light" width={512}>
@@ -173,11 +171,6 @@ export function SwapCanvas({ controller, anatomyState }: { controller: CanvasCon
         <CanvasFrame id="limit-dark" title="Ready · dark">
           <Stage theme="dark" width={512}>
             <SwapFormView state={preset('limit-ready')} />
-          </Stage>
-        </CanvasFrame>
-        <CanvasFrame id="limit-orders-form" title="With open orders">
-          <Stage width={512}>
-            <SwapFormView state={preset('limit-orders')} />
           </Stage>
         </CanvasFrame>
         <CanvasFrame id="limit-mobile" title="Mobile · 375px" note="Buying ETH with USDC">
@@ -204,15 +197,10 @@ export function SwapCanvas({ controller, anatomyState }: { controller: CanvasCon
         </CanvasFrame>
       </CanvasSection>
 
-      <CanvasSection id="limit-parts" title="Limit footer and orders">
+      <CanvasSection id="limit-parts" title="Limit footer and button">
         <CanvasFrame id="limit-footer" title="Footer" note="Expiry is a menu; placing is a signature, so no gas">
           <Stage>
             <LimitFooter expiry="1w" onExpiryChange={() => {}} />
-          </Stage>
-        </CanvasFrame>
-        <CanvasFrame id="limit-order-list" title="Open orders" note="A placed order lands here; × cancels">
-          <Stage>
-            <LimitOrderList orders={preset('limit-orders').limit.orders} onCancel={() => {}} />
           </Stage>
         </CanvasFrame>
         {limitActionPresets.map((id) => {
@@ -229,6 +217,11 @@ export function SwapCanvas({ controller, anatomyState }: { controller: CanvasCon
         <CanvasFrame id="action-limit-signing" title={CONFIRM_IN_WALLET.label} note="Waiting on the signature">
           <Stage width={360}>
             <SwapActionButton action={CONFIRM_IN_WALLET} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="action-limit-placed" title={ORDER_PLACED.label} note="Signed; the form clears">
+          <Stage width={360}>
+            <SwapActionButton action={ORDER_PLACED} />
           </Stage>
         </CanvasFrame>
       </CanvasSection>

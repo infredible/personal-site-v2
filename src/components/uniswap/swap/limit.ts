@@ -1,6 +1,6 @@
 import { parseAmount } from './format'
 import { formatDerivedAmount } from './parts/amount'
-import type { LimitExpiry, LimitOrder, LimitSettings, SwapFormState, Token } from './types'
+import type { LimitExpiry, LimitSettings, SwapFormState, Token } from './types'
 
 /*
  * Limit order math, shared by the form parts and SwapBox. A redesign of
@@ -30,7 +30,7 @@ export const LIMIT_EXPIRIES: { value: LimitExpiry; label: string }[] = [
 
 export const expiryLabel = (expiry: LimitExpiry) => LIMIT_EXPIRIES.find((e) => e.value === expiry)?.label ?? expiry
 
-export const DEFAULT_LIMIT: LimitSettings = { price: '', inverted: false, preset: 0, expiry: '1w', orders: [] }
+export const DEFAULT_LIMIT: LimitSettings = { price: '', inverted: false, preset: 0, expiry: '1w' }
 
 /** Typed-price rounding stays inside this, so "Market" never reads as below market */
 const MARKET_TOLERANCE = 0.0005
@@ -170,22 +170,4 @@ export function requoteLimit(state: SwapFormState): SwapFormState {
     return deriveLimitAmounts(withLimitPreset(state, state.limit.preset ?? 0, prefersInverted(input.token!, output.token!)))
   }
   return deriveLimitAmounts(state)
-}
-
-/** Snapshot of the form as an open order, or undefined when it isn't placeable. */
-export function createLimitOrder(state: SwapFormState, id: string): LimitOrder | undefined {
-  const price = getLimitPrice(state)
-  const inAmount = parseAmount(state.input.amount)
-  const outAmount = parseAmount(state.output.amount)
-  if (!price || !state.input.token || !state.output.token || !(inAmount > 0) || !(outAmount > 0)) return undefined
-  return {
-    id,
-    input: { token: state.input.token, amount: inAmount },
-    output: { token: state.output.token, amount: outAmount },
-    base: price.base,
-    quote: price.quote,
-    price: price.price,
-    gain: price.gain,
-    expiry: state.limit.expiry,
-  }
 }

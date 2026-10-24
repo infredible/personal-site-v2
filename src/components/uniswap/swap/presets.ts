@@ -1,7 +1,7 @@
-import { createLimitOrder, DEFAULT_LIMIT, requoteLimit, withLimitPreset, withLimitPrice } from './limit'
+import { DEFAULT_LIMIT, requoteLimit, withLimitPreset, withLimitPrice } from './limit'
 import { formatDerivedAmount } from './parts/amount'
 import { DEFAULT_SLIPPAGE, MOCK_WALLET, TOKENS } from './tokens'
-import type { LimitOrder, SwapFormState, SwapQuote, Token } from './types'
+import type { SwapFormState, SwapQuote, Token } from './types'
 
 // Named SwapFormState snapshots: render any of them read-only through
 // SwapFormView, or seed SwapBox with one.
@@ -64,14 +64,13 @@ function limit(
   output: Token,
   amount: string,
   price: { preset: number } | { typed: (market: number) => number },
-  orders: LimitOrder[] = [],
 ): SwapFormState {
   const oriented = requoteLimit({
     ...base,
     mode: 'limit',
     input: { token: input, amount },
     output: { token: output, amount: '' },
-    limit: { ...DEFAULT_LIMIT, orders },
+    limit: DEFAULT_LIMIT,
   })
   const priced =
     'preset' in price
@@ -80,12 +79,6 @@ function limit(
   return requoteLimit(priced)
 }
 
-const order = (id: string, state: SwapFormState, expiry: LimitOrder['expiry']): LimitOrder => ({
-  ...createLimitOrder(state, id)!,
-  expiry,
-})
-
-const limitReady = limit(TOKENS.ETH, TOKENS.USDC, '1', { preset: 0.05 })
 
 export const SWAP_PRESETS: SwapPreset[] = [
   {
@@ -209,7 +202,7 @@ export const SWAP_PRESETS: SwapPreset[] = [
     id: 'limit-ready',
     label: 'Limit · Ready',
     description: 'Sell 1 ETH when it reaches 5% above market.',
-    state: limitReady,
+    state: limit(TOKENS.ETH, TOKENS.USDC, '1', { preset: 0.05 }),
   },
   {
     id: 'limit-buy',
@@ -234,15 +227,6 @@ export const SWAP_PRESETS: SwapPreset[] = [
     label: 'Limit · Far from market',
     description: 'Over 2× market: allowed, with a warning that it may never fill.',
     state: limit(TOKENS.UNI, TOKENS.USDC, '100', { typed: (market) => market * 2.5 }),
-  },
-  {
-    id: 'limit-orders',
-    label: 'Limit · Open orders',
-    description: 'Two orders placed and waiting to fill.',
-    state: limit(TOKENS.ETH, TOKENS.USDC, '', { preset: 0.05 }, [
-      order('order-a', limitReady, '1w'),
-      order('order-b', limit(TOKENS.USDC, TOKENS.WBTC, '1200', { preset: 0.1 }), '1m'),
-    ]),
   },
 ]
 

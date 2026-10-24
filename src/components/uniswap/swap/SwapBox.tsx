@@ -15,8 +15,8 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { DialogOverlay, DialogPortal } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { parseAmount } from './format'
-import { CONFIRM_IN_WALLET } from './getSwapAction'
-import { createLimitOrder, requoteLimit, withInvertedPrice, withLimitPreset, withLimitPrice } from './limit'
+import { CONFIRM_IN_WALLET, ORDER_PLACED } from './getSwapAction'
+import { requoteLimit, withInvertedPrice, withLimitPreset, withLimitPrice } from './limit'
 import { mockQuote } from './presets'
 import { formatDerivedAmount, toAmountString } from './parts'
 import { SwapFormView } from './SwapFormView'
@@ -32,13 +32,14 @@ import type { SwapField, SwapFormState, Token } from './types'
  * On the Limit tab the derived side follows the limit price instead, with no
  * quote to wait for. Placing an order skips the review modal: the form already
  * says everything the review would, so the button waits on the wallet
- * signature and the order lands in the open orders list under it.
+ * signature, reads "Order placed" for a moment, and the form clears.
  */
 
 const QUOTE_LATENCY_MS = 450
 const BALANCES_LATENCY_MS = 900
 const TOKEN_LIST_LATENCY_MS = 600
 const SIGN_LATENCY_MS = 1400
+const PLACED_MS = 1600
 
 /** Fake price impact: grows with trade size so large swaps show warnings. */
 function priceImpactFor(usdValue: number) {
@@ -96,10 +97,9 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [deadline, setDeadline] = React.useState(30)
   const [review, setReview] = React.useState<{ status: SwapReviewStatus; stage: 'wallet' | 'submitted' } | null>(null)
-  const [signing, setSigning] = React.useState(false)
+  const [placing, setPlacing] = React.useState<'signing' | 'placed' | null>(null)
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const signTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const orderCount = React.useRef(0)
 
   // What the review modal shows. Kept after close so the exit animation plays on
   // the last content instead of an empty card (closing a success also clears the form).
@@ -196,24 +196,13 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
     }))
 
   const placeOrder = () => {
-    setSigning(true)
+    setPlacing('signing')
     signTimer.current = setTimeout(() => {
-      setSigning(false)
-      setState((s) => {
-        const order = createLimitOrder(s, `order-${++orderCount.current}`)
-        if (!order) return s
-        return {
-          ...s,
-          input: { ...s.input, amount: '' },
-          output: { ...s.output, amount: '' },
-          limit: { ...s.limit, orders: [order, ...s.limit.orders] },
-        }
-      })
+      setPlacing('placed')
+      setState((s) => ({ ...s, input: { ...s.input, amount: '' }, output: { ...s.output, amount: '' } }))
+      signTimer.current = setTimeout(() => setPlacing(null), PLACED_MS)
     }, SIGN_LATENCY_MS)
   }
-
-  const cancelOrder = (id: string) =>
-    setState((s) => ({ ...s, limit: { ...s.limit, orders: s.limit.orders.filter((o) => o.id !== id) } }))
 
   const confirm = () => {
     setReview({ status: 'pending', stage: 'wallet' })
@@ -251,12 +240,11 @@ export function SwapBox({ initialState, simulateLoading = false, onLoaded, onSta
             onPercent={setFraction}
             onQuickSelect={(token) => update((s) => ({ ...s, output: { ...s.output, token } }))}
             onSwitch={switchTokens}
-            actionOverride={signing ? CONFIRM_IN_WALLET : undefined}
+            actionOverride={placing === 'signing' ? CONFIRM_IN_WALLET : placing === 'placed' ? ORDER_PLACED : undefined}
             onLimitPriceChange={(price) => update((s) => withLimitPrice(s, price))}
             onLimitPreset={(preset) => update((s) => withLimitPreset(s, preset))}
             onLimitInvert={() => update(withInvertedPrice)}
             onLimitExpiryChange={(expiry) => setState((s) => ({ ...s, limit: { ...s.limit, expiry } }))}
-            onCancelOrder={cancelOrder}
             onAction={(action) => {
               if (action.kind === 'review') setReview({ status: 'review', stage: 'wallet' })
               if (action.kind === 'place-order') placeOrder()
