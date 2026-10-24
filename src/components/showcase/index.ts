@@ -14,3 +14,5 @@ export type {
 export { Segmented, BarButton, BarSelect, ThemeSwitch } from './ShowcaseControls'
 export type { SegmentOption } from './ShowcaseControls'
 export { useExplodedViewTransition } from './useExplodedViewTransition'
+export { PhoneFrame, PhoneStatusBar, PhoneHomeIndicator, phoneScaleToFit, IPHONE } from './PhoneFrame'
+export type { PhoneFrameProps } from './PhoneFrame'

@@ -26,6 +26,11 @@ const showcases = [
     description: 'A redesign of the review flow as one morphing surface, compared with production.',
   },
   {
+    href: '/showcase/uniswap/island',
+    title: 'Swap review · Dynamic Island',
+    description: 'The same flow in the iPhone app: one Face ID, then a Live Activity in the island through to the receipt.',
+  },
+  {
     href: '/showcase/uniswap/sparkline',
     title: 'Price sparkline',
     description: 'The mini price chart beside the swap: scrubbing, periods, and loading.',

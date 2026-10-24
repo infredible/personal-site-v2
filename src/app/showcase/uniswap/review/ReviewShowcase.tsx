@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { ArrowDownUp, Palette } from 'lucide-react'
+import { ArrowDownUp, Palette, Smartphone } from 'lucide-react'
 import { ShowcaseShell, useExplodedViewTransition } from '@/components/showcase'
 import { CanvasZoomControls, useCanvasController } from '@/components/showcase/canvas'
 import { REVIEW_PRESETS, getReviewPreset, type ReviewFlowState, type ReviewScenario } from '@/components/uniswap/swap/review'
@@ -11,6 +11,7 @@ import { ReviewCanvas } from './ReviewCanvas'
 const links = [
   { href: '/showcase/uniswap/system', label: 'Design system', icon: <Palette aria-hidden /> },
   { href: '/showcase/uniswap/swap', label: 'Swap', icon: <ArrowDownUp aria-hidden /> },
+  { href: '/showcase/uniswap/island', label: 'iPhone', icon: <Smartphone aria-hidden /> },
 ]
 
 const PRODUCTION = 'production'
