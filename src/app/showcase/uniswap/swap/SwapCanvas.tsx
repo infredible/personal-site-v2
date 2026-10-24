@@ -3,10 +3,14 @@
 import { useState } from 'react'
 import { Canvas, CanvasFrame, CanvasSection, type CanvasController } from '@/components/showcase/canvas'
 import { ModalSurface, PaletteSurface, PopoverSurface, UniswapScope } from '@/components/uniswap'
-import { getSwapAction } from '@/components/uniswap/swap/getSwapAction'
+import { CONFIRM_IN_WALLET, getSwapAction } from '@/components/uniswap/swap/getSwapAction'
+import { getLimitPrice, withInvertedPrice, withLimitPreset, withLimitPrice } from '@/components/uniswap/swap/limit'
 import { SwapReviewPanel, SwapSettingsPanel, TokenSelectorPanel } from '@/components/uniswap/swap/overlays'
 import {
   CurrencyPanel,
+  LimitFooter,
+  LimitOrderList,
+  LimitPricePanel,
   SwapActionButton,
   SwapDetails,
   SwapDetailsSkeleton,
@@ -80,10 +84,24 @@ const PART_NOTES: Record<SwapPartId, string> = {
   header: 'Mode tabs and the settings gear',
   sell: 'Typed amount, token, balance',
   switch: 'Flips the pair',
-  buy: 'Derived from the quote',
+  buy: 'Derived from the quote, or the limit price',
+  price: 'Limit price: unit flips, presets beat market',
   action: 'Label and emphasis from getSwapAction',
   details: 'Rate, network cost, fees',
+  footer: 'Expiry and network cost',
+  orders: 'Placed and waiting to fill',
 }
+
+const limitActionPresets = ['limit', 'limit-below-market', 'limit-ready'] as const
+
+const limitPricePresets = [
+  { id: 'limit', title: 'At market', note: 'The price a new pair starts at' },
+  { id: 'limit-ready', title: 'Above market', note: 'Selling: presets raise the price' },
+  { id: 'limit-buy', title: 'Buying', note: 'Still per ETH, so better is lower: presets go negative' },
+  { id: 'limit-custom', title: 'Typed, focused', note: 'Typing clears the preset' },
+  { id: 'limit-below-market', title: 'Below market', note: 'Worse than a swap: critical, and the button blocks it' },
+  { id: 'limit-far', title: 'Far from market', note: 'Over 2×: allowed, with a warning' },
+] as const
 
 /**
  * The live swap taken apart, one part per frame in an exploded vertical stack.
@@ -138,6 +156,79 @@ export function SwapCanvas({ controller, anatomyState }: { controller: CanvasCon
         <CanvasFrame id="form-mobile" title="Mobile · 375px" note="Same form at phone width">
           <Stage width={375} className="p-uni-8">
             <SwapFormView state={preset('enter-amount')} />
+          </Stage>
+        </CanvasFrame>
+      </CanvasSection>
+
+      <CanvasSection
+        id="limit"
+        title="Limit"
+        description="Sell and Buy stay where the Swap tab has them; the price goes under Buy, with no second token picker. Expiry and cost share the footer, and placed orders list below."
+      >
+        <CanvasFrame id="limit-light" title="Ready · light">
+          <Stage theme="light" width={512}>
+            <SwapFormView state={preset('limit-ready')} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="limit-dark" title="Ready · dark">
+          <Stage theme="dark" width={512}>
+            <SwapFormView state={preset('limit-ready')} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="limit-orders-form" title="With open orders">
+          <Stage width={512}>
+            <SwapFormView state={preset('limit-orders')} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="limit-mobile" title="Mobile · 375px" note="Buying ETH with USDC">
+          <Stage width={375} className="p-uni-8">
+            <SwapFormView state={preset('limit-buy')} />
+          </Stage>
+        </CanvasFrame>
+      </CanvasSection>
+
+      <CanvasSection
+        id="limit-price"
+        title="Limit price"
+        description="Quoted in the pricier token, so it reads like a chart either way round. Presets are always better than market for you. Each frame is live: type, pick presets, flip the unit."
+      >
+        {limitPricePresets.map(({ id, title, note }) => (
+          <CanvasFrame key={id} id={`limit-price-${id}`} title={title} note={note}>
+            <LimitPriceFrame presetId={id} />
+          </CanvasFrame>
+        ))}
+        <CanvasFrame id="limit-price-no-pair" title="No pair" note="Nothing to price until both tokens are chosen">
+          <Stage>
+            <LimitPricePanel value="" preset={0} />
+          </Stage>
+        </CanvasFrame>
+      </CanvasSection>
+
+      <CanvasSection id="limit-parts" title="Limit footer and orders">
+        <CanvasFrame id="limit-footer" title="Footer" note="Expiry is a menu; placing is a signature, so no gas">
+          <Stage>
+            <LimitFooter expiry="1w" onExpiryChange={() => {}} />
+          </Stage>
+        </CanvasFrame>
+        <CanvasFrame id="limit-order-list" title="Open orders" note="A placed order lands here; × cancels">
+          <Stage>
+            <LimitOrderList orders={preset('limit-orders').limit.orders} onCancel={() => {}} />
+          </Stage>
+        </CanvasFrame>
+        {limitActionPresets.map((id) => {
+          const p = getPreset(id)!
+          const action = getSwapAction(p.state)
+          return (
+            <CanvasFrame key={id} id={`action-${id}`} title={action.label} note={p.label}>
+              <Stage width={360}>
+                <SwapActionButton action={action} onClick={() => {}} />
+              </Stage>
+            </CanvasFrame>
+          )
+        })}
+        <CanvasFrame id="action-limit-signing" title={CONFIRM_IN_WALLET.label} note="Waiting on the signature">
+          <Stage width={360}>
+            <SwapActionButton action={CONFIRM_IN_WALLET} />
           </Stage>
         </CanvasFrame>
       </CanvasSection>
@@ -363,6 +454,24 @@ export function SwapCanvas({ controller, anatomyState }: { controller: CanvasCon
         ))}
       </CanvasSection>
     </Canvas>
+  )
+}
+
+/** The price panel is controlled; local state through the same helpers SwapBox uses. */
+function LimitPriceFrame({ presetId }: { presetId: string }) {
+  const [state, setState] = useState(() => preset(presetId))
+  return (
+    <Stage>
+      <LimitPricePanel
+        price={getLimitPrice(state)}
+        value={state.limit.price}
+        preset={state.limit.preset}
+        focused={state.focusedField === 'price' || undefined}
+        onValueChange={(price) => setState((s) => withLimitPrice(s, price))}
+        onPresetSelect={(value) => setState((s) => withLimitPreset(s, value))}
+        onInvert={() => setState(withInvertedPrice)}
+      />
+    </Stage>
   )
 }
 

@@ -27,6 +27,8 @@ const presetState = (preset: string | undefined) => (preset && getPreset(preset)
 interface ChartState {
   input?: Token
   output?: Token
+  /** Side the chart starts on: the output token, or on the Limit tab the side the price is quoted in */
+  preferred: 'input' | 'output'
   loading: boolean
 }
 
@@ -34,6 +36,8 @@ interface ChartState {
 const chartStateOf = (state: SwapFormState, loading = Boolean(state.wallet.balancesLoading)): ChartState => ({
   input: state.input.token ?? undefined,
   output: state.output.token ?? undefined,
+  // "1 ETH = 3,412 USDC" charts ETH, whichever side of the order it's on
+  preferred: state.mode === 'limit' && !state.limit.inverted ? 'input' : 'output',
   loading,
 })
 
@@ -95,9 +99,12 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
   const [chart, setChart] = useState<ChartState>(() => chartStateOf(boxProps.initialState, boxProps.simulateLoading))
   const [panels, setPanels] = useState<{ top: number; height: number } | null>(null)
   const [chartVisible, setChartVisible] = useState(true)
-  // Which side of the pair the chart shows: the output token by default, else
+  // Which side of the pair the chart shows: the preferred side by default, else
   // whichever is set, else ETH. With both set, the header offers the other one.
-  const [side, setSide] = useState<'input' | 'output'>('output')
+  // A pick lasts until the preferred side changes (a tab switch, a flipped pair).
+  const [picked, setPicked] = useState({ for: chart.preferred, side: chart.preferred })
+  const side = picked.for === chart.preferred ? picked.side : chart.preferred
+  const setSide = (next: 'input' | 'output') => setPicked({ for: chart.preferred, side: next })
   const other = side === 'output' ? 'input' : 'output'
   const chartToken = chart[side] ?? chart[other] ?? TOKENS.ETH
   const pairToken = chart[side] && chart[other] ? chart[other] : undefined
@@ -110,7 +117,11 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
     onStateChangeRef.current?.(state)
     // Only a new token or the end of loading re-renders the card; typing doesn't
     const next = chartStateOf(state)
-    setChart((prev) => (prev.input === next.input && prev.output === next.output && prev.loading === next.loading ? prev : next))
+    setChart((prev) =>
+      prev.input === next.input && prev.output === next.output && prev.preferred === next.preferred && prev.loading === next.loading
+        ? prev
+        : next,
+    )
   }, [])
 
   useLayoutEffect(() => {
