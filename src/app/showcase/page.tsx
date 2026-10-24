@@ -31,6 +31,11 @@ const showcases = [
     description: 'The mini price chart beside the swap: scrubbing, periods, and loading.',
   },
   {
+    href: '/showcase/uniswap/explore',
+    title: 'Explore tables',
+    description: 'The Tokens and Pools tables from Explore: sorting, filters, search, and loading states.',
+  },
+  {
     href: '/showcase/uniswap/system',
     title: 'Design system',
     description: 'The Uniswap tokens and components these are built from.',

@@ -125,13 +125,13 @@ const DIRECTION_TEXT: Record<PriceDirection, string> = {
 /* Delta ------------------------------------------------------------------- */
 
 /** Uniswap's ArrowChange (a rounded triangle), pointing down; rotated for up */
-function DeltaTriangle({ direction, className }: { direction: PriceDirection; className?: string }) {
+export function DeltaTriangle({ direction, className }: { direction: PriceDirection; className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       role="img"
-      aria-label={direction === 'down' ? 'down' : 'up'}
+      aria-label={direction === 'flat' ? 'unchanged' : direction}
       className={cn('size-uni-16 shrink-0', direction !== 'down' && 'rotate-180', className)}
     >
       <path
