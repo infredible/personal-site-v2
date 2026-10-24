@@ -1,5 +1,5 @@
-export { RangeModeControl, RANGE_MODE_DESCRIPTIONS } from './RangeModeControl'
-export type { RangeModeControlProps } from './RangeModeControl'
+export { RangeHeading, RANGE_MODE_DESCRIPTIONS } from './RangeHeading'
+export type { RangeHeadingProps } from './RangeHeading'
 export { RangeChartHeader } from './RangeChartHeader'
 export type { RangeChartHeaderProps } from './RangeChartHeader'
 export { RangeActionBar } from './RangeActionBar'

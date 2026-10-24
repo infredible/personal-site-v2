@@ -46,6 +46,9 @@ export interface RangeView {
 
 export type PriceStrategyId = 'stable' | 'wide' | 'one-sided-lower' | 'one-sided-upper'
 
+/** A tile in the strategy grid: full range, a strategy, or a range set by hand */
+export type RangeOption = 'full' | PriceStrategyId | 'custom'
+
 /** What the min/max inputs edit: a price, or a % from the current price */
 export type RangeInputMode = 'price' | 'percent'
 

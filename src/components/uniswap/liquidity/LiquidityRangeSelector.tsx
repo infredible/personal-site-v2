@@ -10,7 +10,7 @@ import {
   PriceStrategies,
   RangeActionBar,
   RangeChartHeader,
-  RangeModeControl,
+  RangeHeading,
   RangeValidation,
 } from './parts'
 import { RANGE_CHART_HEIGHT, RangeChart } from './RangeChart'
@@ -20,8 +20,8 @@ import type { RangeSelectorState } from './types'
 /*
  * Uniswap's "Set price range" step, composed (SelectPriceRangeStep):
  *
- *   Set price range / Full range | Custom range / description
- *   ┌ price strategies (rounded top) ─────────────────┐ 4px
+ *   Set price range / description
+ *   ┌ range options: full, strategies, custom (top) ──┐ 4px
  *   ├ current price · token toggle ───────────────────┤
  *   │ Advanced ⌄                                      │
  *   │ ┆ chart, period + zoom + reset (when open)      │
@@ -29,8 +29,9 @@ import type { RangeSelectorState } from './types'
  *   Invalid range
  *   [ Continue ]
  *
- * A redesign of the order, not a port: Uniswap leads with the chart and puts
- * the strategies under it. Here strategies come first (the quick path), and
+ * A redesign of the order, not a port: Uniswap leads with a Full | Custom
+ * switch and the chart, and puts the strategies under it. Here one grid of
+ * options (full range, the strategies, custom) comes first, and
  * the chart opens behind "Advanced" (state: `advanced`), easing its height
  * open. Closed, the chart is unmounted; its view keeps tracking the range, so
  * it opens fitted to whatever the strategies or inputs set.
@@ -49,7 +50,7 @@ interface LiquidityRangeSelectorProps {
   onContinue?: () => void
 }
 
-type Part = 'mode' | 'strategies' | 'chart-header' | 'advanced' | 'chart' | 'actions' | 'inputs' | 'continue'
+type Part = 'heading' | 'strategies' | 'chart-header' | 'advanced' | 'chart' | 'actions' | 'inputs' | 'continue'
 
 function LiquidityRangeSelector({ defaultState, explode, className, onContinue }: LiquidityRangeSelectorProps) {
   const s = useRangeSelector(defaultState)
@@ -67,10 +68,7 @@ function LiquidityRangeSelector({ defaultState, explode, className, onContinue }
       data-slot="liquidity-range-selector"
       className={cn('@container/range flex w-full max-w-[560px] flex-col gap-uni-20', className)}
     >
-      {part(
-        'mode',
-        <RangeModeControl fullRange={s.fullRange} onFullRangeChange={s.setFullRange} />,
-      )}
+      {part('heading', <RangeHeading fullRange={s.fullRange} />)}
 
       <div className="flex flex-col gap-uni-8">
         <div className="flex flex-col gap-uni-4">
@@ -78,8 +76,10 @@ function LiquidityRangeSelector({ defaultState, explode, className, onContinue }
             'strategies',
             <PriceStrategies
               tickSpacing={s.tickSpacing}
-              selected={s.strategy}
-              onSelect={s.selectStrategy}
+              selected={s.option}
+              range={s.range}
+              currentTick={s.currentTick}
+              onSelect={s.selectOption}
               className="rounded-t-uni-20"
             />,
           )}

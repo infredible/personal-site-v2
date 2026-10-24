@@ -21,7 +21,16 @@ import {
   withUpper,
   type VisualRange,
 } from './ticks'
-import type { Pool, PriceRange, PriceStrategyId, RangeInputMode, RangePeriod, RangeSelectorState, RangeView } from './types'
+import type {
+  Pool,
+  PriceRange,
+  PriceStrategyId,
+  RangeInputMode,
+  RangeOption,
+  RangePeriod,
+  RangeSelectorState,
+  RangeView,
+} from './types'
 import { ZOOM_FACTOR, fitRangeView, historyView, zoomView } from './view'
 
 /*
@@ -134,6 +143,7 @@ export function useRangeSelector(initial: RangeSelectorState) {
 
   /** The range the chart draws: the typed one while it's valid, else the committed one */
   const chartRange = core.live ?? visualRange
+  const option: RangeOption = range.fullRange ? 'full' : (strategy ?? 'custom')
 
   const bounds = usableTickBounds(tickSpacing)
   const invalidRange = !range.fullRange && isInvalidRange(range)
@@ -217,6 +227,29 @@ export function useRangeSelector(initial: RangeSelectorState) {
       }
     })
   }, [])
+
+  /**
+   * The Custom tile: a range of your own, edited with the inputs (or the
+   * chart). From full range it restores the last custom range, or the
+   * default one; from a strategy it keeps the strategy's range as a start.
+   */
+  const selectCustom = React.useCallback(() => {
+    setCore((c) => {
+      if (!c.range.fullRange) return c.strategy === null ? c : { ...c, strategy: null }
+      const next = c.lastCustom?.range ?? defaultRangeFor(c.pool, c.period, c.inverted)
+      return { ...c, range: next, strategy: null, view: viewFor(c.pool, next, c.inverted, c.period) }
+    })
+  }, [])
+
+  /** A tile of the strategy grid */
+  const selectOption = React.useCallback(
+    (option: RangeOption) => {
+      if (option === 'full') setFullRange(true)
+      else if (option === 'custom') selectCustom()
+      else selectStrategy(option)
+    },
+    [setFullRange, selectCustom, selectStrategy],
+  )
 
   const toggleInputMode = React.useCallback(() => {
     setCore((c) => ({
@@ -337,6 +370,8 @@ export function useRangeSelector(initial: RangeSelectorState) {
     inputMode,
     strategy,
     fullRange: range.fullRange,
+    /** The selected tile of the strategy grid */
+    option,
     advanced,
     /** Canonical state, as RangeSelectorState describes it */
     state: { pool, inverted, range, period, inputMode, strategy, advanced } satisfies RangeSelectorState,
@@ -362,6 +397,8 @@ export function useRangeSelector(initial: RangeSelectorState) {
     setInverted,
     setPeriod,
     selectStrategy,
+    selectCustom,
+    selectOption,
     toggleInputMode,
     setAdvanced,
     handleRangeChange,

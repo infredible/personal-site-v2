@@ -11,7 +11,7 @@ import {
   PriceStrategies,
   RangeActionBar,
   RangeChartHeader,
-  RangeModeControl,
+  RangeHeading,
   RangeValidation,
   createRangeState,
   poolAtFee,
@@ -93,17 +93,24 @@ function RangeAnatomy({ state }: { state: RangeSelectorState }) {
       description="The live step, taken apart. The parts share one state: drag a bound in the chart and the inputs follow; pick a strategy and the chart moves."
       direction="column"
     >
-      <CanvasFrame id="part-mode" title="Range mode" note="Full range | Custom range" labelPlacement="side">
+      <CanvasFrame id="part-heading" title="Heading" note="The description follows full range vs custom" labelPlacement="side">
         <Stage card>
-          <div data-explode-target="mode">
-            <RangeModeControl fullRange={s.fullRange} onFullRangeChange={s.setFullRange} />
+          <div data-explode-target="heading">
+            <RangeHeading fullRange={s.fullRange} />
           </div>
         </Stage>
       </CanvasFrame>
-      <CanvasFrame id="part-strategies" title="Price strategies" note="First: the quick path. Each snaps to the tick spacing" labelPlacement="side">
+      <CanvasFrame id="part-strategies" title="Range options" note="Full range, four strategies, Custom; Custom tracks hand edits" labelPlacement="side">
         <Stage card>
           <div data-explode-target="strategies" className="@container/range">
-            <PriceStrategies tickSpacing={s.tickSpacing} selected={s.strategy} onSelect={s.selectStrategy} className="rounded-t-uni-20" />
+            <PriceStrategies
+              tickSpacing={s.tickSpacing}
+              selected={s.option}
+              range={s.range}
+              currentTick={s.currentTick}
+              onSelect={s.selectOption}
+              className="rounded-t-uni-20"
+            />
           </div>
         </Stage>
       </CanvasFrame>
@@ -222,7 +229,7 @@ export function LiquidityRangeCanvas({
         <CanvasFrame id="state-full-range" title="Full range" note="Min 0, Max ∞; the chart fits the price history">
           <SelectorStage state={createRangeState(ETH_USDC, { fullRange: true, advanced: true })} />
         </CanvasFrame>
-        <CanvasFrame id="state-custom" title="Custom (default)" note="Middle 60% of a window reaching the history's low and high">
+        <CanvasFrame id="state-custom" title="Custom (default)" note="Middle 60% of a window reaching the history's low and high; the Custom tile shows it">
           <SelectorStage state={createRangeState(ETH_USDC)} />
         </CanvasFrame>
         <CanvasFrame id="state-advanced" title="Advanced" note="Opened: the chart and its controls under the current price">
