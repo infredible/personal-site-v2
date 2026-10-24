@@ -5,7 +5,7 @@ import { animate, useReducedMotion, type AnimationPlaybackControls } from 'frame
 import { cn } from '@/lib/utils'
 import { SegmentedControl } from '../SegmentedControl'
 import { Shimmer, TextSkeleton } from '../Skeleton'
-import { ArrowUpRight, Check, Heart, HeartOutline, LineChartDots, MoreHorizontal } from '../icons'
+import { ArrowUpRight, ArrowsLeftRight, Check, Heart, HeartOutline, LineChartDots, MoreHorizontal } from '../icons'
 import { Copy } from 'lucide-react'
 import { UniMenu, UniMenuContent, UniMenuItem, UniMenuSeparator, UniMenuTrigger } from '../UniMenu'
 import { TokenLogo } from '../swap/parts/TokenLogo'
@@ -150,6 +150,9 @@ export interface SparklineHeaderProps {
   loading?: boolean
   /** Rendered right of the price, top-aligned (the card puts the period selector here) */
   aside?: React.ReactNode
+  /** The pair's other token: shows a button in the token bar that switches the chart to it */
+  pairToken?: Token
+  onPairTokenSelect?: () => void
   className?: string
 }
 
@@ -201,7 +204,35 @@ function TokenMenu({ token }: { token: Token }) {
   )
 }
 
-export function SparklineHeader({ model, hoverIndex = null, loading = false, aside, className }: SparklineHeaderProps) {
+/** Switches the chart to the other token in the pair: its logo and symbol, with the swap-direction arrows */
+function PairTokenButton({ token, onClick }: { token: Token; onClick?: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Show ${token.symbol} chart`}
+      className={cn(
+        'flex h-uni-28 shrink-0 cursor-pointer items-center gap-uni-6 rounded-uni-full border border-surface3 pr-uni-8 pl-uni-4 text-body3 text-neutral1 outline-none',
+        'transition-[background-color,scale] duration-[80ms] ease-out hover:bg-surface2 active:scale-[0.97]',
+        'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
+      )}
+    >
+      <TokenLogo token={token} size={20} />
+      {token.symbol}
+      <ArrowsLeftRight className="size-uni-16 text-neutral2" />
+    </button>
+  )
+}
+
+export function SparklineHeader({
+  model,
+  hoverIndex = null,
+  loading = false,
+  aside,
+  pairToken,
+  onPairTokenSelect,
+  className,
+}: SparklineHeaderProps) {
   const { token, points, start, period } = model
   const hovered = hoverIndex !== null ? points[hoverIndex] : undefined
   const price = hovered?.value ?? model.end
@@ -221,7 +252,8 @@ export function SparklineHeader({ model, hoverIndex = null, loading = false, asi
             )}
           />
         </div>
-        <div className="-mr-uni-4 ml-auto flex shrink-0 items-center">
+        <div className="-mr-uni-4 ml-auto flex shrink-0 items-center gap-uni-4">
+          {pairToken && <PairTokenButton token={pairToken} onClick={onPairTokenSelect} />}
           <TokenMenu token={token} />
         </div>
       </div>
@@ -741,6 +773,9 @@ export interface TokenPriceSparklineProps {
   chartHeight?: number
   /** Mark header / chart / periods with data-explode for a showcase's exploded-view transition */
   explode?: boolean
+  /** The other token in the swap pair, offered as a switch in the header (see SparklineHeader) */
+  pairToken?: Token
+  onPairTokenSelect?: () => void
   className?: string
 }
 
@@ -757,6 +792,8 @@ function TokenPriceSparklineInner({
   height,
   chartHeight = 160,
   explode = false,
+  pairToken,
+  onPairTokenSelect,
   className,
 }: TokenPriceSparklineProps) {
   const [ownPeriod, setOwnPeriod] = React.useState(defaultPeriod)
@@ -783,6 +820,8 @@ function TokenPriceSparklineInner({
       <div data-explode={explode ? 'header' : undefined}>
         <SparklineHeader
           model={model}
+          pairToken={pairToken}
+          onPairTokenSelect={onPairTokenSelect}
           hoverIndex={shownIndex}
           loading={loading}
           aside={

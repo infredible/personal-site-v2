@@ -25,13 +25,15 @@ const presetState = (preset: string | undefined) => (preset && getPreset(preset)
 /* Price chart beside the swap -------------------------------------------- */
 
 interface ChartState {
-  token: Token
+  input?: Token
+  output?: Token
   loading: boolean
 }
 
-/** The chart follows the output token, else the input token, else ETH; it loads with the page */
+/** The swap's tokens; the chart loads with the page */
 const chartStateOf = (state: SwapFormState, loading = Boolean(state.wallet.balancesLoading)): ChartState => ({
-  token: state.output.token ?? state.input.token ?? TOKENS.ETH,
+  input: state.input.token ?? undefined,
+  output: state.output.token ?? undefined,
   loading,
 })
 
@@ -93,6 +95,12 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
   const [chart, setChart] = useState<ChartState>(() => chartStateOf(boxProps.initialState, boxProps.simulateLoading))
   const [panels, setPanels] = useState<{ top: number; height: number } | null>(null)
   const [chartVisible, setChartVisible] = useState(true)
+  // Which side of the pair the chart shows: the output token by default, else
+  // whichever is set, else ETH. With both set, the header offers the other one.
+  const [side, setSide] = useState<'input' | 'output'>('output')
+  const other = side === 'output' ? 'input' : 'output'
+  const chartToken = chart[side] ?? chart[other] ?? TOKENS.ETH
+  const pairToken = chart[side] && chart[other] ? chart[other] : undefined
   const reduceMotion = useReducedMotion()
   const boxRef = useRef<HTMLDivElement>(null)
 
@@ -102,7 +110,7 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
     onStateChangeRef.current?.(state)
     // Only a new token or the end of loading re-renders the card; typing doesn't
     const next = chartStateOf(state)
-    setChart((prev) => (prev.token === next.token && prev.loading === next.loading ? prev : next))
+    setChart((prev) => (prev.input === next.input && prev.output === next.output && prev.loading === next.loading ? prev : next))
   }, [])
 
   useLayoutEffect(() => {
@@ -156,7 +164,13 @@ function SwapWithChart({ onStateChange, ...boxProps }: SwapBoxProps) {
             // the end values, flashing the card back to opacity 0 as it lands.
             onUpdate={() => {}}
           >
-            <TokenPriceSparkline token={chart.token} loading={chart.loading} height={panels?.height ?? 288} />
+            <TokenPriceSparkline
+              token={chartToken}
+              loading={chart.loading}
+              height={panels?.height ?? 288}
+              pairToken={pairToken}
+              onPairTokenSelect={() => setSide(other)}
+            />
           </motion.div>
         )}
       </AnimatePresence>
