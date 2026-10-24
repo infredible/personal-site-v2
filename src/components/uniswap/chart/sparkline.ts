@@ -144,6 +144,161 @@ export function areaPath(ys: number[], xs?: number[]): string {
   return `${linePath(ys, xs)}L${r(last)},${VIEW_H}L${r(first)},${VIEW_H}Z`
 }
 
+/* Candles ----------------------------------------------------------------- */
+
+export type ChartType = 'line' | 'candles'
+
+/** OHLC over a run of points; `first` / `last` are the point indices of its open and close */
+export interface Candle {
+  first: number
+  last: number
+  /** Unix ms span the candle covers */
+  start: number
+  end: number
+  open: number
+  high: number
+  low: number
+  close: number
+}
+
+/** Fixed periods: each candle spans this many point intervals (97 points: 24 candles, hourly on 1D) */
+export const CANDLE_SPAN = 4
+/** Live: a candle per 5 seconds (10 ticks), 24 across the window */
+export const LIVE_CANDLE_MS = 5_000
+/** Body width as a share of the candle's slot */
+export const CANDLE_BODY = 0.6
+/** Minimum body height (viewBox units), so a doji still shows a tick */
+const MIN_BODY = 0.8
+
+/** Deterministic noise in [0, 1) from a number (a fixed candle's extra wick) */
+const noise = (seed: number) => {
+  const x = Math.sin(seed * 12.9898) * 43758.5453
+  return x - Math.floor(x)
+}
+
+function candleOver(points: PricePoint[], first: number, last: number, start: number, end: number): Candle {
+  let high = -Infinity
+  let low = Infinity
+  for (let i = first; i <= last; i++) {
+    if (points[i].value > high) high = points[i].value
+    if (points[i].value < low) low = points[i].value
+  }
+  return { first, last, start, end, open: points[first].value, high, low, close: points[last].value }
+}
+
+/**
+ * Candles from a price series. Fixed periods group every CANDLE_SPAN
+ * intervals, sharing boundary points so each opens at the last one's close;
+ * with only five points a candle would rarely show a wick, so each gets a
+ * seeded one, kept inside the series' range so the y scale still fits. Live
+ * groups ticks into LIVE_CANDLE_MS buckets of feed time (the newest is still
+ * forming), each opening at the previous close.
+ */
+export function toCandles(points: PricePoint[], { live = false }: { live?: boolean } = {}): Candle[] {
+  const n = points.length
+  const candles: Candle[] = []
+  if (n < 2) return n ? [candleOver(points, 0, 0, points[0].timestamp, points[0].timestamp)] : []
+  if (live) {
+    const bucket = (i: number) => Math.floor(points[i].timestamp / LIVE_CANDLE_MS)
+    let from = 0
+    for (let i = 1; i <= n; i++) {
+      if (i < n && bucket(i) === bucket(from)) continue
+      const start = bucket(from) * LIVE_CANDLE_MS
+      candles.push(candleOver(points, Math.max(from - 1, 0), i - 1, start, start + LIVE_CANDLE_MS))
+      from = i
+    }
+    return candles
+  }
+  let seriesHigh = -Infinity
+  let seriesLow = Infinity
+  for (const p of points) {
+    if (p.value > seriesHigh) seriesHigh = p.value
+    if (p.value < seriesLow) seriesLow = p.value
+  }
+  for (let first = 0; first < n - 1; first += CANDLE_SPAN) {
+    const last = Math.min(first + CANDLE_SPAN, n - 1)
+    const c = candleOver(points, first, last, points[first].timestamp, points[last].timestamp)
+    let step = 0
+    for (let i = first + 1; i <= last; i++) step += Math.abs(points[i].value - points[i - 1].value)
+    step /= last - first
+    const seed = points[last].timestamp / 3_600_000 + points[last].value
+    c.high = Math.min(c.high + step * noise(seed) * 0.8, seriesHigh)
+    c.low = Math.max(c.low - step * noise(seed + 1) * 0.8, seriesLow)
+    candles.push(c)
+  }
+  return candles
+}
+
+/** The candle holding point `index` (its open is the previous candle's close) */
+export function candleIndexAt(candles: Candle[], index: number): number {
+  let lo = 0
+  let hi = candles.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (candles[mid].last < index) lo = mid + 1
+    else hi = mid
+  }
+  return lo
+}
+
+/** A candle in viewBox units: center x, body width, and the y of each value */
+export interface CandleGlyph {
+  x: number
+  w: number
+  open: number
+  high: number
+  low: number
+  close: number
+}
+
+/** Fixed periods: candles spaced like the line's points */
+export function candleGlyphs(candles: Candle[], count: number, scale: { lo: number; range: number }): CandleGlyph[] {
+  return candles.map((c) => {
+    const x0 = xAt(c.first, count)
+    const x1 = xAt(c.last, count)
+    return glyph(c, (x0 + x1) / 2, (x1 - x0) * CANDLE_BODY, scale)
+  })
+}
+
+export function glyph(c: Pick<Candle, 'open' | 'high' | 'low' | 'close'>, x: number, w: number, scale: { lo: number; range: number }): CandleGlyph {
+  return {
+    x,
+    w,
+    open: valueToViewY(c.open, scale),
+    high: valueToViewY(c.high, scale),
+    low: valueToViewY(c.low, scale),
+    close: valueToViewY(c.close, scale),
+  }
+}
+
+/** Bodies (filled) and wicks (stroked), split by direction so each takes its color */
+export function candlePaths(glyphs: CandleGlyph[]) {
+  const out = { upBody: '', upWick: '', downBody: '', downWick: '' }
+  for (const g of glyphs) {
+    // Up when it closes at or above its open (y grows downward)
+    const up = g.close <= g.open
+    let top = Math.min(g.open, g.close)
+    let bottom = Math.max(g.open, g.close)
+    if (bottom - top < MIN_BODY) {
+      const mid = (top + bottom) / 2
+      top = mid - MIN_BODY / 2
+      bottom = mid + MIN_BODY / 2
+    }
+    const left = r(g.x - g.w / 2)
+    const right = r(g.x + g.w / 2)
+    const body = `M${left},${r(top)}H${right}V${r(bottom)}H${left}Z`
+    const wick = `M${r(g.x)},${r(g.high)}V${r(g.low)}`
+    if (up) {
+      out.upBody += body
+      out.upWick += wick
+    } else {
+      out.downBody += body
+      out.downWick += wick
+    }
+  }
+  return out
+}
+
 /* Values ------------------------------------------------------------------ */
 
 export type PriceDirection = 'up' | 'down' | 'flat'

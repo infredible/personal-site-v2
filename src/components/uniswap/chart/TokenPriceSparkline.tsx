@@ -19,10 +19,17 @@ import {
   type PricePoint,
 } from './mockPriceHistory'
 import {
+  CANDLE_BODY,
+  LIVE_CANDLE_MS,
   VIEW_H,
   VIEW_W,
   areaPath,
   axisTicks,
+  candleGlyphs,
+  candleIndexAt,
+  candlePaths,
+  glyph,
+  toCandles,
   directionOf,
   formatAxisTime,
   formatChartTime,
@@ -37,6 +44,9 @@ import {
   sampleY,
   waveY,
   xAt,
+  type Candle,
+  type CandleGlyph,
+  type ChartType,
   type PriceDirection,
 } from './sparkline'
 import { useLivePriceHistory, type LiveClock } from './useLivePriceHistory'
@@ -56,6 +66,11 @@ import { useLivePriceHistory, type LiveClock } from './useLivePriceHistory'
  * but holds still mid-drag so the line stays under the pointer, and eases to
  * fit once it's let go.
  *
+ * The token bar switches between the line and candlesticks (OHLC per hour on
+ * 1D, per 5 seconds on Live): scrubbing then steps candle by candle, the
+ * header shows each one's close, and an O/H/L/C readout sits over the chart.
+ * Switching morphs the line into candles and back.
+ *
  * Exported in parts (header, chart, period selector) so the showcase canvas can
  * lay out the same components one by one.
  */
@@ -74,6 +89,8 @@ export interface SparklineModel {
   include?: number
   start: number
   end: number
+  /** OHLC over the points (see toCandles); the candlestick view draws these */
+  candles: Candle[]
   /** Change over the period, as a fraction */
   change: number
   direction: PriceDirection
@@ -105,6 +122,7 @@ export function useSparklineModel(
       points,
       ys: points.map((p) => valueToViewY(p.value, scale)),
       scale,
+      candles: toCandles(points, { live: !!livePoints }),
       include,
       start,
       end,
@@ -170,7 +188,56 @@ export interface SparklineHeaderProps {
   /** The pair's other token: shows a button in the token bar that switches the chart to it */
   pairToken?: Token
   onPairTokenSelect?: () => void
+  /** Line or candlesticks: shows a switch in the token bar when `onChartTypeChange` is set */
+  chartType?: ChartType
+  onChartTypeChange?: (type: ChartType) => void
   className?: string
+}
+
+function LineIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden {...props}>
+      <path d="M1.75 11.5 5.5 7.25l3 2.5 5.75-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function CandlesIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden {...props}>
+      <path d="M4.5 2v12M11.5 1.5v10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      <rect x="2.75" y="4.5" width="3.5" height="6.5" rx="1" fill="currentColor" />
+      <rect x="9.75" y="3.5" width="3.5" height="5" rx="1" fill="currentColor" />
+    </svg>
+  )
+}
+
+const CHART_TYPE_OPTIONS = [
+  { value: 'line' as const, label: 'Line', Icon: LineIcon },
+  { value: 'candles' as const, label: 'Candles', Icon: CandlesIcon },
+].map(({ value, label, Icon }) => ({
+  value,
+  label: (
+    <span className="flex h-uni-16 items-center">
+      <Icon className="size-uni-16" />
+      <span className="sr-only">{label}</span>
+    </span>
+  ),
+}))
+
+/** Line or candlesticks: icon-only, borderless like the period selector */
+export function SparklineChartTypeToggle({ value, onValueChange }: { value: ChartType; onValueChange: (type: ChartType) => void }) {
+  return (
+    <SegmentedControl
+      aria-label="Chart type"
+      size="small"
+      outlined={false}
+      options={CHART_TYPE_OPTIONS}
+      value={value}
+      onValueChange={onValueChange}
+      className="min-h-0 gap-uni-2 border-0 p-0"
+    />
+  )
 }
 
 /** The token bar's "…" menu: a 32px round button with a 20px icon, like the swap header's gear. Items are mock (nothing navigates). */
@@ -248,6 +315,8 @@ export function SparklineHeader({
   aside,
   pairToken,
   onPairTokenSelect,
+  chartType = 'line',
+  onChartTypeChange,
   className,
 }: SparklineHeaderProps) {
   const { token, points, start, period } = model
@@ -270,6 +339,7 @@ export function SparklineHeader({
           />
         </div>
         <div className="-mr-uni-4 ml-auto flex shrink-0 items-center gap-uni-4">
+          {onChartTypeChange && <SparklineChartTypeToggle value={chartType} onValueChange={onChartTypeChange} />}
           {pairToken && <PairTokenButton token={pairToken} onClick={onPairTokenSelect} />}
           <TokenMenu token={token} />
         </div>
@@ -313,6 +383,22 @@ const SCRUB_DIM = 0.6
 
 const lerp = (from: number[], to: number[], t: number) => from.map((v, i) => v + (to[i] - v) * t)
 const evenXs = (n: number) => Array.from({ length: n }, (_, i) => xAt(i, n))
+
+const GLYPH_KEYS = ['x', 'w', 'open', 'high', 'low', 'close'] as const
+const lerpGlyphs = (from: CandleGlyph[], to: CandleGlyph[], t: number) =>
+  to.map((g, i) => {
+    const out = { ...g }
+    for (const k of GLYPH_KEYS) out[k] = from[i][k] + (g[k] - from[i][k]) * t
+    return out
+  })
+/** Candles flattened onto a drawn line: where a line → candles morph starts */
+const collapse = (glyphs: CandleGlyph[], xs: number[], ys: number[]) =>
+  glyphs.map((g) => {
+    const y = sampleY(xs, ys, g.x)
+    return { ...g, open: y, high: y, low: y, close: y }
+  })
+type CandlePathKey = keyof ReturnType<typeof candlePaths>
+const NO_CANDLES: Record<CandlePathKey, string> = { upBody: '', upWick: '', downBody: '', downWick: '' }
 
 const subscribeNoop = () => () => {}
 /** Axis labels are local times: rendered after hydration so server and browser agree */
@@ -397,6 +483,8 @@ export interface SparklineChartProps {
   onHoverIndexChange?: (index: number | null) => void
   /** Draws a placeholder wave under a shimmer; when data arrives the wave morphs into the line */
   loading?: boolean
+  /** Line (default) or candlesticks from `model.candles`; switching morphs between them */
+  type?: ChartType
   className?: string
   style?: React.CSSProperties
 }
@@ -418,6 +506,7 @@ export function SparklineChart({
   hoverIndex = null,
   onHoverIndexChange,
   loading = false,
+  type = 'line',
   className,
   style,
 }: SparklineChartProps) {
@@ -442,26 +531,67 @@ export function SparklineChart({
   /** The scale on screen: the model's, or live's eased one */
   const scaleRef = React.useRef(model.scale)
   const [draggingLine, setDraggingLine] = React.useState(false)
+  const candleRefs = React.useRef<Record<CandlePathKey, SVGPathElement | null>>({ upBody: null, upWick: null, downBody: null, downWick: null })
+  /** The candles on screen, when it's showing candles */
+  const drawnGlyphs = React.useRef<CandleGlyph[] | null>(null)
 
   const n = model.points.length
   const target = React.useMemo(() => (loading ? waveY(n) : model.ys), [loading, n, model.ys])
   const clock = loading ? undefined : model.clock
   const stablecoin = isStablecoin(model.token)
   const hovered = !loading && hoverIndex !== null ? hoverIndex : null
+  // Loading always draws the wave; the candles morph out of it
+  const candleMode = type === 'candles' && !loading
+  const glyphs = React.useMemo(
+    () => (candleMode ? candleGlyphs(model.candles, n, model.scale) : null),
+    [candleMode, model.candles, n, model.scale],
+  )
+  const candles = model.candles
+  const hoveredCandle = candleMode && hovered !== null ? candleIndexAt(candles, hovered) : null
 
+  const setCandlePaths = (paths: Record<CandlePathKey, string>) => {
+    for (const key of Object.keys(paths) as CandlePathKey[]) candleRefs.current[key]?.setAttribute('d', paths[key])
+  }
   const draw = React.useCallback((ys: number[], xs: number[] | null = null) => {
     drawn.current = ys
     drawnXs.current = xs
+    drawnGlyphs.current = null
     lineRef.current?.setAttribute('d', linePath(ys, xs ?? undefined))
     areaRef.current?.setAttribute('d', areaPath(ys, xs ?? undefined))
+    setCandlePaths(NO_CANDLES)
+  }, [])
+  // Leaves the closes as the drawn line, so switching back morphs from them
+  const drawCandles = React.useCallback((next: CandleGlyph[]) => {
+    drawn.current = next.map((g) => g.close)
+    drawnXs.current = next.map((g) => g.x)
+    drawnGlyphs.current = next
+    lineRef.current?.setAttribute('d', '')
+    areaRef.current?.setAttribute('d', '')
+    setCandlePaths(candlePaths(next))
   }, [])
 
   // React renders `d` at the target; on a change, this rewinds it to what was on
   // screen before paint and morphs to the new series (resampled, so a series of
-  // a different length, like Live's, morphs too).
+  // a different length, like Live's, morphs too). Candles morph candle by candle
+  // from the last candles, or grow out of the line that was there.
   React.useLayoutEffect(() => {
     if (clock) return
     const from = drawn.current
+    if (glyphs) {
+      if (!from || reduceMotion) return void drawCandles(glyphs)
+      const prev = drawnGlyphs.current
+      const start = prev && prev.length === glyphs.length ? prev : collapse(glyphs, drawnXs.current ?? evenXs(from.length), from)
+      const controls = animate(0, 1, {
+        ...MORPH,
+        onUpdate: (t) => drawCandles(lerpGlyphs(start, glyphs, t)),
+        onComplete: () => {
+          morph.current = null
+          drawCandles(glyphs)
+        },
+      })
+      morph.current = controls
+      return () => controls.stop()
+    }
     if (!from || reduceMotion) return void draw(target)
     const fromXs = drawnXs.current ?? evenXs(from.length)
     const start = evenXs(target.length).map((x) => sampleY(fromXs, from, x))
@@ -475,7 +605,7 @@ export function SparklineChart({
     })
     morph.current = controls
     return () => controls.stop()
-  }, [target, clock, reduceMotion, draw])
+  }, [target, glyphs, clock, reduceMotion, draw, drawCandles])
 
   /*
    * Live, after Liveline (benjitaylor/liveline): drawn every frame from the
@@ -484,11 +614,14 @@ export function SparklineChart({
    * the right edge. The tip's value isn't the latest point's: it eases toward
    * it (closing small gaps faster than big ones), so each new price glides in
    * instead of the line stepping to it. The y range eases the same way, and
-   * scrubbing dims the line ahead of the crosshair. Reduced motion draws each
-   * tick as it lands.
+   * scrubbing dims the line ahead of the crosshair. Candles scroll the same
+   * way, each at its slot's time, and the forming one closes at the eased tip.
+   * Reduced motion draws each tick as it lands.
    */
   const live = React.useRef({ model, hovered, priceLine })
   const liveFrame = React.useRef<(() => void) | null>(null)
+  /** The eased tip and y range, kept when switching line ↔ candles so neither jumps */
+  const liveEase = React.useRef<{ clock: LiveClock; tip: number | null; scale: { lo: number; range: number } | null } | null>(null)
   React.useLayoutEffect(() => {
     if (!clock) scaleRef.current = model.scale
     live.current = { model, hovered, priceLine }
@@ -498,13 +631,14 @@ export function SparklineChart({
 
   React.useLayoutEffect(() => {
     if (!clock) return
-    // Entering live (a period switch or the end of loading) morphs in from what was on screen
+    // Entering live, or switching line ↔ candles, morphs in from what was on screen
     let blend =
       drawn.current && !reduceMotion
         ? { ys: drawn.current, xs: drawnXs.current ?? evenXs(drawn.current.length), start: performance.now() }
         : null
-    let tip: number | null = null
-    let scale: { lo: number; range: number } | null = null
+    if (liveEase.current?.clock !== clock) liveEase.current = { clock, tip: null, scale: null }
+    const eased = liveEase.current
+    let { tip, scale } = eased
     let scrub = 0
     let scrubX = VIEW_W
     let prev = performance.now()
@@ -533,30 +667,59 @@ export function SparklineChart({
         scale = { lo: approach(scale.lo, goal.lo, speed, dt), range: approach(scale.range, goal.range, speed, dt) }
       }
 
-      // Every point at its time, the newest at the eased value, plus the tip at now
-      const xs = points.map((p) => (1 - (now - p.timestamp) / LIVE_WINDOW_MS) * VIEW_W)
-      xs.push(VIEW_W)
+      eased.tip = tip
+      eased.scale = scale
+
+      const xOf = (time: number) => (1 - (now - time) / LIVE_WINDOW_MS) * VIEW_W
+      const b = blend ? Math.min((t - blend.start) / (MORPH.duration * 1000), 1) : 1
+      if (b >= 1) blend = null
       const tipY = valueToViewY(tip, scale)
-      let ys = points.map((p, i) => (i === count - 1 ? tipY : valueToViewY(p.value, scale!)))
-      ys.push(tipY)
-      if (blend) {
-        const b = Math.min((t - blend.start) / (MORPH.duration * 1000), 1)
-        if (b < 1) {
+      // Where the crosshair and dot go
+      let mark: (index: number) => { x: number; y: number }
+      if (candleMode) {
+        const slot = (LIVE_CANDLE_MS / LIVE_WINDOW_MS) * VIEW_W
+        const candles = model.candles
+        let gs = candles.map((c, i) => {
+          if (i < candles.length - 1) return glyph(c, xOf((c.start + c.end) / 2), slot * CANDLE_BODY, scale!)
+          // The forming candle: its ticks so far, closing at the eased tip
+          let high = Math.max(c.open, tip!)
+          let low = Math.min(c.open, tip!)
+          for (let j = c.first; j < c.last; j++) {
+            high = Math.max(high, points[j].value)
+            low = Math.min(low, points[j].value)
+          }
+          return glyph({ open: c.open, high, low, close: tip! }, xOf((c.start + c.end) / 2), slot * CANDLE_BODY, scale!)
+        })
+        if (blend) gs = lerpGlyphs(collapse(gs, blend.xs, blend.ys), gs, easeOut(b))
+        drawCandles(gs)
+        mark = (index) => {
+          const g = gs[candleIndexAt(candles, index)]
+          return { x: g.x, y: g.close }
+        }
+      } else {
+        // Every point at its time, the newest at the eased value, plus the tip at now
+        const xs = points.map((p) => xOf(p.timestamp))
+        xs.push(VIEW_W)
+        let ys = points.map((p, i) => (i === count - 1 ? tipY : valueToViewY(p.value, scale!)))
+        ys.push(tipY)
+        if (blend) {
           const { ys: fromYs, xs: fromXs } = blend
           ys = ys.map((y, i) => {
             const from = sampleY(fromXs, fromYs, xs[i])
             return from + (y - from) * easeOut(b)
           })
-        } else blend = null
+        }
+        draw(ys, xs)
+        mark = (index) => ({ x: xs[index], y: ys[index] })
       }
-      draw(ys, xs)
       scaleRef.current = scale
       if (priceLineRef.current && priceLine) {
         priceLineRef.current.style.top = `${(valueToViewY(priceLine.value, scale) / VIEW_H) * 100}%`
       }
 
       const active = hovered !== null && hovered < count
-      if (active) scrubX = xs[hovered]
+      const marked = active ? mark(hovered) : { x: VIEW_W, y: tipY }
+      if (active) scrubX = marked.x
       scrub = reduceMotion ? Number(active) : approach(scrub, Number(active), SCRUB_SPEED, dt)
       if (Math.abs(scrub - Number(active)) < 0.01) scrub = Number(active)
       if (scrubDimRef.current) {
@@ -564,12 +727,10 @@ export function SparklineChart({
         scrubDimRef.current.setAttribute('fill-opacity', String(SCRUB_DIM * scrub))
       }
 
-      const mx = active ? xs[hovered] : VIEW_W
-      const my = active ? ys[hovered] : tipY
-      const left = `${(mx / VIEW_W) * 100}%`
+      const left = `${(marked.x / VIEW_W) * 100}%`
       if (markerRef.current) {
         markerRef.current.style.left = left
-        markerRef.current.style.top = `${(my / VIEW_H) * 100}%`
+        markerRef.current.style.top = `${(marked.y / VIEW_H) * 100}%`
       }
       if (crosshairRef.current) crosshairRef.current.style.left = left
       if (axisTrackRef.current) {
@@ -588,7 +749,7 @@ export function SparklineChart({
       cancelAnimationFrame(raf)
       liveFrame.current = null
     }
-  }, [clock, reduceMotion, stablecoin, draw])
+  }, [clock, candleMode, reduceMotion, stablecoin, draw, drawCandles])
 
   const interactive = !!onHoverIndexChange && !loading
   const scrubTo = (index: number | null) => {
@@ -603,6 +764,15 @@ export function SparklineChart({
   const indexAt = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const f = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1)
+    // Candles: the nearest one on screen, as its close
+    const centers = candleMode ? drawnXs.current : null
+    if (centers && centers.length === candles.length) {
+      let best = candles.length - 1
+      for (let i = 0; i < centers.length; i++) {
+        if (Math.abs(centers[i] - f * VIEW_W) < Math.abs(centers[best] - f * VIEW_W)) best = i
+      }
+      return candles[best].last
+    }
     const xs = clock ? drawnXs.current : null
     if (!xs) return Math.round(f * (n - 1))
     // Live points sit wherever the scroll left them: take the nearest one on screen
@@ -676,10 +846,17 @@ export function SparklineChart({
       : undefined
   const lineY = priceLine ? (valueToViewY(priceLine.value, model.scale) / VIEW_H) * 100 : 0
 
-  // The dot sits on the scrubbed point, else blips on the latest one
-  const marked = loading ? null : (hovered ?? n - 1)
-  const x = marked !== null ? (xAt(marked, n) / VIEW_W) * 100 : 0
+  // The dot sits on the scrubbed point, else blips on the latest one; candles show no dot, only the crosshair
+  const marked = loading || candleMode ? null : (hovered ?? n - 1)
+  const x =
+    hoveredCandle !== null && glyphs
+      ? (glyphs[hoveredCandle].x / VIEW_W) * 100
+      : marked !== null
+        ? (xAt(marked, n) / VIEW_W) * 100
+        : 0
   const y = marked !== null ? (model.ys[marked] / VIEW_H) * 100 : 0
+  const staticCandlePaths = React.useMemo(() => (glyphs ? candlePaths(glyphs) : NO_CANDLES), [glyphs])
+  const ohlc = hoveredCandle !== null ? candles[hoveredCandle] : null
   // Remounted when live starts or stops, so styles the live frame set don't outlive it
   const mode = clock ? 'live' : 'static'
 
@@ -726,8 +903,21 @@ export function SparklineChart({
       onKeyDown={
         interactive
           ? (e) => {
-              const step = e.shiftKey ? 8 : 1
               const current = hoverIndex ?? n - 1
+              if (candleMode) {
+                // A candle at a time (Shift: 4)
+                const step = e.shiftKey ? 4 : 1
+                const k = candleIndexAt(candles, current)
+                if (e.key === 'ArrowLeft') scrubTo(candles[Math.max(0, k - step)].last)
+                else if (e.key === 'ArrowRight') scrubTo(candles[Math.min(candles.length - 1, k + step)].last)
+                else if (e.key === 'Home') scrubTo(candles[0].last)
+                else if (e.key === 'End') scrubTo(n - 1)
+                else if (e.key === 'Escape') scrubTo(null)
+                else return
+                e.preventDefault()
+                return
+              }
+              const step = e.shiftKey ? 8 : 1
               if (e.key === 'ArrowLeft') scrubTo(Math.max(0, current - step))
               else if (e.key === 'ArrowRight') scrubTo(Math.min(n - 1, current + step))
               else if (e.key === 'Home') scrubTo(0)
@@ -771,8 +961,9 @@ export function SparklineChart({
                 <rect x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3} fill={`url(#${fadeId}-ramp)`} />
               </mask>
               {/* Live: the oldest points scroll off the left edge */}
+              {/* (Candles get a slot's room on the right: the forming one's slot runs past now) */}
               <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-                <rect x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3} />
+                <rect x={0} y={-VIEW_H} width={VIEW_W * (candleMode ? 1 + LIVE_CANDLE_MS / LIVE_WINDOW_MS : 1)} height={VIEW_H * 3} />
               </clipPath>
               {/* Live scrubbing: the black rect, moved to the crosshair and faded in, dims what's ahead of it */}
               <mask id={scrubId} maskUnits="userSpaceOnUse" x={0} y={-VIEW_H} width={VIEW_W} height={VIEW_H * 3}>
@@ -783,14 +974,14 @@ export function SparklineChart({
             <g clipPath={clock ? `url(#${clipId})` : undefined} mask={clock ? `url(#${scrubId})` : undefined}>
               <path
                 ref={areaRef}
-                d={areaPath(target)}
+                d={glyphs ? '' : areaPath(target)}
                 fill={`url(#${gradientId})`}
                 mask={`url(#${fadeId})`}
                 className={cn('transition-opacity duration-200 ease-out', loading && 'opacity-0')}
               />
               <path
                 ref={lineRef}
-                d={linePath(target)}
+                d={glyphs ? '' : linePath(target)}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -798,10 +989,40 @@ export function SparklineChart({
                 strokeLinejoin="round"
                 vectorEffect="non-scaling-stroke"
               />
+              {/* Candles: green up, red down, whatever the period's direction */}
+              {(['up', 'down'] as const).map((dir) => (
+                <g key={dir} className={dir === 'up' ? 'text-statusSuccess' : 'text-statusCritical'}>
+                  <path
+                    ref={(el) => void (candleRefs.current[`${dir}Wick`] = el)}
+                    d={staticCandlePaths[`${dir}Wick`]}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <path ref={(el) => void (candleRefs.current[`${dir}Body`] = el)} d={staticCandlePaths[`${dir}Body`]} fill="currentColor" />
+                </g>
+              ))}
             </g>
           </svg>
         </Shimmer>
 
+        {ohlc && (
+          // The scrubbed candle's values, top left (the header shows its close)
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-0 left-uni-16 z-10 flex flex-wrap gap-x-uni-8 rounded-uni-8 bg-surface1/90 px-uni-6 py-uni-2 text-body4 text-neutral2 tabular-nums"
+          >
+            {(['open', 'high', 'low', 'close'] as const).map((k) => (
+              <span key={k}>
+                {k[0].toUpperCase()}{' '}
+                <span className={k === 'close' ? (ohlc.close >= ohlc.open ? 'text-statusSuccess' : 'text-statusCritical') : 'text-neutral1'}>
+                  {formatTokenPrice(ohlc[k])}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
         {hovered !== null && (
           // Crosshair: a dotted vertical line, no horizontal
           <span
@@ -944,6 +1165,11 @@ export interface TokenPriceSparklineProps {
   /** Controlled period */
   period?: ChartPeriod
   onPeriodChange?: (period: ChartPeriod) => void
+  /** Uncontrolled starting chart type. Default line. */
+  defaultChartType?: ChartType
+  /** Controlled chart type */
+  chartType?: ChartType
+  onChartTypeChange?: (type: ChartType) => void
   /** First load: price and chart are skeletons; when it turns false the line morphs in */
   loading?: boolean
   /** Show this point as scrubbed while the pointer isn't on the chart (static demos) */
@@ -973,6 +1199,9 @@ function TokenPriceSparklineInner({
   defaultPeriod = '1D',
   period: periodProp,
   onPeriodChange,
+  defaultChartType = 'line',
+  chartType: chartTypeProp,
+  onChartTypeChange,
   loading = false,
   scrubIndex,
   height,
@@ -985,17 +1214,27 @@ function TokenPriceSparklineInner({
 }: TokenPriceSparklineProps) {
   const [ownPeriod, setOwnPeriod] = React.useState(defaultPeriod)
   const period = periodProp ?? ownPeriod
+  const [ownChartType, setOwnChartType] = React.useState(defaultChartType)
+  const chartType = chartTypeProp ?? ownChartType
   const [hoverIndex, setHoverIndex] = React.useState<number | null>(null)
-  const shownIndex = hoverIndex ?? scrubIndex ?? null
+  const pinnedIndex = hoverIndex ?? scrubIndex ?? null
   // The y range takes the price line in, from where it was when a drag began until it ends
   const [heldInclude, setHeldInclude] = React.useState<number | null>(null)
   const include = priceLine ? (heldInclude ?? priceLine.value) : undefined
-  const model = useSparklineModel(token, period, { paused: shownIndex !== null, include })
+  const model = useSparklineModel(token, period, { paused: pinnedIndex !== null, include })
+  // Candles scrub by candle: a pinned point shows as its candle's close
+  const shownIndex =
+    pinnedIndex !== null && chartType === 'candles' && !loading ? model.candles[candleIndexAt(model.candles, pinnedIndex)].last : pinnedIndex
 
   const setPeriod = (next: ChartPeriod) => {
     setHoverIndex(null)
     setOwnPeriod(next)
     onPeriodChange?.(next)
+  }
+  const setChartType = (next: ChartType) => {
+    setHoverIndex(null)
+    setOwnChartType(next)
+    onChartTypeChange?.(next)
   }
 
   return (
@@ -1012,6 +1251,8 @@ function TokenPriceSparklineInner({
           model={model}
           pairToken={pairToken}
           onPairTokenSelect={onPairTokenSelect}
+          chartType={chartType}
+          onChartTypeChange={setChartType}
           hoverIndex={shownIndex}
           loading={loading}
           aside={
@@ -1035,6 +1276,7 @@ function TokenPriceSparklineInner({
           hoverIndex={shownIndex}
           onHoverIndexChange={setHoverIndex}
           loading={loading}
+          type={chartType}
           className={height ? 'flex-1' : undefined}
           style={height ? undefined : { height: chartHeight }}
         />
