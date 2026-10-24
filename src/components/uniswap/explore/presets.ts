@@ -25,6 +25,12 @@ export const EXPLORE_PRESETS = [
   { id: 'sorted-1h', label: 'Sorted by 1H', state: preset({ tokenSort: { field: 'change1h', direction: 'desc' } }) },
   { id: 'base', label: 'On Base', state: preset({ chain: 'base' }) },
   { id: 'search-eth', label: 'Search "eth"', state: preset({ query: 'eth' }) },
+  // Network + search + a non-default sort: the active-filters row with every chip
+  {
+    id: 'filtered',
+    label: 'Filtered',
+    state: preset({ chain: 'base', query: 'usd', tokenSort: { field: 'fdv', direction: 'asc' } }),
+  },
   // PEPE isn't on Base: the empty state offers "Search all networks", which finds it
   { id: 'no-results', label: 'No results', state: preset({ chain: 'base', query: 'pepe' }) },
   { id: 'loading', label: 'Loading', state: preset({ status: 'loading' }) },

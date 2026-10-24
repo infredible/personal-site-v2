@@ -2,23 +2,18 @@
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { Check, ChevronDown, Search, X } from '../../icons'
-import { UniMenu, UniMenuContent, UniMenuItem, UniMenuTrigger } from '../../UniMenu'
+import { Search, X } from '../../icons'
 import { NetworkMenu } from '../../swap/overlays/NetworkMenu'
 import type { Chain } from '../../swap/types'
 import { EXPLORE_NETWORKS, exploreNetworkCounts } from '../filters'
-import type { ExploreChain, ExploreTab, ExploreTimePeriod } from '../types'
-import { useForcedTheme } from './useForcedTheme'
+import type { ExploreChain, ExploreTab } from '../types'
 
 /*
  * The Explore filter controls, right of the tabs (production:
- * VolumeTimeFrameSelector, TableNetworkFilter, SearchBar).
+ * TableNetworkFilter, SearchBar). The same two on both tabs, so nothing
+ * shifts between them; production's volume period dropdown moved into the
+ * Volume column header (VolumePeriodMenu).
  *
- * - Time period (Tokens only; it changes the Volume column alone): a 40px
- *   dropdown, options "1H volume" … with an accent1 check on the selected one.
- *   Production also offers "All time" (the mock data has no all-time volume)
- *   and shortens the trigger to "1D" under 1024px; here it keeps "volume", so
- *   it says what it changes.
  * - Network: the token selector's NetworkMenu (searchable list, inline so it
  *   follows forced themes), restyled to the 40px control. "All networks" by
  *   default; the label drops under 480px.
@@ -29,50 +24,6 @@ import { useForcedTheme } from './useForcedTheme'
  *   takes the remaining width instead. Filtering is instant (production
  *   debounces 300ms and refetches).
  */
-
-export const EXPLORE_TIME_PERIODS: ExploreTimePeriod[] = ['1H', '1D', '1W', '1M', '1Y']
-
-const control = cn(
-  'flex h-uni-40 shrink-0 cursor-pointer items-center gap-uni-6 rounded-uni-12 border border-surface3 bg-surface1 px-uni-12',
-  'text-buttonLabel3 text-neutral1 outline-none select-none hover:bg-surface2 data-[state=open]:bg-surface2',
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1',
-)
-
-export function TimePeriodMenu({
-  value,
-  onValueChange,
-  className,
-}: {
-  value: ExploreTimePeriod
-  onValueChange: (period: ExploreTimePeriod) => void
-  className?: string
-}) {
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
-  const [theme, readTheme] = useForcedTheme(triggerRef)
-  return (
-    <UniMenu modal={false} onOpenChange={(open) => open && readTheme()}>
-      <UniMenuTrigger asChild>
-        <button ref={triggerRef} type="button" className={cn(control, className)}>
-          {value} volume
-          <ChevronDown className="size-uni-16 text-neutral2" />
-        </button>
-      </UniMenuTrigger>
-      <UniMenuContent data-theme={theme} align="end" className="max-w-[min(320px,calc(100vw-32px))]">
-        {EXPLORE_TIME_PERIODS.map((period) => (
-          <UniMenuItem
-            key={period}
-            role="menuitemradio"
-            aria-checked={period === value}
-            onSelect={() => onValueChange(period)}
-          >
-            <span className="flex-1">{period} volume</span>
-            {period === value && <Check className="size-uni-16 text-accent1" />}
-          </UniMenuItem>
-        ))}
-      </UniMenuContent>
-    </UniMenu>
-  )
-}
 
 export interface ExploreSearchProps {
   value: string
@@ -154,8 +105,6 @@ export function ExploreSearch({ value, onValueChange, placeholder, inputRef, cla
 
 export interface ExploreFilterBarProps {
   tab: ExploreTab
-  period: ExploreTimePeriod
-  onPeriodChange: (period: ExploreTimePeriod) => void
   chain: ExploreChain
   onChainChange: (chain: ExploreChain) => void
   query: string
@@ -173,8 +122,6 @@ export interface ExploreFilterBarProps {
 
 export function ExploreFilterBar({
   tab,
-  period,
-  onPeriodChange,
   chain,
   onChainChange,
   query,
@@ -192,7 +139,6 @@ export function ExploreFilterBar({
 
   return (
     <div ref={rootRef} className={cn('flex min-w-0 items-center gap-uni-8 @max-[640px]:w-full', className)}>
-      {tab === 'tokens' && <TimePeriodMenu value={period} onValueChange={onPeriodChange} />}
       <NetworkMenu
         chains={chains}
         value={chain}

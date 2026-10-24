@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { getChain, nextSort } from './filters'
+import { getChain, nextSort, type ExploreRanks } from './filters'
 import { ExploreEmptyState, ExploreErrorState } from './parts/ExploreStates'
 import { PoolTableRow, PoolTableSkeletonRow } from './parts/PoolTableRow'
 import { ExploreTable, ExploreTableMessage } from './parts/Table'
@@ -27,9 +27,11 @@ export interface ExplorePoolTableProps {
   /** Empty state's "Search all networks" (shown when `chain` is one network) */
   onSearchAllNetworks?: () => void
   onRowSelect?: (row: ExplorePoolStats) => void
+  /** # per row id (1D volume rank); default: position in `rows` */
+  ranks?: ExploreRanks
   /** Skeleton rows on first load (default 10) */
   skeletonRows?: number
-  stickyTop?: number
+  stickyTop?: number | string
   explode?: boolean
   className?: string
 }
@@ -47,6 +49,7 @@ export function ExplorePoolTable({
   onClearSearch,
   onSearchAllNetworks,
   onRowSelect,
+  ranks,
   skeletonRows = 10,
   stickyTop,
   explode,
@@ -89,7 +92,7 @@ export function ExplorePoolTable({
       <PoolTableRow
         key={row.id}
         row={row}
-        rank={i + 1}
+        rank={ranks?.get(row.id) ?? i + 1}
         columns={POOL_COLUMNS}
         query={query}
         badge={getChain(row.chain)}

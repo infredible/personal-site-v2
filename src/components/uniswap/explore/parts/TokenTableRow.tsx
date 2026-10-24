@@ -37,7 +37,7 @@ import { TokenSparklineCell } from './TokenSparklineCell'
 
 export interface TokenTableRowProps {
   row: ExploreTokenStats
-  /** Position in the current order */
+  /** Volume rank (#) on the current network, whatever the sort */
   rank: number
   columns: ExploreColumn[]
   period: ExploreTimePeriod

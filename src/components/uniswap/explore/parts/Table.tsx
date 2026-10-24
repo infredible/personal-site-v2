@@ -6,8 +6,9 @@ import { cn } from '@/lib/utils'
 import { ArrowDown, Check, ChevronDown } from '../../icons'
 import { UniMenu, UniMenuContent, UniMenuItem, UniMenuTrigger } from '../../UniMenu'
 import { UniTooltip } from '../../UniTooltip'
-import type { SortState } from '../types'
+import type { ExploreTimePeriod, SortState } from '../types'
 import { useForcedTheme } from './useForcedTheme'
+import { EXPLORE_TIME_PERIODS, VolumePeriodMenu } from './VolumePeriodMenu'
 
 /*
  * Table primitives for the Explore tables, after Uniswap's shared Table
@@ -27,13 +28,17 @@ import { useForcedTheme } from './useForcedTheme'
  * Differences from production:
  * - Sort headers are buttons with aria-sort; header tooltips open on focus as
  *   well as hover, and clicking the label sorts (production's tooltip
- *   swallowed label clicks).
+ *   swallowed label clicks). A column with a period (Tokens' Volume) splits
+ *   its header: the sort label, then the period menu, two tab stops.
+ * - # is always the volume rank (the tables pass it in), whatever the sort;
+ *   its header says so in a tooltip.
  * - Rows are focusable with a roving tabindex: one tab stop for the body,
  *   ↑/↓ move, Home/End jump, ←/→ scroll sideways, Enter activates.
  * - Rows reorder with a FLIP layout animation (framer-motion `layout`) instead
  *   of a skeleton swap; reduced motion moves them instantly.
  * - The sticky header gains a hairline once it's stuck (production shows no
- *   change); pinned cells are opaque rather than 95%.
+ *   change); pinned cells are opaque rather than 95%. `stickyTop` takes a CSS
+ *   length, so ExploreTables can stack it under its sticky filters.
  * - Sizing follows the table's own container (@container/explore-table), so
  *   it reflows inside a 375px frame as on a phone.
  * - Narrow (table under 640px; production scrolls sideways at every width
@@ -41,7 +46,7 @@ import { useForcedTheme } from './useForcedTheme'
  *   cell pair (ExploreNarrowCell, data-narrow) that shows instead of the column
  *   cells, which go display:none, so only one set is ever focusable or read.
  *   The header becomes the name label plus a sort menu (ExploreSortMenu) over
- *   the sortable columns. Between 640px and the full layout the pinned
+ *   the sortable columns, with the period inline under its column. Between 640px and the full layout the pinned
  *   columns scroll as before.
  */
 
@@ -66,6 +71,13 @@ export interface ExploreColumn<F extends string = string> {
   pinned?: boolean
   /** The last pinned column draws the 1px divider while the table overflows */
   pinnedEdge?: boolean
+}
+
+/** A column whose values follow a time period (Tokens' Volume): the header and sort menu offer it. */
+export interface ExploreColumnPeriod {
+  columnId: string
+  value: ExploreTimePeriod
+  onValueChange: (period: ExploreTimePeriod) => void
 }
 
 /* Cells ------------------------------------------------------------------- */
@@ -139,6 +151,8 @@ export interface ExploreTableHeaderCellProps<F extends string> {
   column: ExploreColumn<F>
   sort?: SortState<F>
   onSort?: (field: F) => void
+  /** The column's period (renders the split label + period menu) */
+  period?: ExploreColumnPeriod
 }
 
 /**
@@ -146,7 +160,7 @@ export interface ExploreTableHeaderCellProps<F extends string> {
  * sits left of the label on the active column only, like production's
  * HeaderArrow + HeaderSortText; the label is neutral1 when active.
  */
-export function ExploreTableHeaderCell<F extends string>({ column, sort, onSort }: ExploreTableHeaderCellProps<F>) {
+export function ExploreTableHeaderCell<F extends string>({ column, sort, onSort, period }: ExploreTableHeaderCellProps<F>) {
   const field = column.sortField
   const active = !!field && sort?.field === field
   const direction = sort?.direction ?? 'desc'
@@ -157,6 +171,7 @@ export function ExploreTableHeaderCell<F extends string>({ column, sort, onSort 
       <button
         type="button"
         onClick={() => onSort?.(field)}
+        aria-label={period ? `Sort by ${column.label.toLowerCase()}` : undefined}
         className={cn(
           'inline-flex cursor-pointer items-center gap-uni-4 rounded-uni-4 text-body3 whitespace-nowrap outline-none select-none',
           'transition-opacity duration-[80ms] ease-in-out hover:opacity-60',
@@ -182,9 +197,32 @@ export function ExploreTableHeaderCell<F extends string>({ column, sort, onSort 
     )
   } else {
     // Non-sortable labels (Token, Pool, 1D chart) are weight 500 in production; # is plain
-    content = (
-      <span className={cn('text-body3 whitespace-nowrap text-neutral2', column.id !== 'index' && '[font-weight:500]')}>
+    const label = (
+      <span
+        tabIndex={column.tooltip ? 0 : undefined}
+        className={cn(
+          'rounded-uni-4 text-body3 whitespace-nowrap text-neutral2 outline-none',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1',
+          column.tooltip && 'cursor-default',
+          column.id !== 'index' && '[font-weight:500]',
+        )}
+      >
         {column.label}
+      </span>
+    )
+    content = column.tooltip ? (
+      <UniTooltip content={column.tooltip} className="max-w-[240px] text-body3">
+        {label}
+      </UniTooltip>
+    ) : (
+      label
+    )
+  }
+  if (period) {
+    content = (
+      <span className="inline-flex items-center gap-uni-4">
+        {content}
+        <VolumePeriodMenu value={period.value} onValueChange={period.onValueChange} />
       </span>
     )
   }
@@ -207,6 +245,8 @@ export interface ExploreSortMenuProps<F extends string> {
   columns: ExploreColumn<F>[]
   sort: SortState<F>
   onSort: (field: F) => void
+  /** A column's period, offered inline under it */
+  period?: ExploreColumnPeriod
   className?: string
 }
 
@@ -214,13 +254,19 @@ export interface ExploreSortMenuProps<F extends string> {
  * The narrow layout's sort control: "↓ Volume" opening a menu of the sortable
  * columns (menuitemradio, the current one checked with its direction).
  * Picking the current field toggles direction, like its header button.
+ *
+ * A column with a period gets a row of five period options under its item
+ * (menu order, so ↑/↓ walk through them; ←/→ move along the row). Picking one
+ * sets the period and sorts by that column (keeping the direction when it's
+ * already the sort); the trigger then reads "↓ 1W volume".
  */
-export function ExploreSortMenu<F extends string>({ columns, sort, onSort, className }: ExploreSortMenuProps<F>) {
+export function ExploreSortMenu<F extends string>({ columns, sort, onSort, period, className }: ExploreSortMenuProps<F>) {
   const triggerRef = React.useRef<HTMLButtonElement>(null)
   const [theme, readTheme] = useForcedTheme(triggerRef)
   const options = columns.filter((c): c is ExploreColumn<F> & { sortField: F } => !!c.sortField)
   const current = options.find((c) => c.sortField === sort.field)
-  const name = (c: ExploreColumn<F>) => c.sortLabel ?? c.label
+  const name = (c: ExploreColumn<F>) =>
+    period && c.id === period.columnId ? `${period.value} ${c.label.toLowerCase()}` : (c.sortLabel ?? c.label)
   const directionLabel = sort.direction === 'asc' ? 'ascending' : 'descending'
   const arrow = (className?: string) => (
     <ArrowDown aria-hidden className={cn('size-uni-16 shrink-0', sort.direction === 'asc' && 'rotate-180', className)} />
@@ -246,10 +292,10 @@ export function ExploreSortMenu<F extends string>({ columns, sort, onSort, class
           <ChevronDown aria-hidden className="size-uni-16 text-neutral2" />
         </button>
       </UniMenuTrigger>
-      <UniMenuContent data-theme={theme} align="end" aria-label="Sort by" className="min-w-[180px]">
+      <UniMenuContent data-theme={theme} align="end" aria-label="Sort by" className="min-w-[200px]">
         {options.map((option) => {
           const active = option.sortField === sort.field
-          return (
+          const item = (
             <UniMenuItem
               key={option.id}
               role="menuitemradio"
@@ -266,9 +312,64 @@ export function ExploreSortMenu<F extends string>({ columns, sort, onSort, class
               )}
             </UniMenuItem>
           )
+          if (!period || option.id !== period.columnId) return item
+          return (
+            <React.Fragment key={option.id}>
+              {item}
+              <PeriodOptions
+                period={period}
+                label={`${option.label} period`}
+                onSelect={(value) => {
+                  period.onValueChange(value)
+                  if (!active) onSort(option.sortField)
+                }}
+              />
+            </React.Fragment>
+          )
         })}
       </UniMenuContent>
     </UniMenu>
+  )
+}
+
+/** The sort menu's inline period row: five 32px options, the selected one filled. */
+function PeriodOptions({
+  period,
+  label,
+  onSelect,
+}: {
+  period: ExploreColumnPeriod
+  label: string
+  onSelect: (value: ExploreTimePeriod) => void
+}) {
+  // ←/→ along the row (the menu itself only moves vertically)
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role=menuitemradio]'))
+    const index = items.indexOf(e.target as HTMLElement)
+    if (index < 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    items[Math.max(0, Math.min(items.length - 1, index + (e.key === 'ArrowRight' ? 1 : -1)))]?.focus()
+  }
+  return (
+    <div role="group" aria-label={label} onKeyDown={onKeyDown} className="flex gap-uni-2 px-uni-4 pb-uni-4">
+      {EXPLORE_TIME_PERIODS.map((value) => (
+        <UniMenuItem
+          key={value}
+          role="menuitemradio"
+          aria-checked={value === period.value}
+          aria-label={`${value} volume`}
+          onSelect={() => onSelect(value)}
+          className={cn(
+            'h-uni-32 flex-1 justify-center rounded-uni-8 px-0 py-0 text-buttonLabel4 text-neutral2',
+            'focus:text-neutral1 aria-checked:bg-surface3 aria-checked:text-neutral1',
+          )}
+        >
+          {value}
+        </UniMenuItem>
+      ))}
+    </div>
   )
 }
 
@@ -310,8 +411,10 @@ export interface ExploreTableProps<F extends string> {
   label: string
   /** Narrow layout: screen-reader name of the right-hand column, e.g. "Price and 1D change" */
   narrowEndLabel?: string
-  /** Distance from the scroll container's top where the header sticks (e.g. under an app bar) */
-  stickyTop?: number
+  /** Distance from the scroll container's top where the header sticks (px, or a CSS length) */
+  stickyTop?: number | string
+  /** A column's time period, offered in its header and the narrow sort menu */
+  period?: ExploreColumnPeriod
   /** First load or refetch in progress (aria-busy) */
   busy?: boolean
   /** Header at 40% (production's error state) */
@@ -341,6 +444,7 @@ export function ExploreTable<F extends string>({
   label,
   narrowEndLabel,
   stickyTop = 0,
+  period,
   busy = false,
   dimHeader = false,
   shimmer = false,
@@ -381,21 +485,28 @@ export function ExploreTable<F extends string>({
     return () => observer.disconnect()
   }, [measure, rowIds.length, shimmer])
 
-  // Stuck once the sentinel above the table passes under the sticky line
+  // Stuck once the header has left its place under the sentinel (it sits flush in flow). Measured on
+  // scroll rather than with an observer, so a sticky offset that changes (a CSS length) needs no setup.
   React.useEffect(() => {
     const sentinel = sentinelRef.current
-    if (!sentinel) return
-    const root = scrollParent(sentinel)
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const rootTop = entry.rootBounds?.top ?? 0
-        setStuck(!entry.isIntersecting && entry.boundingClientRect.top < rootTop + stickyTop + 1)
-      },
-      { root, rootMargin: `-${stickyTop}px 0px 0px 0px`, threshold: 0 },
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [stickyTop])
+    const head = headRef.current
+    if (!sentinel || !head) return
+    const target: HTMLElement | Window = scrollParent(sentinel) ?? window
+    let frame = 0
+    const check = () => {
+      frame = 0
+      setStuck(head.getBoundingClientRect().top - sentinel.getBoundingClientRect().top > 1)
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(check)
+    }
+    check()
+    target.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      target.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
 
   const echoRef = React.useRef<HTMLElement | null>(null)
 
@@ -476,7 +587,7 @@ export function ExploreTable<F extends string>({
       data-slot="explore-table"
       data-overflowing={scroll.overflowing}
       className={cn('group/explore-table @container/explore-table relative w-full min-w-0', className)}
-      style={{ '--explore-sticky-top': `${stickyTop}px` } as React.CSSProperties}
+      style={{ '--explore-sticky-top': typeof stickyTop === 'number' ? `${stickyTop}px` : stickyTop } as React.CSSProperties}
     >
       <div ref={sentinelRef} aria-hidden className="h-px w-full" />
       <table role="table" aria-label={label} aria-busy={busy || undefined} className="-mt-px block w-full">
@@ -486,7 +597,7 @@ export function ExploreTable<F extends string>({
           data-explode={explode ? 'header' : undefined}
           data-stuck={stuck || undefined}
           onScroll={() => syncFrom('head')}
-          style={{ top: stickyTop }}
+          style={{ top: 'var(--explore-sticky-top)' }}
           className={cn(
             'sticky z-10 block overflow-x-auto overflow-y-hidden bg-surface1 pt-uni-12 pb-uni-2 @max-[640px]/explore-table:overflow-x-hidden',
             // Hairline once stuck, so rows sliding under it have an edge
@@ -503,7 +614,13 @@ export function ExploreTable<F extends string>({
             )}
           >
             {columns.map((column) => (
-              <ExploreTableHeaderCell key={column.id} column={column} sort={sort} onSort={onSort} />
+              <ExploreTableHeaderCell
+                key={column.id}
+                column={column}
+                sort={sort}
+                onSort={onSort}
+                period={period?.columnId === column.id ? period : undefined}
+              />
             ))}
             <th
               role="columnheader"
@@ -520,7 +637,7 @@ export function ExploreTable<F extends string>({
               className={cn(narrowHeader, 'shrink-0 justify-end pr-uni-16 pl-uni-8 font-[inherit]')}
             >
               {narrowEndLabel && <span className="sr-only">{narrowEndLabel}</span>}
-              {sort && onSort && <ExploreSortMenu columns={columns} sort={sort} onSort={onSort} />}
+              {sort && onSort && <ExploreSortMenu columns={columns} sort={sort} onSort={onSort} period={period} />}
             </th>
           </tr>
         </thead>

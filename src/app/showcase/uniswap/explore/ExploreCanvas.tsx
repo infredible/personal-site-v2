@@ -6,6 +6,7 @@ import { UniswapScope } from '@/components/uniswap'
 import {
   EXPLORE_PARTS,
   EXPLORE_PRESETS,
+  ExploreActiveFilters,
   ExploreFilterBar,
   ExplorePoolTable,
   ExploreTabs,
@@ -27,11 +28,15 @@ import {
   getExplorePools,
   getChain,
   getExploreTokens,
+  exploreViewChip,
   nextSort,
+  poolVolumeRanks,
   sortPools,
   sortTokens,
   tokenColumns,
   tokenNetworks,
+  tokenVolumeRanks,
+  type ExploreActiveFiltersProps,
   type ExploreChain,
   type ExplorePartId,
   type ExplorePoolStats,
@@ -59,6 +64,9 @@ const PHONE_WIDTH = 375
 const presetState = (id: (typeof EXPLORE_PRESETS)[number]['id']) => EXPLORE_PRESETS.find((p) => p.id === id)!.state
 
 const noop = () => {}
+
+/** Static token frames still show the Volume header's period menu, as the live table does */
+const staticPeriod = { columnId: 'volume', value: '1D', onValueChange: noop } as const
 
 /** A Uniswap-scoped surface for a frame. Follows the site theme unless forced. */
 function Stage({
@@ -91,16 +99,24 @@ function Stage({
 
 const PART_NOTES: Record<ExplorePartId, string> = {
   tabs: 'Tokens and Pools; ←/→ move between them',
-  filters: 'Volume period (Tokens), network menu, and search; “/” focuses the search',
-  header: 'Sortable columns: a new column starts descending, the same one toggles',
+  filters: 'Network and search, on both tabs (“/” focuses it); chips and Reset when not at the default',
+  header: 'A new column sorts descending, the same one toggles; Volume holds its period; # is volume rank',
   rows: '64px rows, focusable: ↑↓ Home End move, ←/→ scroll sideways when columns overflow, ↵ opens',
 }
 
-/** The live table as a display table, with its own sort so the header frame responds. */
-function AnatomyTable({ state, maxRows }: { state: ExploreState; maxRows?: number }) {
-  const [tokenSort, setTokenSort] = React.useState<SortState<TokenSortField>>(state.tokenSort)
-  const [poolSort, setPoolSort] = React.useState<SortState<PoolSortField>>(state.poolSort)
-  const { chain, period, query, status } = state
+/** The live table as a display table: header and rows frames share the anatomy's state. */
+function AnatomyTable({
+  state,
+  onChange,
+  maxRows,
+}: {
+  state: ExploreState
+  onChange: (patch: Partial<ExploreState>) => void
+  maxRows?: number
+}) {
+  const { chain, period, query, status, tokenSort, poolSort } = state
+  const tokenRanks = React.useMemo(() => tokenVolumeRanks(getExploreTokens(chain), period), [chain, period])
+  const poolRanks = React.useMemo(() => poolVolumeRanks(getExplorePools(chain)), [chain])
   const tokens = React.useMemo(
     () => sortTokens(filterTokens(getExploreTokens(chain), query), tokenSort, period),
     [chain, period, query, tokenSort],
@@ -115,55 +131,95 @@ function AnatomyTable({ state, maxRows }: { state: ExploreState; maxRows?: numbe
       {...shared}
       rows={maxRows ? tokens.slice(0, maxRows) : tokens}
       sort={tokenSort}
-      onSortChange={setTokenSort}
+      onSortChange={(next) => onChange({ tokenSort: next })}
       period={period}
+      onPeriodChange={(next) => onChange({ period: next })}
+      ranks={tokenRanks}
     />
   ) : (
     <ExplorePoolTable
       {...shared}
       rows={maxRows ? pools.slice(0, maxRows) : pools}
       sort={poolSort}
-      onSortChange={setPoolSort}
+      onSortChange={(next) => onChange({ poolSort: next })}
+      ranks={poolRanks}
     />
   )
 }
 
+/** The active-filters row's props for a state, with handlers that patch it (no latency here). */
+function activeFiltersFor(
+  state: ExploreState,
+  onChange: (patch: Partial<ExploreState>) => void,
+): ExploreActiveFiltersProps {
+  const { tab, chain } = state
+  const rows = tab === 'tokens' ? filterTokens(getExploreTokens(chain), state.query) : filterPools(getExplorePools(chain), state.query)
+  const defaults = presetState('tokens')
+  const defaultView = tab === 'tokens' ? { tokenSort: defaults.tokenSort, period: defaults.period } : { poolSort: defaults.poolSort }
+  return {
+    noun: tab,
+    count: rows.length,
+    status: state.status,
+    chain: chain === 'all' ? undefined : getChain(chain),
+    query: state.query,
+    view: exploreViewChip(state),
+    onRemoveChain: () => onChange({ chain: 'all' }),
+    onRemoveQuery: () => onChange({ query: '' }),
+    onResetView: () => onChange(defaultView),
+    onReset: () => onChange({ chain: 'all', query: '', ...defaultView }),
+  }
+}
+
 /**
  * The live tables taken apart, one region per frame in an exploded vertical
- * stack, rendered from the Component view's current state. The exploded-view
- * transition flies each region (data-explode-target) between here and the page.
- * The header and rows regions are the same table with the other half hidden.
+ * stack, rendered from the Component view's current state (then live here:
+ * the frames share it, so sorting in the header frame reorders the rows
+ * frame). The exploded-view transition flies each region (data-explode-target)
+ * between here and the page; the filters frame holds two, the bar and the
+ * active-filters row. The header and rows regions are the same table with the
+ * other half hidden.
  */
-function ExploreAnatomy({ state }: { state: ExploreState }) {
-  const [tab, setTab] = React.useState<ExploreTab>(state.tab)
-  const [tabFilters, setTabFilters] = React.useState({ period: state.period, chain: state.chain, query: state.query })
+function ExploreAnatomy({ state: initialState }: { state: ExploreState }) {
+  const [state, setState] = React.useState(initialState)
+  const update = React.useCallback((patch: Partial<ExploreState>) => setState((s) => ({ ...s, ...patch })), [])
   const width = TOKENS_WIDTH
+  const activeFilters = activeFiltersFor(state, update)
+  const filtered = !!(activeFilters.chain || state.query.trim() || activeFilters.view)
 
   const parts: Record<ExplorePartId, React.ReactNode> = {
     tabs: (
       <div data-explode-target="tabs" className="w-fit px-uni-8 pt-uni-8">
-        <ExploreTabs value={tab} onValueChange={setTab} />
+        <ExploreTabs value={state.tab} onValueChange={(tab) => update({ tab })} />
       </div>
     ),
     filters: (
-      <div data-explode-target="filters" className="flex px-uni-8 pt-uni-8">
-        <ExploreFilterBar
-          tab={tab}
-          {...tabFilters}
-          onPeriodChange={(period) => setTabFilters((f) => ({ ...f, period }))}
-          onChainChange={(chain) => setTabFilters((f) => ({ ...f, chain }))}
-          onQueryChange={(query) => setTabFilters((f) => ({ ...f, query }))}
-        />
+      <div className="px-uni-8 pt-uni-8">
+        <div data-explode-target="filters" className="flex">
+          <ExploreFilterBar
+            tab={state.tab}
+            chain={state.chain}
+            query={state.query}
+            onChainChange={(chain) => update({ chain })}
+            onQueryChange={(query) => update({ query })}
+          />
+        </div>
+        <div data-explode-target={filtered ? 'active-filters' : undefined} className={cn(filtered && 'pt-uni-4')}>
+          <ExploreActiveFilters {...activeFilters} />
+        </div>
       </div>
     ),
     header: (
       <div data-explode-target="header" className="[&_tbody]:hidden">
-        <AnatomyTable state={state} />
+        <AnatomyTable state={state} onChange={update} />
       </div>
     ),
     rows: (
       <div data-explode-target="rows" className="max-h-[430px] overflow-hidden [&_thead]:hidden">
-        <AnatomyTable state={state} maxRows={state.status === 'ready' || state.status === 'refetching' ? 6 : undefined} />
+        <AnatomyTable
+          state={state}
+          onChange={update}
+          maxRows={state.status === 'ready' || state.status === 'refetching' ? 6 : undefined}
+        />
       </div>
     ),
   }
@@ -172,7 +228,7 @@ function ExploreAnatomy({ state }: { state: ExploreState }) {
     <CanvasSection
       id="anatomy"
       title="Anatomy"
-      description="The live tables, taken apart. Each region is the same component, in the state you left it: tabs, filters, the table header, and the rows."
+      description="The live tables, taken apart. Each region is the same component, in the state you left it: tabs, filters (with the active-filters row when something isn’t default), the table header, and the rows."
       direction="column"
     >
       {EXPLORE_PARTS.map((part) => (
@@ -226,6 +282,7 @@ function RowTable({
       label={tab === 'tokens' ? 'Tokens' : 'Pools'}
       columns={tab === 'tokens' ? tokenColumnSet : POOL_COLUMNS}
       sort={tab === 'tokens' ? { field: 'volume', direction: 'desc' } : { field: 'volume1d', direction: 'desc' }}
+      period={tab === 'tokens' ? staticPeriod : undefined}
       rowIds={[rowId]}
       pulse={pulse}
       className={force && FORCE[force]}
@@ -296,6 +353,7 @@ function SkeletonFrame({ tab }: { tab: ExploreTab }) {
         label={tab === 'tokens' ? 'Tokens' : 'Pools'}
         columns={tab === 'tokens' ? tokenColumnSet : POOL_COLUMNS}
         sort={tab === 'tokens' ? { field: 'volume', direction: 'desc' } : { field: 'volume1d', direction: 'desc' }}
+        period={tab === 'tokens' ? staticPeriod : undefined}
         rowIds={[]}
         shimmer
         busy
@@ -325,21 +383,57 @@ function CellStage({ children, className }: { children: React.ReactNode; classNa
   )
 }
 
-const priceColumn = tokenColumnSet.find((c) => c.id === 'price')!
-
-/** A header cell by itself, in a header row. */
-function HeaderCellFrame({ sort }: { sort: SortState<TokenSortField> }) {
+/** A header cell by itself, in a header row. Volume gets its period menu. */
+function HeaderCellFrame({
+  columnId = 'price',
+  sort,
+  period: initialPeriod = '1D',
+}: {
+  columnId?: 'index' | 'price' | 'volume'
+  sort: SortState<TokenSortField>
+  period?: ExploreTimePeriod
+}) {
   const [current, setCurrent] = React.useState(sort)
+  const [period, setPeriod] = React.useState(initialPeriod)
+  const column = tokenColumns(undefined, period).find((c) => c.id === columnId)!
   return (
-    <UniswapScope className="@container/explore-table rounded-uni-20 bg-surface1 p-uni-8">
+    // No @container/explore-table: inline-size containment would collapse the fitted frame; with no
+    // container the cell's container-query variants stay off, as in the full-width table
+    <UniswapScope className="w-fit rounded-uni-20 bg-surface1 p-uni-8">
       <table role="table" aria-label="Sort header" className="block">
         <thead role="rowgroup" className="block">
           <tr role="row" className="flex w-fit rounded-uni-12 bg-surface2">
-            <ExploreTableHeaderCell column={priceColumn} sort={current} onSort={() => setCurrent((s) => nextSort(s, 'price'))} />
+            <ExploreTableHeaderCell
+              column={column}
+              sort={current}
+              onSort={(field) => setCurrent((s) => nextSort(s, field))}
+              period={columnId === 'volume' ? { columnId, value: period, onValueChange: setPeriod } : undefined}
+            />
           </tr>
         </thead>
       </table>
     </UniswapScope>
+  )
+}
+
+/** The active-filters row on its own, live: chips remove, and the row comes back after Reset. */
+function ActiveFiltersFrame({ presetId }: { presetId: (typeof EXPLORE_PRESETS)[number]['id'] }) {
+  const [state, setState] = React.useState(() => presetState(presetId))
+  const props = activeFiltersFor(state, (patch) => setState((s) => ({ ...s, ...patch })))
+  const empty = !props.chain && !state.query.trim() && !props.view
+  return (
+    <Stage width={TOKENS_WIDTH} className="min-h-[54px] pt-uni-8">
+      <ExploreActiveFilters {...props} />
+      {empty && (
+        <button
+          type="button"
+          onClick={() => setState(presetState(presetId))}
+          className="h-[38px] cursor-pointer px-uni-4 text-buttonLabel4 text-neutral2 hover:text-neutral1"
+        >
+          Hidden at the tab’s default · show again
+        </button>
+      )}
+    </Stage>
   )
 }
 
@@ -357,6 +451,7 @@ function StateTable({ status }: { status: 'loading' | 'refetching' | 'error' }) 
         status={status}
         skeletonRows={6}
         onRetry={noop}
+        onPeriodChange={noop}
       />
     </Stage>
   )
@@ -400,12 +495,21 @@ function NarrowTable({
 }) {
   const [tokenSort, setTokenSort] = React.useState(initialTokenSort)
   const [poolSort, setPoolSort] = React.useState(initialPoolSort)
-  const tokens = React.useMemo(() => sortTokens(getExploreTokens('all'), tokenSort, '1D').slice(0, 6), [tokenSort])
+  const [period, setPeriod] = React.useState<ExploreTimePeriod>('1D')
+  const tokens = React.useMemo(() => sortTokens(getExploreTokens('all'), tokenSort, period).slice(0, 6), [tokenSort, period])
   const pools = React.useMemo(() => sortPools(getExplorePools('all'), poolSort).slice(0, 6), [poolSort])
   return (
     <Stage width={PHONE_WIDTH}>
       {tab === 'tokens' ? (
-        <ExploreTokenTable rows={tokens} sort={tokenSort} onSortChange={setTokenSort} status={status} skeletonRows={4} />
+        <ExploreTokenTable
+          rows={tokens}
+          sort={tokenSort}
+          onSortChange={setTokenSort}
+          period={period}
+          onPeriodChange={setPeriod}
+          status={status}
+          skeletonRows={4}
+        />
       ) : (
         <ExplorePoolTable rows={pools} sort={poolSort} onSortChange={setPoolSort} status={status} skeletonRows={4} />
       )}
@@ -484,7 +588,7 @@ export function ExploreCanvas({
       <CanvasSection
         id="cells"
         title="Cells"
-        description="The pieces rows are made of: change, sparkline and logo cells, and the sort header."
+        description="The pieces rows are made of: change, sparkline and logo cells, the sort header (Volume’s split into sort label and period menu), and the active-filters row."
       >
         <CanvasFrame id="cell-change-up" title="Change · up" note="Green arrow, absolute value">
           <CellStage>
@@ -535,6 +639,24 @@ export function ExploreCanvas({
         <CanvasFrame id="cell-sort-desc" title="Sort header · descending" note="Hover for its description">
           <HeaderCellFrame sort={{ field: 'price', direction: 'desc' }} />
         </CanvasFrame>
+        <CanvasFrame id="cell-volume-inactive" title="Volume header · not sorted" note="Two tab stops: “Sort by volume”, then “Volume period, 1D”">
+          <HeaderCellFrame columnId="volume" sort={{ field: 'price', direction: 'desc' }} />
+        </CanvasFrame>
+        <CanvasFrame id="cell-volume-sorted" title="Volume header · sorted" note="The default sort; the period menu opens 1H … 1Y">
+          <HeaderCellFrame columnId="volume" sort={{ field: 'volume', direction: 'desc' }} />
+        </CanvasFrame>
+        <CanvasFrame id="cell-volume-1w" title="Volume header · 1W" note="Changing the period refetches; sorted by volume, rows then reorder">
+          <HeaderCellFrame columnId="volume" sort={{ field: 'volume', direction: 'desc' }} period="1W" />
+        </CanvasFrame>
+        <CanvasFrame id="cell-rank" title="# header" note="Always the volume rank, whatever the sort; the tooltip names the period">
+          <HeaderCellFrame columnId="index" sort={{ field: 'volume', direction: 'desc' }} />
+        </CanvasFrame>
+        <CanvasFrame id="cell-active-filters" title="Active filters · network, search, sort" note="Count, a chip per change, Reset; each ✕ removes one">
+          <ActiveFiltersFrame presetId="filtered" />
+        </CanvasFrame>
+        <CanvasFrame id="cell-active-filters-view" title="Active filters · sort only" note="Shown whenever the view isn’t the tab’s default">
+          <ActiveFiltersFrame presetId="sorted-1h" />
+        </CanvasFrame>
       </CanvasSection>
 
       <CanvasSection
@@ -567,7 +689,7 @@ export function ExploreCanvas({
         <CanvasFrame id="narrow-tokens-fdv" title="Tokens · sorted by FDV" note="The subline follows the sort: SYMBOL · $410.0B FDV">
           <NarrowTable tab="tokens" tokenSort={{ field: 'fdv', direction: 'desc' }} />
         </CanvasFrame>
-        <CanvasFrame id="narrow-tokens-1h" title="Tokens · sorted by 1H" note="Sort menu: pick a field; the current one reverses">
+        <CanvasFrame id="narrow-tokens-1h" title="Tokens · sorted by 1H" note="Sort menu: pick a field; the current one reverses; Volume carries its period inline">
           <NarrowTable tab="tokens" tokenSort={{ field: 'change1h', direction: 'desc' }} />
         </CanvasFrame>
         <CanvasFrame id="narrow-pools" title="Pools · 375px" note="TVL over the sort's metric: 1D vol by default">
@@ -579,7 +701,7 @@ export function ExploreCanvas({
         <CanvasFrame id="narrow-loading" title="Loading · 375px" note="Skeletons in the two-column shape">
           <NarrowTable tab="tokens" status="loading" />
         </CanvasFrame>
-        <CanvasFrame id="narrow-page" title="Whole component · 375px" note="Filters stack under the tabs; scrolls inside">
+        <CanvasFrame id="narrow-page" title="Whole component · 375px" note="Filters stack under the tabs; tabs, filters and the table header stick while it scrolls inside">
           <ExploreInStage presetId="tokens" width={PHONE_WIDTH} height={720} />
         </CanvasFrame>
       </CanvasSection>

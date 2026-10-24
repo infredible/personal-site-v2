@@ -18,6 +18,7 @@ export type {
   ExploreTableRowProps,
   ExploreTableHeaderCellProps,
   ExploreSortMenuProps,
+  ExploreColumnPeriod,
 } from './Table'
 export { tokenColumns, POOL_COLUMNS, TOKEN_TABLE_COMPACT_WIDTH, POOL_TABLE_COMPACT_WIDTH } from './columns'
 export { TokenTableRow, TokenTableSkeletonRow } from './TokenTableRow'
@@ -30,7 +31,10 @@ export { TokenSparklineCell } from './TokenSparklineCell'
 export { HighlightedText } from './HighlightedText'
 export { ExploreTabs, EXPLORE_TABS, exploreTabId } from './ExploreTabs'
 export type { ExploreTabsProps } from './ExploreTabs'
-export { ExploreFilterBar, ExploreSearch, TimePeriodMenu, EXPLORE_TIME_PERIODS } from './ExploreFilterBar'
+export { ExploreFilterBar, ExploreSearch } from './ExploreFilterBar'
 export type { ExploreFilterBarProps, ExploreSearchProps } from './ExploreFilterBar'
+export { VolumePeriodMenu, EXPLORE_TIME_PERIODS } from './VolumePeriodMenu'
+export { ExploreActiveFilters } from './ExploreActiveFilters'
+export type { ExploreActiveFiltersProps, ExploreViewChip } from './ExploreActiveFilters'
 export { ExploreEmptyState, ExploreErrorState } from './ExploreStates'
 export type { ExploreEmptyStateProps } from './ExploreStates'

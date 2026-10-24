@@ -36,7 +36,7 @@ import { ExploreNarrowCell, ExploreSkeletonRow, ExploreTableCell, ExploreTableRo
 
 export interface PoolTableRowProps {
   row: ExplorePoolStats
-  /** Position in the current order */
+  /** 1D volume rank (#) on the current network, whatever the sort */
   rank: number
   columns: ExploreColumn[]
   /** Search text to highlight in the pair */

@@ -5,9 +5,19 @@ import { cn } from '@/lib/utils'
 import { getExplorePools, getExploreTokens } from './data'
 import { ExplorePoolTable } from './ExplorePoolTable'
 import { ExploreTokenTable } from './ExploreTokenTable'
-import { filterPools, filterTokens, sortPools, sortTokens } from './filters'
+import {
+  filterPools,
+  filterTokens,
+  getChain,
+  poolVolumeRanks,
+  sortPools,
+  sortTokens,
+  tokenVolumeRanks,
+} from './filters'
+import { ExploreActiveFilters, type ExploreViewChip } from './parts/ExploreActiveFilters'
 import { ExploreFilterBar } from './parts/ExploreFilterBar'
 import { ExploreTabs, exploreTabId } from './parts/ExploreTabs'
+import { POOL_COLUMNS, tokenColumns } from './parts/columns'
 import { DEFAULT_EXPLORE_STATE } from './presets'
 import type {
   ExploreChain,
@@ -33,15 +43,30 @@ import type {
  *
  * Production lays the Tokens filters out on a separate row beside category
  * chips; with no chips here, both tabs put them in the tab row (as Pools
- * does). The row stacks under 768px. "/" focuses the search when focus isn't
+ * does): network and search on both, the volume period in the Volume header.
+ * The row stacks under 768px. "/" focuses the search when focus isn't
  * already in a field.
+ *
+ * Under it, ExploreActiveFilters shows while anything differs from the tab's
+ * default (all networks, no search, the tab's default sort, 1D): the count,
+ * a chip per change, and Reset. Tabs, filters and that row stick together
+ * (opaque surface1, at `stickyTop`); the block's height is measured into
+ * --explore-controls-height so the table header sticks right under it, and
+ * the header's stuck hairline marks the bottom of the whole stack.
+ *
+ * # is the volume rank on the loaded network (filters.ts), so it survives
+ * search and sorting.
  *
  * initialState is read on mount: remount (key) to apply another one.
  */
 
 export type ExploreRowSelection = { tab: 'tokens'; row: ExploreTokenStats } | { tab: 'pools'; row: ExplorePoolStats }
 
-/** Regions marked with data-explode, top to bottom (showcase exploded view). */
+/**
+ * Regions marked with data-explode, top to bottom (showcase exploded view).
+ * The filters part is two marked elements: the bar ("filters") and the
+ * active-filters row ("active-filters") when it shows.
+ */
 export type ExplorePartId = 'tabs' | 'filters' | 'header' | 'rows'
 
 export const EXPLORE_PARTS: { id: ExplorePartId; label: string }[] = [
@@ -59,11 +84,48 @@ export interface ExploreTablesProps {
   firstLoadMs?: number
   /** Simulated refetch latency for network and period changes */
   refetchMs?: number
-  /** The table header sticks this far below its scroll container's top (e.g. under an app bar) */
+  /** The controls stick this far below their scroll container's top (e.g. under an app bar), the table header under them */
   stickyTop?: number
   /** "/" focuses the search (turn off when several instances share a page) */
   searchShortcut?: boolean
   className?: string
+}
+
+/** Sort and period are the tab's defaults. */
+type ViewState = Pick<ExploreState, 'tab' | 'period' | 'tokenSort' | 'poolSort'>
+
+const DEFAULT_TOKEN_SORT = DEFAULT_EXPLORE_STATE.tokenSort
+const DEFAULT_POOL_SORT = DEFAULT_EXPLORE_STATE.poolSort
+const DEFAULT_PERIOD = DEFAULT_EXPLORE_STATE.period
+
+const sameSort = <F extends string>(a: { field: F; direction: string }, b: { field: F; direction: string }) =>
+  a.field === b.field && a.direction === b.direction
+
+const sortNames: Record<string, string> = Object.fromEntries(
+  [...tokenColumns(), ...POOL_COLUMNS].filter((c) => c.sortField).map((c) => [c.sortField, c.sortLabel ?? c.label]),
+)
+
+/**
+ * The active-filters row's view chip, when sort or period isn't the tab's
+ * default: "Sorted by FDV ↑", "1W volume", "Sorted by FDV ↑ · 1W volume".
+ * The period only counts on Tokens (Pools has no period).
+ */
+export function exploreViewChip({ tab, period, tokenSort, poolSort }: ViewState): ExploreViewChip | undefined {
+  const sort = tab === 'tokens' ? tokenSort : poolSort
+  const sortChanged = !sameSort(sort, tab === 'tokens' ? DEFAULT_TOKEN_SORT : DEFAULT_POOL_SORT)
+  const periodChanged = tab === 'tokens' && period !== DEFAULT_PERIOD
+  if (!sortChanged && !periodChanged) return undefined
+  const direction = sort.direction === 'asc' ? 'ascending' : 'descending'
+  if (!sortChanged) return { label: `${period} volume`, description: `${period} volume` }
+  const name = tab === 'tokens' && sort.field === 'volume' ? `${period} volume` : sortNames[sort.field]
+  // A period that isn't the sort's own is named after the arrow
+  const extra = periodChanged && sort.field !== 'volume' ? ` · ${period} volume` : ''
+  return {
+    label: `Sorted by ${name}`,
+    direction: sort.direction,
+    description: `Sorted by ${name}, ${direction}${extra}`,
+    suffix: extra || undefined,
+  }
 }
 
 /** What the rows on screen were loaded for; lags the filters while a refetch is in flight. */
@@ -78,7 +140,7 @@ export function ExploreTables({
   onRowSelect,
   firstLoadMs,
   refetchMs = 600,
-  stickyTop,
+  stickyTop = 0,
   searchShortcut = true,
   className,
 }: ExploreTablesProps) {
@@ -90,6 +152,21 @@ export function ExploreTables({
   )
   const idBase = React.useId()
   const searchRef = React.useRef<HTMLInputElement>(null)
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const controlsRef = React.useRef<HTMLDivElement>(null)
+
+  // The sticky controls' height, for the table header's offset. A CSS variable, not state:
+  // the active-filters row animates its height, and re-rendering the table each frame isn't needed.
+  React.useLayoutEffect(() => {
+    const controls = controlsRef.current
+    const root = rootRef.current
+    if (!controls || !root) return
+    const measure = () => root.style.setProperty('--explore-controls-height', `${controls.offsetHeight}px`)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(controls)
+    return () => observer.disconnect()
+  }, [])
 
   const update = React.useCallback((patch: Partial<ExploreState>) => setState((s) => ({ ...s, ...patch })), [])
 
@@ -156,12 +233,37 @@ export function ExploreTables({
     () => sortPools(filterPools(getExplorePools(loaded.chain), state.query), state.poolSort),
     [loaded.chain, state.query, state.poolSort],
   )
+  // Before search, whatever the sort
+  const tokenRanks = React.useMemo(() => tokenVolumeRanks(getExploreTokens(loaded.chain), loaded.period), [loaded])
+  const poolRanks = React.useMemo(() => poolVolumeRanks(getExplorePools(loaded.chain)), [loaded.chain])
 
   // First-load skeletons match the rows that will arrive, so nothing jumps when they do
   const expected = state.tab === 'tokens'
     ? filterTokens(getExploreTokens(state.chain), state.query).length
     : filterPools(getExplorePools(state.chain), state.query).length
   const skeletonRows = Math.min(Math.max(expected, 4), 20)
+
+  const focusSearch = () => searchRef.current?.focus({ preventScroll: true })
+
+  /** Sort and period back to the tab's default (the period refetches) */
+  const resetView = () => {
+    if (state.tab === 'pools') return update({ poolSort: DEFAULT_POOL_SORT })
+    if (state.period !== DEFAULT_PERIOD) refetch({ tokenSort: DEFAULT_TOKEN_SORT, period: DEFAULT_PERIOD })
+    else update({ tokenSort: DEFAULT_TOKEN_SORT })
+  }
+
+  /** Everything the active-filters row shows, back to the tab's default */
+  const reset = () => {
+    const patch: Partial<ExploreState> = { chain: 'all', query: '' }
+    if (state.tab === 'tokens') Object.assign(patch, { tokenSort: DEFAULT_TOKEN_SORT, period: DEFAULT_PERIOD })
+    else patch.poolSort = DEFAULT_POOL_SORT
+    const refetches = state.chain !== 'all' || (state.tab === 'tokens' && state.period !== DEFAULT_PERIOD)
+    if (refetches) refetch(patch)
+    else update(patch)
+  }
+
+  const view = exploreViewChip(state)
+  const filtered = state.chain !== 'all' || state.query.trim() !== '' || !!view
 
   const panelId = `${idBase}-panel`
   const shared = {
@@ -171,54 +273,77 @@ export function ExploreTables({
     onRetry: retry,
     onClearSearch: () => {
       update({ query: '' })
-      searchRef.current?.focus({ preventScroll: true })
+      focusSearch()
     },
     onSearchAllNetworks: () => {
       refetch({ chain: 'all' })
       // The button unmounts with the empty state; keep focus in the filters
-      searchRef.current?.focus({ preventScroll: true })
+      focusSearch()
     },
     skeletonRows,
-    stickyTop,
+    stickyTop: `calc(${stickyTop}px + var(--explore-controls-height, 0px))`,
     explode: true,
   }
 
   const count = state.tab === 'tokens' ? tokenRows.length : poolRows.length
   const noun = state.tab === 'tokens' ? (count === 1 ? 'token' : 'tokens') : count === 1 ? 'pool' : 'pools'
+  // The visible count (active-filters row) isn't live; this announces it
   const announcement =
-    state.status === 'loading'
-      ? `Loading ${state.tab}`
-      : state.status === 'ready' && state.query.trim()
-        ? `${count} ${noun} found`
-        : ''
+    state.status === 'loading' ? `Loading ${state.tab}` : state.status === 'ready' && filtered ? `${count} ${noun}` : ''
 
   return (
-    <div data-slot="explore-tables" className={cn('@container/explore mx-auto flex w-full max-w-[1200px] min-w-0 flex-col', className)}>
+    <div
+      ref={rootRef}
+      data-slot="explore-tables"
+      className={cn('@container/explore mx-auto flex w-full max-w-[1200px] min-w-0 flex-col', className)}
+    >
       <div
-        className={cn(
-          'mb-uni-4 flex items-center justify-between gap-uni-16',
-          '@max-[768px]/explore:mb-uni-12 @max-[768px]/explore:flex-col @max-[768px]/explore:items-start',
-        )}
+        ref={controlsRef}
+        data-slot="explore-controls"
+        // Opaque lead-in above the tabs (offset by the negative margin): once
+        // stuck it clears whatever sits at the top edge, e.g. the mobile frame's corner
+        className="sticky z-20 -mt-uni-20 bg-surface1 pt-uni-20"
+        style={{ top: stickyTop }}
       >
-        <div data-explode="tabs">
-          <ExploreTabs
-            value={state.tab}
-            onValueChange={(tab: ExploreTab) => update({ tab })}
-            idBase={idBase}
-            panelId={panelId}
-          />
+        <div
+          className={cn(
+            'flex items-center justify-between gap-uni-16 pb-uni-4',
+            '@max-[768px]/explore:flex-col @max-[768px]/explore:items-start @max-[768px]/explore:gap-uni-12 @max-[768px]/explore:pb-uni-12',
+          )}
+        >
+          <div data-explode="tabs">
+            <ExploreTabs
+              value={state.tab}
+              onValueChange={(tab: ExploreTab) => update({ tab })}
+              idBase={idBase}
+              panelId={panelId}
+            />
+          </div>
+          <div data-explode="filters" className="flex min-w-0 @max-[768px]/explore:w-full">
+            <ExploreFilterBar
+              tab={state.tab}
+              chain={state.chain}
+              onChainChange={(chain) => chain !== state.chain && refetch({ chain })}
+              query={state.query}
+              onQueryChange={(query) => update({ query })}
+              searchRef={searchRef}
+              className="@max-[768px]/explore:w-full"
+            />
+          </div>
         </div>
-        <div data-explode="filters" className="flex min-w-0 @max-[768px]/explore:w-full">
-          <ExploreFilterBar
-            tab={state.tab}
-            period={state.period}
-            onPeriodChange={(period) => period !== state.period && refetch({ period })}
-            chain={state.chain}
-            onChainChange={(chain) => chain !== state.chain && refetch({ chain })}
+        <div data-explode={filtered ? 'active-filters' : undefined}>
+          <ExploreActiveFilters
+            noun={state.tab}
+            count={count}
+            status={state.status}
+            chain={state.chain === 'all' ? undefined : getChain(state.chain)}
             query={state.query}
-            onQueryChange={(query) => update({ query })}
-            searchRef={searchRef}
-            className="@max-[768px]/explore:w-full"
+            view={view}
+            onRemoveChain={() => refetch({ chain: 'all' })}
+            onRemoveQuery={() => update({ query: '' })}
+            onResetView={resetView}
+            onReset={reset}
+            onEmpty={focusSearch}
           />
         </div>
       </div>
@@ -231,6 +356,9 @@ export function ExploreTables({
             sort={state.tokenSort}
             onSortChange={(tokenSort) => update({ tokenSort })}
             period={loaded.period}
+            selectedPeriod={state.period}
+            onPeriodChange={(period) => period !== state.period && refetch({ period })}
+            ranks={tokenRanks}
             onRowSelect={onRowSelect ? (row) => onRowSelect({ tab: 'tokens', row }) : undefined}
           />
         ) : (
@@ -239,6 +367,7 @@ export function ExploreTables({
             rows={poolRows}
             sort={state.poolSort}
             onSortChange={(poolSort) => update({ poolSort })}
+            ranks={poolRanks}
             onRowSelect={onRowSelect ? (row) => onRowSelect({ tab: 'pools', row }) : undefined}
           />
         )}

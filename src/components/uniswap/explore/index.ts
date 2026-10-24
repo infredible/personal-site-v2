@@ -1,5 +1,5 @@
 // Uniswap web's Explore page, Tokens and Pools tabs. See ExploreTables.tsx.
-export { ExploreTables, EXPLORE_PARTS } from './ExploreTables'
+export { ExploreTables, EXPLORE_PARTS, exploreViewChip } from './ExploreTables'
 export type { ExploreTablesProps, ExploreRowSelection, ExplorePartId } from './ExploreTables'
 export { ExploreTokenTable } from './ExploreTokenTable'
 export type { ExploreTokenTableProps } from './ExploreTokenTable'
@@ -20,7 +20,10 @@ export {
   filterTokens,
   filterPools,
   poolVolumeOverTvl,
+  tokenVolumeRanks,
+  poolVolumeRanks,
   splitMatch,
 } from './filters'
+export type { ExploreRanks } from './filters'
 export { getExploreTokens, getExplorePools, EXPLORE_TOKEN_STATS, EXPLORE_POOL_STATS } from './data'
 export type * from './types'

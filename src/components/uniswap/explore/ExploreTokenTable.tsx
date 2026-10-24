@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { getChain, nextSort, tokenNetworks } from './filters'
+import { getChain, nextSort, tokenNetworks, type ExploreRanks } from './filters'
 import { ExploreEmptyState, ExploreErrorState } from './parts/ExploreStates'
 import { ExploreTable, ExploreTableMessage } from './parts/Table'
 import { tokenColumns } from './parts/columns'
@@ -26,6 +26,10 @@ import type {
  *
  * Production (TokensTable) swaps in 20 skeleton rows on every sort or filter
  * change; here only the first load does, and sorting reorders in place.
+ *
+ * With `onPeriodChange`, the Volume header carries the period menu (and the
+ * narrow sort menu its inline options). `period` is what the values are for;
+ * `selectedPeriod` what the menu shows, ahead of it while a refetch is out.
  */
 
 export interface ExploreTokenTableProps {
@@ -37,6 +41,12 @@ export interface ExploreTokenTableProps {
   query?: string
   /** Volume window shown in the Volume column */
   period?: ExploreTimePeriod
+  /** The period menu's value (default: `period`) */
+  selectedPeriod?: ExploreTimePeriod
+  /** Shows the period menu in the Volume header */
+  onPeriodChange?: (period: ExploreTimePeriod) => void
+  /** # per row id (volume rank); default: position in `rows` */
+  ranks?: ExploreRanks
   /** Network the rows are for: badges every logo, and names it in the price tooltip and empty state */
   chain?: ExploreChain
   onRetry?: () => void
@@ -46,8 +56,8 @@ export interface ExploreTokenTableProps {
   onRowSelect?: (row: ExploreTokenStats) => void
   /** Skeleton rows on first load (default 10) */
   skeletonRows?: number
-  /** Header sticks this far below the scroll container's top */
-  stickyTop?: number
+  /** Header sticks this far below the scroll container's top (px, or a CSS length) */
+  stickyTop?: number | string
   /** data-explode on the header and rows */
   explode?: boolean
   className?: string
@@ -62,6 +72,9 @@ export function ExploreTokenTable({
   status,
   query,
   period = '1D',
+  selectedPeriod = period,
+  onPeriodChange,
+  ranks,
   chain = 'all',
   onRetry,
   onClearSearch,
@@ -73,7 +86,7 @@ export function ExploreTokenTable({
   className,
 }: ExploreTokenTableProps) {
   const chainInfo = chain === 'all' ? undefined : getChain(chain)
-  const columns = React.useMemo(() => tokenColumns(chainInfo?.name), [chainInfo?.name])
+  const columns = React.useMemo(() => tokenColumns(chainInfo?.name, period), [chainInfo?.name, period])
   const showRows = status === 'ready' || status === 'refetching'
   const rowIds = React.useMemo(() => (showRows ? rows.map((row) => row.id) : []), [rows, showRows])
 
@@ -110,7 +123,7 @@ export function ExploreTokenTable({
         <TokenTableRow
           key={row.id}
           row={row}
-          rank={i + 1}
+          rank={ranks?.get(row.id) ?? i + 1}
           columns={columns}
           period={period}
           query={query}
@@ -132,6 +145,7 @@ export function ExploreTokenTable({
       rowIds={rowIds}
       onRowActivate={onRowActivate}
       stickyTop={stickyTop}
+      period={onPeriodChange ? { columnId: 'volume', value: selectedPeriod, onValueChange: onPeriodChange } : undefined}
       busy={status === 'loading' || status === 'refetching'}
       shimmer={status === 'loading'}
       pulse={status === 'refetching'}

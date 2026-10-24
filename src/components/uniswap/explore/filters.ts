@@ -115,6 +115,29 @@ export function sortPools(rows: ExplorePoolStats[], sort: SortState<PoolSortFiel
   return sortBy(rows, (row) => poolValue(row, sort.field), sort.direction)
 }
 
+/* Rank ------------------------------------------------------------------- */
+
+/*
+ * # is the row's volume rank among everything on the network, computed
+ * before search and independent of the sort: ETH stays #1 when you sort by
+ * price or search "eth". Tokens rank by the selected period's volume, pools
+ * by 1D volume.
+ */
+
+export type ExploreRanks = ReadonlyMap<string, number>
+
+function ranksBy<T extends { id: string }>(rows: T[], value: (row: T) => number): ExploreRanks {
+  return new Map(sortBy(rows, value, 'desc').map((row, i) => [row.id, i + 1]))
+}
+
+export function tokenVolumeRanks(rows: ExploreTokenStats[], period: ExploreTimePeriod): ExploreRanks {
+  return ranksBy(rows, (row) => row.volumeUsd[period])
+}
+
+export function poolVolumeRanks(rows: ExplorePoolStats[]): ExploreRanks {
+  return ranksBy(rows, (row) => row.volume1dUsd)
+}
+
 /* Search ------------------------------------------------------------------ */
 
 const normalize = (query: string) => query.trim().toLowerCase()
