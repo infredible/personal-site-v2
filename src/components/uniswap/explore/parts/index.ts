@@ -7,8 +7,18 @@ export {
   ExploreTableCell,
   ExploreSkeletonRow,
   ExploreTableMessage,
+  ExploreNarrowCell,
+  ExploreSortMenu,
+  EXPLORE_TABLE_NARROW_WIDTH,
 } from './Table'
-export type { ExploreColumn, ExploreColumnAlign, ExploreTableProps, ExploreTableRowProps, ExploreTableHeaderCellProps } from './Table'
+export type {
+  ExploreColumn,
+  ExploreColumnAlign,
+  ExploreTableProps,
+  ExploreTableRowProps,
+  ExploreTableHeaderCellProps,
+  ExploreSortMenuProps,
+} from './Table'
 export { tokenColumns, POOL_COLUMNS, TOKEN_TABLE_COMPACT_WIDTH, POOL_TABLE_COMPACT_WIDTH } from './columns'
 export { TokenTableRow, TokenTableSkeletonRow } from './TokenTableRow'
 export type { TokenTableRowProps } from './TokenTableRow'

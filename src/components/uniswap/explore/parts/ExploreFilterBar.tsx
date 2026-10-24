@@ -8,6 +8,7 @@ import { NetworkMenu } from '../../swap/overlays/NetworkMenu'
 import type { Chain } from '../../swap/types'
 import { EXPLORE_NETWORKS, exploreNetworkCounts } from '../filters'
 import type { ExploreChain, ExploreTab, ExploreTimePeriod } from '../types'
+import { useForcedTheme } from './useForcedTheme'
 
 /*
  * The Explore filter controls, right of the tabs (production:
@@ -36,15 +37,6 @@ const control = cn(
   'text-buttonLabel3 text-neutral1 outline-none select-none hover:bg-surface2 data-[state=open]:bg-surface2',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1',
 )
-
-/** Theme forced by the nearest <UniswapScope theme>, so portal content (the menu) can match it. */
-function useForcedTheme(ref: React.RefObject<HTMLElement | null>) {
-  const [theme, setTheme] = React.useState<string | undefined>()
-  const read = React.useCallback(() => {
-    setTheme(ref.current?.closest('[data-theme]')?.getAttribute('data-theme') ?? undefined)
-  }, [ref])
-  return [theme, read] as const
-}
 
 export function TimePeriodMenu({
   value,

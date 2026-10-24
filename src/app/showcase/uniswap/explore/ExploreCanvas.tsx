@@ -93,7 +93,7 @@ const PART_NOTES: Record<ExplorePartId, string> = {
   tabs: 'Tokens and Pools; ←/→ move between them',
   filters: 'Volume period (Tokens), network menu, and search; “/” focuses the search',
   header: 'Sortable columns: a new column starts descending, the same one toggles',
-  rows: '64px rows, focusable: ↑↓ Home End move, ←/→ scroll sideways, ↵ opens',
+  rows: '64px rows, focusable: ↑↓ Home End move, ←/→ scroll sideways when columns overflow, ↵ opens',
 }
 
 /** The live table as a display table, with its own sort so the header frame responds. */
@@ -384,6 +384,35 @@ function ExploreInStage({
   )
 }
 
+/* Narrow ------------------------------------------------------------------ */
+
+/** A phone-width display table with its own sort, so the sort menu works in the frame. */
+function NarrowTable({
+  tab,
+  tokenSort: initialTokenSort = presetState('tokens').tokenSort,
+  poolSort: initialPoolSort = presetState('pools').poolSort,
+  status = 'ready',
+}: {
+  tab: ExploreTab
+  tokenSort?: SortState<TokenSortField>
+  poolSort?: SortState<PoolSortField>
+  status?: 'ready' | 'loading'
+}) {
+  const [tokenSort, setTokenSort] = React.useState(initialTokenSort)
+  const [poolSort, setPoolSort] = React.useState(initialPoolSort)
+  const tokens = React.useMemo(() => sortTokens(getExploreTokens('all'), tokenSort, '1D').slice(0, 6), [tokenSort])
+  const pools = React.useMemo(() => sortPools(getExplorePools('all'), poolSort).slice(0, 6), [poolSort])
+  return (
+    <Stage width={PHONE_WIDTH}>
+      {tab === 'tokens' ? (
+        <ExploreTokenTable rows={tokens} sort={tokenSort} onSortChange={setTokenSort} status={status} skeletonRows={4} />
+      ) : (
+        <ExplorePoolTable rows={pools} sort={poolSort} onSortChange={setPoolSort} status={status} skeletonRows={4} />
+      )}
+    </Stage>
+  )
+}
+
 /* Canvas ------------------------------------------------------------------ */
 
 export function ExploreCanvas({
@@ -530,27 +559,25 @@ export function ExploreCanvas({
       <CanvasSection
         id="narrow"
         title="Narrow"
-        description="At phone width the table follows its own container: the # column hides and the name column pins as logo and symbol while the rest scrolls sideways."
+        description="Under 640px of table width (the table's own container, so a 375px frame is a phone) rows drop to two columns and nothing scrolls sideways. Left: logo, name, and a subline whose metric follows the sort; right: values, right-aligned. The header becomes the label and a sort menu."
       >
-        <CanvasFrame id="narrow-tokens" title="Tokens · 375px" note="Pinned: logo and symbol">
-          <Stage width={PHONE_WIDTH}>
-            <ExploreTokenTable
-              rows={sixTokens}
-              sort={presetState('tokens').tokenSort}
-              onSortChange={noop}
-              status="ready"
-            />
-          </Stage>
+        <CanvasFrame id="narrow-tokens" title="Tokens · 375px" note="Price over 1D change; the subline shows volume by default">
+          <NarrowTable tab="tokens" />
         </CanvasFrame>
-        <CanvasFrame id="narrow-pools" title="Pools · 375px" note="Pinned: pair and details">
-          <Stage width={PHONE_WIDTH}>
-            <ExplorePoolTable
-              rows={sortPools(getExplorePools('all'), presetState('pools').poolSort).slice(0, 6)}
-              sort={presetState('pools').poolSort}
-              onSortChange={noop}
-              status="ready"
-            />
-          </Stage>
+        <CanvasFrame id="narrow-tokens-fdv" title="Tokens · sorted by FDV" note="The subline follows the sort: SYMBOL · $410.0B FDV">
+          <NarrowTable tab="tokens" tokenSort={{ field: 'fdv', direction: 'desc' }} />
+        </CanvasFrame>
+        <CanvasFrame id="narrow-tokens-1h" title="Tokens · sorted by 1H" note="Sort menu: pick a field; the current one reverses">
+          <NarrowTable tab="tokens" tokenSort={{ field: 'change1h', direction: 'desc' }} />
+        </CanvasFrame>
+        <CanvasFrame id="narrow-pools" title="Pools · 375px" note="TVL over the sort's metric: 1D vol by default">
+          <NarrowTable tab="pools" />
+        </CanvasFrame>
+        <CanvasFrame id="narrow-pools-apr" title="Pools · sorted by APR" note="Rewards shrink to the UNI logo; hover for the split">
+          <NarrowTable tab="pools" poolSort={{ field: 'apr', direction: 'desc' }} />
+        </CanvasFrame>
+        <CanvasFrame id="narrow-loading" title="Loading · 375px" note="Skeletons in the two-column shape">
+          <NarrowTable tab="tokens" status="loading" />
         </CanvasFrame>
         <CanvasFrame id="narrow-page" title="Whole component · 375px" note="Filters stack under the tabs; scrolls inside">
           <ExploreInStage presetId="tokens" width={PHONE_WIDTH} height={720} />

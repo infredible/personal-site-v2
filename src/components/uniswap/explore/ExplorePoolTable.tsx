@@ -64,6 +64,10 @@ export function ExplorePoolTable({
     }
   }, [rows, onRowSelect])
 
+  // Narrow layout's right column: TVL over the sort's metric (APR when sorted by TVL)
+  const metricField = sort.field === 'tvl' ? 'apr' : sort.field
+  const narrowEndLabel = `TVL and ${POOL_COLUMNS.find((c) => c.sortField === metricField)?.label ?? 'Pool APR'}`
+
   let body: React.ReactNode
   if (status === 'loading' || status === 'error') {
     const count = status === 'loading' ? skeletonRows : ERROR_ROWS
@@ -89,6 +93,7 @@ export function ExplorePoolTable({
         columns={POOL_COLUMNS}
         query={query}
         badge={getChain(row.chain)}
+        sortField={sort.field}
       />
     ))
   }
@@ -96,6 +101,7 @@ export function ExplorePoolTable({
   return (
     <ExploreTable
       label="Pools"
+      narrowEndLabel={narrowEndLabel}
       columns={POOL_COLUMNS}
       sort={sort}
       onSort={(field) => onSortChange(nextSort(sort, field))}

@@ -16,6 +16,9 @@ import type { ExploreColumn } from './Table'
  *           <  850  # hidden, Pool min 210
  *           <  760  compact pinned cell, 168
  * # and the name column are pinned; below the minimum the body scrolls sideways.
+ * Under 640px (both tables) rows drop to two cells and nothing scrolls
+ * sideways (EXPLORE_TABLE_NARROW_WIDTH, Table.tsx); sortLabel names a column
+ * in that layout's sort menu.
  */
 
 export const TOKEN_TABLE_COMPACT_WIDTH = 969
@@ -55,8 +58,8 @@ export function tokenColumns(chainName?: string): ExploreColumn<TokenSortField>[
         : 'For multi-network tokens, token price reflects price on highest-volume network.',
       className: `w-[136px] ${DATA}`,
     },
-    { id: 'change1h', label: '1H', align: 'end', sortField: 'change1h', className: `w-[124px] ${DATA}` },
-    { id: 'change1d', label: '1D', align: 'end', sortField: 'change1d', className: `w-[124px] ${DATA}` },
+    { id: 'change1h', label: '1H', sortLabel: '1H change', align: 'end', sortField: 'change1h', className: `w-[124px] ${DATA}` },
+    { id: 'change1d', label: '1D', sortLabel: '1D change', align: 'end', sortField: 'change1d', className: `w-[124px] ${DATA}` },
     {
       id: 'fdv',
       label: 'FDV',

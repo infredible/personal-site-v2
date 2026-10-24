@@ -7,10 +7,10 @@ import { ChainLogo } from '../../swap/overlays/NetworkMenu'
 import { TokenLogo } from '../../swap/parts/TokenLogo'
 import type { Chain } from '../../swap/types'
 import { formatFiatTokenPrice, formatFiatTokenStats } from '../format'
-import type { ExploreTimePeriod, ExploreTokenStats } from '../types'
+import type { ExploreTimePeriod, ExploreTokenStats, TokenSortField } from '../types'
 import { HighlightedText } from './HighlightedText'
 import { PriceChangeCell } from './PriceChangeCell'
-import { ExploreSkeletonRow, ExploreTableCell, ExploreTableRow, type ExploreColumn } from './Table'
+import { ExploreNarrowCell, ExploreSkeletonRow, ExploreTableCell, ExploreTableRow, type ExploreColumn } from './Table'
 import { TokenSparklineCell } from './TokenSparklineCell'
 
 /*
@@ -27,6 +27,12 @@ import { TokenSparklineCell } from './TokenSparklineCell'
  * Compact (table under 969px; Tailwind needs these class names spelled out,
  * so the breakpoint is repeated literally): the name hides and the symbol becomes the
  * label, so the pinned column stays narrow.
+ *
+ * Narrow (table under 640px): two cells. Start: logo, name, and a subline
+ * "{symbol} · {metric}" where the metric follows the sort, so a sort by a
+ * hidden column still shows its values: Volume and the default (Price, 1D)
+ * show the period's volume, FDV the FDV, 1H the 1H change. End: price over
+ * the 1D change.
  */
 
 export interface TokenTableRowProps {
@@ -41,6 +47,68 @@ export interface TokenTableRowProps {
   badge?: Chain
   /** Networks for the hover swap; shown when there are two or more */
   networks?: Chain[]
+  /** Active sort: picks the narrow layout's subline metric */
+  sortField?: TokenSortField
+}
+
+/** The narrow subline's metric for the active sort */
+function NarrowMetric({ row, period, sortField }: Pick<TokenTableRowProps, 'row' | 'period' | 'sortField'>) {
+  switch (sortField) {
+    case 'fdv':
+      return <span className="truncate">{formatFiatTokenStats(row.fdvUsd)} FDV</span>
+    case 'change1h':
+      return (
+        <span className="inline-flex min-w-0 items-center gap-uni-4">
+          <PriceChangeCell change={row.change1h} className="gap-uni-2 [&_svg]:size-uni-12" />
+          <span className="shrink-0">1H</span>
+        </span>
+      )
+    default:
+      return (
+        <span className="truncate">
+          {formatFiatTokenStats(row.volumeUsd[period])} {period} vol
+        </span>
+      )
+  }
+}
+
+function NarrowTokenCells({
+  row,
+  period,
+  query,
+  badge,
+  sortField,
+}: Pick<TokenTableRowProps, 'row' | 'period' | 'query' | 'badge' | 'sortField'>) {
+  return (
+    <>
+      <ExploreNarrowCell side="start" className="gap-uni-12">
+        <span aria-hidden className="shrink-0">
+          <TokenLogo token={row.token} size={32} chain={badge} />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-body2 text-neutral1">
+            <HighlightedText text={row.token.name} query={query} />
+          </span>
+          <span className="flex h-[20px] min-w-0 items-center gap-uni-4 text-body3 text-neutral2">
+            <span className="shrink-0">
+              <HighlightedText text={row.token.symbol} query={query} />
+            </span>
+            <span aria-hidden className="shrink-0">
+              ·
+            </span>
+            <NarrowMetric row={row} period={period} sortField={sortField} />
+          </span>
+        </div>
+      </ExploreNarrowCell>
+      <ExploreNarrowCell side="end">
+        <span className="max-w-full truncate text-body2 text-neutral1">{formatFiatTokenPrice(row.priceUsd)}</span>
+        <span className="flex h-[20px] items-center text-body3 text-neutral2">
+          <span className="sr-only">1D change </span>
+          <PriceChangeCell change={row.change1d} className="gap-uni-2 [&_svg]:size-uni-12" />
+        </span>
+      </ExploreNarrowCell>
+    </>
+  )
 }
 
 function TokenDescription({
@@ -92,7 +160,7 @@ function TokenDescription({
   )
 }
 
-export function TokenTableRow({ row, rank, columns, period, query, badge, networks }: TokenTableRowProps) {
+export function TokenTableRow({ row, rank, columns, period, query, badge, networks, sortField }: TokenTableRowProps) {
   const cells: Record<string, React.ReactNode> = {
     index: rank,
     token: <TokenDescription row={row} query={query} badge={badge} networks={networks} />,
@@ -110,6 +178,7 @@ export function TokenTableRow({ row, rank, columns, period, query, badge, networ
           {cells[column.id]}
         </ExploreTableCell>
       ))}
+      <NarrowTokenCells row={row} period={period} query={query} badge={badge} sortField={sortField} />
     </ExploreTableRow>
   )
 }
@@ -137,7 +206,29 @@ const tokenSkeletonCells: Record<string, React.ReactNode> = {
   sparkline: <span className="h-[20px] w-[80px] rounded-uni-4 bg-surface3" />,
 }
 
+const tokenSkeletonNarrow = {
+  start: (
+    <div className="flex min-w-0 items-center gap-uni-12">
+      <span className="size-[32px] shrink-0 rounded-uni-full bg-surface3" />
+      <div className="flex min-w-0 flex-col">
+        <TextSkeleton placeholder="Token name" className="text-body2" />
+        <span className="flex h-[20px] items-center">
+          <TextSkeleton placeholder="TKN · $000.0M 1D vol" className="text-body3" />
+        </span>
+      </div>
+    </div>
+  ),
+  end: (
+    <>
+      <TextSkeleton placeholder="$0,000.00" className="text-body2" />
+      <span className="flex h-[20px] items-center">
+        <TextSkeleton placeholder="▲ 0.00%" className="text-body3" />
+      </span>
+    </>
+  ),
+}
+
 /** First-load placeholder for a token row: each cell sized to the text it stands in for. */
 export function TokenTableSkeletonRow({ columns, className }: { columns: ExploreColumn[]; className?: string }) {
-  return <ExploreSkeletonRow columns={columns} cells={tokenSkeletonCells} className={className} />
+  return <ExploreSkeletonRow columns={columns} cells={tokenSkeletonCells} narrow={tokenSkeletonNarrow} className={className} />
 }

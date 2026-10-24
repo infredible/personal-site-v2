@@ -3,9 +3,11 @@
 import * as React from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { ArrowDown } from '../../icons'
+import { ArrowDown, Check, ChevronDown } from '../../icons'
+import { UniMenu, UniMenuContent, UniMenuItem, UniMenuTrigger } from '../../UniMenu'
 import { UniTooltip } from '../../UniTooltip'
 import type { SortState } from '../types'
+import { useForcedTheme } from './useForcedTheme'
 
 /*
  * Table primitives for the Explore tables, after Uniswap's shared Table
@@ -34,7 +36,17 @@ import type { SortState } from '../types'
  *   change); pinned cells are opaque rather than 95%.
  * - Sizing follows the table's own container (@container/explore-table), so
  *   it reflows inside a 375px frame as on a phone.
+ * - Narrow (table under 640px; production scrolls sideways at every width
+ *   under 1200): no horizontal scroll. Each row and the header carry a second
+ *   cell pair (ExploreNarrowCell, data-narrow) that shows instead of the column
+ *   cells, which go display:none, so only one set is ever focusable or read.
+ *   The header becomes the name label plus a sort menu (ExploreSortMenu) over
+ *   the sortable columns. Between 640px and the full layout the pinned
+ *   columns scroll as before.
  */
+
+/** Table width under which rows collapse to two cells (Tailwind needs it spelled out: @max-[640px]/explore-table). */
+export const EXPLORE_TABLE_NARROW_WIDTH = 640
 
 export type ExploreColumnAlign = 'start' | 'end'
 
@@ -46,6 +58,8 @@ export interface ExploreColumn<F extends string = string> {
   className: string
   /** Sortable: the field it sorts by */
   sortField?: F
+  /** Longer name for the narrow sort menu (default: label), e.g. "1H change" */
+  sortLabel?: string
   /** Header description, shown on hover and focus */
   tooltip?: React.ReactNode
   /** Stays put while the body scrolls sideways (pass its sticky `left` in className) */
@@ -56,7 +70,38 @@ export interface ExploreColumn<F extends string = string> {
 
 /* Cells ------------------------------------------------------------------- */
 
-const cellBase = 'flex min-w-0 items-center px-uni-12 first:pl-uni-8 last:pr-uni-8'
+// The last column cell is the last cell that isn't a narrow one
+const cellBase =
+  'flex min-w-0 items-center px-uni-12 first:pl-uni-8 [&:nth-last-child(1_of_:not([data-narrow]))]:pr-uni-8'
+
+/** On a row or header row: under 640px, full width, and only the narrow cells show. */
+const narrowRow =
+  '@max-[640px]/explore-table:w-full @max-[640px]/explore-table:[&>:not([data-narrow])]:hidden'
+
+const narrowCellBase = 'hidden min-w-0 @max-[640px]/explore-table:flex'
+const narrowCellSide = {
+  // Fills the row; text inside truncates
+  start: 'flex-1 items-center overflow-hidden pr-uni-8 pl-uni-16',
+  // Fixed minimum so prices line up down the list
+  end: 'max-w-[55%] min-w-[112px] shrink-0 flex-col items-end justify-center overflow-hidden pr-uni-16 pl-uni-8 text-right',
+}
+
+/**
+ * A narrow-layout body cell (start: name column, end: right-aligned values).
+ * display:none above 640px; the column cells hide below it.
+ */
+export function ExploreNarrowCell({
+  side,
+  className,
+  children,
+  ...props
+}: { side: 'start' | 'end' } & React.ComponentProps<'td'>) {
+  return (
+    <td role="cell" data-narrow="" className={cn(narrowCellBase, narrowCellSide[side], className)} {...props}>
+      {children}
+    </td>
+  )
+}
 
 function cellClassName(column: ExploreColumn, surface: 'header' | 'body') {
   return cn(
@@ -156,6 +201,77 @@ export function ExploreTableHeaderCell<F extends string>({ column, sort, onSort 
   )
 }
 
+/* Narrow header ----------------------------------------------------------- */
+
+export interface ExploreSortMenuProps<F extends string> {
+  columns: ExploreColumn<F>[]
+  sort: SortState<F>
+  onSort: (field: F) => void
+  className?: string
+}
+
+/**
+ * The narrow layout's sort control: "↓ Volume" opening a menu of the sortable
+ * columns (menuitemradio, the current one checked with its direction).
+ * Picking the current field toggles direction, like its header button.
+ */
+export function ExploreSortMenu<F extends string>({ columns, sort, onSort, className }: ExploreSortMenuProps<F>) {
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const [theme, readTheme] = useForcedTheme(triggerRef)
+  const options = columns.filter((c): c is ExploreColumn<F> & { sortField: F } => !!c.sortField)
+  const current = options.find((c) => c.sortField === sort.field)
+  const name = (c: ExploreColumn<F>) => c.sortLabel ?? c.label
+  const directionLabel = sort.direction === 'asc' ? 'ascending' : 'descending'
+  const arrow = (className?: string) => (
+    <ArrowDown aria-hidden className={cn('size-uni-16 shrink-0', sort.direction === 'asc' && 'rotate-180', className)} />
+  )
+  return (
+    <UniMenu modal={false} onOpenChange={(open) => open && readTheme()}>
+      <UniMenuTrigger asChild>
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label={current ? `Sort by ${name(current)}, ${directionLabel}` : 'Sort'}
+          className={cn(
+            // Negative margins: a bigger hit area without growing the 44px header
+            '-my-uni-6 -mr-uni-8 inline-flex cursor-pointer items-center gap-uni-4 rounded-uni-8 py-uni-6 pr-uni-6 pl-uni-8',
+            'text-body3 whitespace-nowrap text-neutral1 outline-none select-none',
+            'transition-colors duration-100 ease-in-out hover:bg-surface3 data-[state=open]:bg-surface3',
+            'focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent1',
+            className,
+          )}
+        >
+          {arrow('text-neutral1')}
+          {current ? name(current) : 'Sort'}
+          <ChevronDown aria-hidden className="size-uni-16 text-neutral2" />
+        </button>
+      </UniMenuTrigger>
+      <UniMenuContent data-theme={theme} align="end" aria-label="Sort by" className="min-w-[180px]">
+        {options.map((option) => {
+          const active = option.sortField === sort.field
+          return (
+            <UniMenuItem
+              key={option.id}
+              role="menuitemradio"
+              aria-checked={active}
+              onSelect={() => onSort(option.sortField)}
+            >
+              <span className="flex-1">{name(option)}</span>
+              {active && (
+                <>
+                  {arrow('text-neutral2')}
+                  <span className="sr-only">{directionLabel}, select to reverse</span>
+                  <Check aria-hidden className="size-uni-16 text-accent1" />
+                </>
+              )}
+            </UniMenuItem>
+          )
+        })}
+      </UniMenuContent>
+    </UniMenu>
+  )
+}
+
 /* Table ------------------------------------------------------------------- */
 
 interface TableContextValue {
@@ -192,6 +308,8 @@ export interface ExploreTableProps<F extends string> {
   onRowActivate?: (id: string) => void
   /** Accessible name, e.g. "Tokens" */
   label: string
+  /** Narrow layout: screen-reader name of the right-hand column, e.g. "Price and 1D change" */
+  narrowEndLabel?: string
   /** Distance from the scroll container's top where the header sticks (e.g. under an app bar) */
   stickyTop?: number
   /** First load or refetch in progress (aria-busy) */
@@ -221,6 +339,7 @@ export function ExploreTable<F extends string>({
   rowIds,
   onRowActivate,
   label,
+  narrowEndLabel,
   stickyTop = 0,
   busy = false,
   dimHeader = false,
@@ -348,6 +467,10 @@ export function ExploreTable<F extends string>({
     [activeId, onRowActivate, reduceMotion],
   )
 
+  // Narrow header: the name column's label (Token, Pool) and the sort menu
+  const nameColumn = columns.find((c) => c.id !== 'index' && !c.sortField)
+  const narrowHeader = 'hidden min-w-0 items-center py-uni-12 text-body3 @max-[640px]/explore-table:flex'
+
   return (
     <div
       data-slot="explore-table"
@@ -365,7 +488,7 @@ export function ExploreTable<F extends string>({
           onScroll={() => syncFrom('head')}
           style={{ top: stickyTop }}
           className={cn(
-            'sticky z-10 block overflow-x-auto overflow-y-hidden bg-surface1 pt-uni-12 pb-uni-2',
+            'sticky z-10 block overflow-x-auto overflow-y-hidden bg-surface1 pt-uni-12 pb-uni-2 @max-[640px]/explore-table:overflow-x-hidden',
             // Hairline once stuck, so rows sliding under it have an edge
             'shadow-[0_1px_0_transparent] transition-shadow duration-150 ease-out data-[stuck]:shadow-[0_1px_0_var(--uni-surface3)]',
             hiddenScrollbar,
@@ -375,12 +498,30 @@ export function ExploreTable<F extends string>({
             role="row"
             className={cn(
               'flex w-fit min-w-full rounded-uni-12 bg-surface2 transition-opacity duration-150',
+              narrowRow,
               dimHeader && 'opacity-40',
             )}
           >
             {columns.map((column) => (
               <ExploreTableHeaderCell key={column.id} column={column} sort={sort} onSort={onSort} />
             ))}
+            <th
+              role="columnheader"
+              scope="col"
+              data-narrow=""
+              className={cn(narrowHeader, 'flex-1 pr-uni-8 pl-uni-16 font-[inherit] [font-weight:500] text-neutral2')}
+            >
+              {nameColumn?.label}
+            </th>
+            <th
+              role="columnheader"
+              scope="col"
+              data-narrow=""
+              className={cn(narrowHeader, 'shrink-0 justify-end pr-uni-16 pl-uni-8 font-[inherit]')}
+            >
+              {narrowEndLabel && <span className="sr-only">{narrowEndLabel}</span>}
+              {sort && onSort && <ExploreSortMenu columns={columns} sort={sort} onSort={onSort} />}
+            </th>
           </tr>
         </thead>
         <TableContext.Provider value={context}>
@@ -392,6 +533,7 @@ export function ExploreTable<F extends string>({
             onKeyDown={onBodyKeyDown}
             className={cn(
               'relative flex flex-col gap-uni-2 overflow-x-auto overflow-y-hidden overscroll-x-none [overflow-anchor:none]',
+              '@max-[640px]/explore-table:overflow-x-hidden',
               'group-data-[overflowing=true]/explore-table:gap-0',
               hiddenScrollbar,
               shimmer && 'uni-shimmer',
@@ -418,8 +560,10 @@ export function ExploreTable<F extends string>({
 const ROW_TRANSITION = { type: 'spring', duration: 0.22, bounce: 0 } as const
 
 // scroll-margin keeps a row focused from the keyboard clear of the sticky header (12 + 42 + 2)
-const rowBase =
-  'relative flex h-[64px] w-fit min-w-full shrink-0 rounded-uni-12 scroll-mt-[calc(var(--explore-sticky-top,0px)+60px)]'
+const rowBase = cn(
+  'relative flex h-[64px] w-fit min-w-full shrink-0 rounded-uni-12 scroll-mt-[calc(var(--explore-sticky-top,0px)+60px)]',
+  narrowRow,
+)
 
 export interface ExploreTableRowProps extends Omit<React.ComponentProps<'tr'>, 'ref' | 'id' | 'children'> {
   /** Stable row id (keyboard navigation, FLIP identity) */
@@ -467,16 +611,20 @@ export function ExploreTableRow({ rowId, className, children, onClick, onFocus, 
 
 /**
  * Skeleton row (first load, error backdrop): the real columns with each cell's
- * placeholder, so shapes line up with the rows that replace them.
+ * placeholder, so shapes line up with the rows that replace them; `narrow`
+ * holds the two-cell layout's placeholders.
  */
 export function ExploreSkeletonRow({
   columns,
   cells,
+  narrow,
   className,
 }: {
   columns: ExploreColumn[]
   /** Placeholder per column id */
   cells: Record<string, React.ReactNode>
+  /** Placeholders for the narrow layout's start and end cells */
+  narrow?: { start: React.ReactNode; end: React.ReactNode }
   className?: string
 }) {
   return (
@@ -486,6 +634,12 @@ export function ExploreSkeletonRow({
           {cells[column.id]}
         </td>
       ))}
+      {narrow && (
+        <>
+          <ExploreNarrowCell side="start">{narrow.start}</ExploreNarrowCell>
+          <ExploreNarrowCell side="end">{narrow.end}</ExploreNarrowCell>
+        </>
+      )}
     </tr>
   )
 }

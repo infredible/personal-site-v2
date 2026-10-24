@@ -116,6 +116,7 @@ export function ExploreTokenTable({
           query={query}
           badge={badge}
           networks={networks}
+          sortField={sort.field}
         />
       )
     })
@@ -124,6 +125,7 @@ export function ExploreTokenTable({
   return (
     <ExploreTable
       label="Tokens"
+      narrowEndLabel="Price and 1D change"
       columns={columns}
       sort={sort}
       onSort={(field) => onSortChange(nextSort(sort, field))}
