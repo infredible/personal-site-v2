@@ -72,18 +72,18 @@ export function AmountDisplay({ amount, denomination, token, usd, tokenAmount, o
       <div className="relative flex h-[72px] w-full items-center justify-center">
         <p
           className={cn(
-            'relative flex items-baseline leading-none tracking-[-0.02em] tabular-nums transition-[font-size,color] duration-150 ease-out',
+            'relative flex items-baseline leading-none tabular-nums transition-[font-size,color] duration-150 ease-out motion-reduce:transition-none',
             empty ? 'text-neutral3' : 'text-neutral1',
           )}
           style={{ fontSize, fontWeight: 485 }}
         >
           <span className="sr-only" aria-live="polite">
-            {inUsd ? formatUsd(Number.parseFloat(amount) || 0) : `${display} ${token.symbol}`}
+            {inUsd ? `$${display}` : `${display} ${token.symbol}`}, {other}
           </span>
           <span
             aria-hidden
             className={cn(
-              'self-start overflow-hidden pt-[0.12em] text-[24px] leading-none transition-[max-width,opacity,translate] duration-150 ease-out',
+              'self-start overflow-hidden pt-[0.12em] text-[24px] leading-none transition-[max-width,opacity,translate] duration-150 ease-out motion-reduce:transition-none',
               inUsd ? 'max-w-uni-24 pr-uni-2 opacity-100' : 'max-w-0 translate-y-uni-8 opacity-0',
             )}
           >
@@ -111,7 +111,7 @@ export function AmountDisplay({ amount, denomination, token, usd, tokenAmount, o
           <span
             aria-hidden
             className={cn(
-              'overflow-hidden text-[16px] leading-none whitespace-nowrap transition-[max-width,opacity,translate] duration-150 ease-out',
+              'overflow-hidden text-[16px] leading-none whitespace-nowrap transition-[max-width,opacity,translate] duration-150 ease-out motion-reduce:transition-none',
               inUsd ? 'max-w-0 translate-y-uni-8 opacity-0' : 'max-w-[80px] pl-uni-6 opacity-100',
             )}
           >
@@ -125,13 +125,13 @@ export function AmountDisplay({ amount, denomination, token, usd, tokenAmount, o
             aria-label={toggleLabel}
             title={toggleLabel}
             className={cn(
-              'absolute right-uni-12 flex size-uni-36 cursor-pointer items-center justify-center rounded-uni-full text-neutral3 outline-none',
+              'absolute right-uni-12 flex size-uni-36 cursor-pointer items-center justify-center rounded-uni-full text-neutral2 outline-none',
               'transition-[color,background-color,scale] duration-100 ease-out hover:text-neutral2 active:scale-90',
-              'focus-visible:bg-surface2 focus-visible:text-neutral2',
+              'focus-visible:bg-surface2 focus-visible:text-neutral2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-neutral1',
             )}
           >
             <ArrowUpDown
-              className="size-uni-20 transition-transform duration-200 ease-[cubic-bezier(0.77,0,0.175,1)]"
+              className="size-uni-20 transition-transform duration-200 ease-[cubic-bezier(0.77,0,0.175,1)] motion-reduce:transition-none"
               style={{ transform: inUsd ? undefined : 'rotate(180deg)' }}
             />
           </button>

@@ -49,7 +49,7 @@ export function AssetCard({
         'flex h-[66px] w-full items-center justify-between gap-uni-8 rounded-uni-20 border border-surface3 bg-surface1 p-uni-12 pr-uni-16 text-left shadow-uni-short outline-none',
         onClick && 'cursor-pointer',
         'transition-[background-color,scale] duration-100 ease-out hover:bg-surface1Hovered active:scale-[0.99]',
-        'focus-visible:border-neutral3',
+        'focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-neutral1',
         className,
       )}
       style={style}
@@ -78,12 +78,15 @@ export function AssetCard({
 export function FlipButton({ onClick, disabled = false, className }: { onClick?: () => void; disabled?: boolean; className?: string }) {
   const [turns, setTurns] = React.useState(0)
   const interactive = Boolean(onClick) && !disabled
+  const noteId = React.useId()
   return (
+    <>
     <button
       type="button"
       aria-label="Flip pay and receive"
       title={disabled ? 'A card payment can’t be received' : undefined}
-      disabled={disabled}
+      aria-disabled={disabled || undefined}
+      aria-describedby={disabled ? noteId : undefined}
       tabIndex={onClick ? undefined : -1}
       onClick={() => {
         if (!interactive) return
@@ -93,15 +96,22 @@ export function FlipButton({ onClick, disabled = false, className }: { onClick?:
       className={cn(
         'flex size-uni-40 items-center justify-center rounded-uni-12 border border-surface3 bg-surface1 text-neutral2 shadow-uni-medium outline-none',
         interactive && 'cursor-pointer hover:bg-surface1Hovered hover:text-neutral1 active:scale-95',
-        'transition-[background-color,color,scale] duration-100 ease-out focus-visible:border-neutral3 disabled:text-neutral3',
+        'transition-[background-color,color,scale] duration-100 ease-out focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-neutral1',
+        disabled && 'text-neutral3',
         className,
       )}
     >
       <ArrowDown
-        className="size-uni-20 transition-transform duration-300"
+        className="size-uni-20 transition-transform duration-300 motion-reduce:transition-none"
         style={{ transform: `rotate(${turns * 360}deg)`, transitionTimingFunction: EASE_MOVE }}
       />
     </button>
+    {disabled && (
+      <span id={noteId} className="sr-only">
+        A card payment can’t be received
+      </span>
+    )}
+    </>
   )
 }
 
@@ -118,7 +128,8 @@ interface BuyCardsProps {
   /** Ids for the sheet to return focus to */
   payId?: string
   receiveId?: string
-  sheetOpen?: boolean
+  /** Which card's sheet is open; undefined when closed */
+  expanded?: 'pay' | 'receive'
 }
 
 export function BuyCards({
@@ -131,7 +142,7 @@ export function BuyCards({
   flipDisabled,
   payId,
   receiveId,
-  sheetOpen = false,
+  expanded,
 }: BuyCardsProps) {
   // Card A holds pay until a flip, then receive; it moves rather than re-rendering
   const cards = [
@@ -147,8 +158,8 @@ export function BuyCards({
           content={card.isPay ? pay : receive}
           onClick={card.isPay ? onPayClick : onReceiveClick}
           aria-haspopup="dialog"
-          aria-expanded={sheetOpen}
-          className="absolute inset-x-0 top-0 transition-[transform,background-color,scale] duration-[240ms]"
+          aria-expanded={expanded === (card.isPay ? 'pay' : 'receive')}
+          className="absolute inset-x-0 top-0 transition-[transform,background-color,scale] duration-[240ms] motion-reduce:transition-none"
           style={{ transform: `translateY(${card.top}px)`, transitionTimingFunction: EASE_MOVE }}
         />
       ))}

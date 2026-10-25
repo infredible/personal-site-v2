@@ -32,9 +32,14 @@ export function BuySheet({ open, onClose, labelledBy, returnFocusId, children }:
   const drag = useDragControls()
   const panel = React.useRef<HTMLDivElement>(null)
 
-  // Focus lands on the content's [data-sheet-focus] if it has one, so its own key handlers see the keys
+  // On opening (not on mounting already open, as canvas frames do, which would
+  // pull focus into whichever frame mounted last), focus lands on the content's
+  // [data-sheet-focus] if it has one, so its own key handlers see the keys
+  const wasOpen = React.useRef(open)
   React.useEffect(() => {
-    if (!open) return
+    const opened = open && !wasOpen.current
+    wasOpen.current = open
+    if (!opened) return
     const target = panel.current?.querySelector<HTMLElement>('[data-sheet-focus]') ?? panel.current
     target?.focus({ preventScroll: true })
   }, [open])
@@ -54,7 +59,10 @@ export function BuySheet({ open, onClose, labelledBy, returnFocusId, children }:
   }
 
   return (
+    // initial={false}: a sheet that mounts open is just open, and its first
+    // frame doesn't depend on reduced motion (unknown on the server)
     <AnimatePresence
+      initial={false}
       onExitComplete={() => returnFocusId && document.getElementById(returnFocusId)?.focus({ preventScroll: true })}
     >
       {open && (
@@ -76,8 +84,8 @@ export function BuySheet({ open, onClose, labelledBy, returnFocusId, children }:
             tabIndex={-1}
             onKeyDown={onKeyDown}
             className="absolute inset-x-0 bottom-0 flex h-[85%] flex-col overflow-hidden rounded-t-uni-20 bg-surface1 outline-none"
-            initial={reduceMotion ? { opacity: 0 } : { y: '100%' }}
-            animate={reduceMotion ? { opacity: 1 } : { y: 0 }}
+            initial={reduceMotion ? { opacity: 0, y: 0 } : { opacity: 1, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { y: '100%', transition: { duration: 0.28, ease: EASE_DRAWER } }}
             transition={{ duration: 0.45, ease: EASE_DRAWER }}
             drag={reduceMotion ? false : 'y'}
@@ -95,6 +103,10 @@ export function BuySheet({ open, onClose, labelledBy, returnFocusId, children }:
             />
             <div aria-hidden className="mx-auto mt-uni-8 mb-uni-8 h-uni-4 w-uni-48 shrink-0 rounded-uni-full bg-neutral3" />
             <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+            {/* Touch screen readers have no Esc, and the scrim is hidden from them */}
+            <button type="button" onClick={onClose} className="sr-only focus:not-sr-only">
+              Close
+            </button>
           </motion.div>
         </div>
       )}

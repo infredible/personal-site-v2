@@ -4,7 +4,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { TOKENS } from '../swap/tokens'
 import type { Token } from '../swap/types'
-import { amountUsd, maxUsd, pressKey, sameAsset, typedFromUsd, type KeypadKey } from './buy'
+import { amountDecimals, amountUsd, amountValue, maxUsd, pressKey, sameAsset, typedFromUsd, type KeypadKey } from './buy'
 import { BuyFormView } from './BuyFormView'
 import { NETWORK_COST_LATENCY_MS, NETWORK_COST_USD } from './data'
 import { CLOSED_SHEET } from './presets'
@@ -14,7 +14,7 @@ import type { BuyFormState, BuySheetState, BuySide, FiatMethodId, PaySource, Pro
 
 /*
  * The buy prototype, live: owns the form and the sheet, and runs the mocks
- * (a 600ms network cost fetch after every edit). Fills its box; the caller
+ * (a 600ms network cost fetch after every change to the amount). Fills its box; the caller
  * gives it a phone-sized one.
  *
  * Interaction rules, from the prototype:
@@ -54,40 +54,54 @@ export function BuyFlow({ initialState, initialSheet = CLOSED_SHEET, onStateChan
     onStateChange?.(state, sheet)
   }, [state, sheet, onStateChange])
 
-  // Network cost: every edit refetches; the last value stays up (pulsing) meanwhile
+  // Network cost: every change to the amount refetches; the last value stays up (pulsing) meanwhile
   const costTimer = React.useRef<ReturnType<typeof setTimeout>>(undefined)
-  React.useEffect(() => () => clearTimeout(costTimer.current), [])
-  const refetchCost = (amount: string) => {
+  const startCostTimer = React.useCallback(() => {
     clearTimeout(costTimer.current)
-    if (amount === '0') return { status: 'idle' as const }
     costTimer.current = setTimeout(() => {
       setState((s) => ({ ...s, networkCost: { status: 'ready', usd: NETWORK_COST_USD } }))
     }, NETWORK_COST_LATENCY_MS)
-    return { status: 'loading' as const, usd: state.networkCost.usd }
+  }, [])
+  // A flow resumed mid-fetch (e.g. back from the canvas) finishes it rather than pulsing forever
+  const [resumeLoading] = React.useState(initialState.networkCost.status === 'loading')
+  React.useEffect(() => {
+    if (resumeLoading) startCostTimer()
+    return () => clearTimeout(costTimer.current)
+  }, [resumeLoading, startCostTimer])
+
+  /** Applies a change. One that moves the amount refetches the network cost; a zero amount has none. */
+  const update = (next: Partial<BuyFormState>) => {
+    const amount = next.amount ?? state.amount
+    let networkCost = state.networkCost
+    if (amount !== state.amount) {
+      clearTimeout(costTimer.current)
+      if (amountValue(amount) > 0) {
+        startCostTimer()
+        networkCost = { status: 'loading', usd: state.networkCost.usd }
+      } else {
+        networkCost = { status: 'idle' }
+      }
+    }
+    setState({ ...state, ...next, networkCost })
   }
 
-  const setAmount = (amount: string) => {
-    if (amount === state.amount) return
-    const networkCost = refetchCost(amount)
-    setState((s) => ({ ...s, amount, networkCost }))
-  }
+  const setAmount = (amount: string) => update({ amount })
 
-  const onKey = (key: KeypadKey) => setAmount(pressKey(state.amount, key, state.denomination))
+  const onKey = (key: KeypadKey) => setAmount(pressKey(state.amount, key, amountDecimals(state.denomination, state.receive)))
 
   const onToggleDenomination = () => {
     const denomination = state.denomination === 'usd' ? 'token' : 'usd'
-    setState((s) => ({ ...s, denomination, amount: typedFromUsd(amountUsd(s), denomination, s.receive) }))
+    update({ denomination, amount: typedFromUsd(amountUsd(state), denomination, state.receive) })
   }
 
   /** New pay / receive; in token units the amount is re-typed so its dollar value holds */
   const setSides = (pay: PaySource, receive: Token, flipped = state.flipped) =>
-    setState((s) => ({
-      ...s,
+    update({
       pay,
       receive,
       flipped,
-      amount: s.denomination === 'token' ? typedFromUsd(amountUsd(s), 'token', receive) : s.amount,
-    }))
+      amount: state.denomination === 'token' ? typedFromUsd(amountUsd(state), 'token', receive) : state.amount,
+    })
 
   const onFlip = () => {
     if (state.pay.kind !== 'token') return
@@ -122,7 +136,7 @@ export function BuyFlow({ initialState, initialSheet = CLOSED_SHEET, onStateChan
   }
 
   const onSelectProvider = (method: FiatMethodId, provider: Provider) => {
-    setState((s) => ({ ...s, pay: { kind: 'fiat', method, provider } }))
+    update({ pay: { kind: 'fiat', method, provider } })
     closeSheet()
   }
 
@@ -170,7 +184,7 @@ export function BuyFlow({ initialState, initialSheet = CLOSED_SHEET, onStateChan
           onMax={onMax}
           // Review is where the prototype ends
           onReview={() => {}}
-          sheetOpen={sheet.open}
+          openSheetSide={sheet.open ? sheet.side : undefined}
           payCardId={ids.pay}
           receiveCardId={ids.receive}
         />

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { formatTokenAmount, formatUsd } from '../swap/format'
 import { TokenLogo } from '../swap/parts/TokenLogo'
 import type { Token } from '../swap/types'
-import { amountUsd, getBuyAction, receiveAmount, type BuyAction, type KeypadKey } from './buy'
+import { amountUsd, amountValue, getBuyAction, receiveAmount, type BuyAction, type KeypadKey } from './buy'
 import { QUICK_AMOUNTS_USD, paymentMethod } from './data'
 import { AmountDisplay } from './parts/AmountDisplay'
 import { BuyActions, BuyHeader } from './parts/BuyActions'
@@ -13,7 +13,7 @@ import { BuyCards, type AssetCardContent } from './parts/BuyCards'
 import { MethodLogo } from './parts/logos'
 import { NetworkCostRow } from './parts/NetworkCostRow'
 import { NumberPad } from './parts/NumberPad'
-import type { BuyDenomination, BuyFormState, PaySource } from './types'
+import type { BuyDenomination, BuyFormState, BuySide, PaySource } from './types'
 
 /*
  * The buy screen, composed from the parts, top to bottom as in the prototype:
@@ -39,8 +39,8 @@ export interface BuyFormViewProps {
   onQuickAmount?: (usd: number) => void
   onMax?: () => void
   onReview?: () => void
-  /** For the cards' aria-expanded */
-  sheetOpen?: boolean
+  /** The side whose sheet is open, for that card's aria-expanded */
+  openSheetSide?: BuySide
   /** Ids on the cards, so the sheet can hand focus back */
   payCardId?: string
   receiveCardId?: string
@@ -107,13 +107,13 @@ export function getBuyFormParts({
   onQuickAmount,
   onMax,
   onReview,
-  sheetOpen,
+  openSheetSide,
   payCardId,
   receiveCardId,
 }: BuyFormViewProps): BuyFormPart[] {
   const { amount, denomination, pay, receive, balances, networkCost } = state
   const action: BuyAction = getBuyAction(state)
-  const hasAmount = amount !== '0'
+  const hasAmount = amountValue(amount) > 0
 
   return [
     { id: 'header', label: 'Header', node: <BuyHeader /> },
@@ -145,7 +145,7 @@ export function getBuyFormParts({
           flipDisabled={pay.kind === 'fiat'}
           payId={payCardId}
           receiveId={receiveCardId}
-          sheetOpen={sheetOpen}
+          expanded={openSheetSide}
         />
       ),
     },

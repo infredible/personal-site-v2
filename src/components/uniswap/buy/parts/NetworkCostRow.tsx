@@ -9,6 +9,15 @@ import type { QuoteStatus } from '../types'
  * shows a skeleton the size of the value; a refetch (every keypress) keeps
  * the last value on screen and pulses it. No amount, no cost: a dash.
  */
+function NotAvailable() {
+  return (
+    <>
+      <span aria-hidden>-</span>
+      <span className="sr-only">Not available</span>
+    </>
+  )
+}
+
 export function NetworkCostRow({
   status,
   usd,
@@ -22,18 +31,18 @@ export function NetworkCostRow({
 }) {
   const loading = status === 'loading'
   return (
-    <div data-slot="buy-network-cost" className={cn('flex items-center justify-between px-uni-12 py-uni-12', className)}>
+    <div data-slot="buy-network-cost" className={cn('flex items-center justify-between px-uni-12 pt-uni-12 pb-[20px]', className)}>
       <span className="flex items-center gap-uni-4 text-body4 text-neutral2">
         <Gas className="size-uni-16" />
         Network cost
       </span>
       <span className="flex items-center gap-uni-4 text-body4 text-neutral2 tabular-nums">
         {!hasAmount ? (
-          <span>-</span>
+          <NotAvailable />
         ) : usd === undefined ? (
-          loading ? <TextSkeleton placeholder="$0.00" shimmer className="text-body4" /> : <span>-</span>
+          loading ? <TextSkeleton placeholder="$0.00" shimmer className="text-body4" /> : <NotAvailable />
         ) : (
-          <span className={cn(loading && 'animate-pulse')} aria-busy={loading || undefined}>
+          <span className={cn(loading && 'animate-pulse motion-reduce:animate-none')}>
             {formatUsd(usd)}
           </span>
         )}

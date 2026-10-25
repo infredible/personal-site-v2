@@ -45,6 +45,7 @@ export function BuyWithPanel(props: BuyWithPanelProps) {
   const paying = side === 'pay'
   const view: PaymentMethodId = paying ? method : 'tokens'
   const search = React.useRef<HTMLInputElement>(null)
+  const idBase = React.useId()
 
   // Typing anywhere in the token view types into the search
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -69,9 +70,15 @@ export function BuyWithPanel(props: BuyWithPanelProps) {
       <h2 id={titleId} className="px-uni-16 pt-uni-8 text-buttonLabel2 text-neutral1">
         {paying ? 'Buy with' : 'Receive'}
       </h2>
-      {paying && <MethodChips value={method} onChange={onMethodChange} />}
+      {paying && <MethodChips value={method} onChange={onMethodChange} idBase={idBase} />}
       {/* Keyed by view: switching chips starts the list at the top */}
-      <div key={view} className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain pb-uni-16', !paying && 'mt-uni-12')}>
+      <div
+        key={view}
+        id={`${idBase}-panel`}
+        role={paying ? 'tabpanel' : undefined}
+        aria-labelledby={paying ? `${idBase}-tab-${method}` : undefined}
+        className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain pb-uni-16', !paying && 'mt-uni-12')}
+      >
         {view === 'tokens' ? <TokenView {...props} searchRef={search} /> : <ProviderView {...props} method={view} />}
       </div>
     </div>
@@ -79,7 +86,7 @@ export function BuyWithPanel(props: BuyWithPanelProps) {
 }
 
 /** Horizontally scrolling tabs; ←/→ move between them (and select, as tabs do) */
-function MethodChips({ value, onChange }: { value: PaymentMethodId; onChange?: (method: PaymentMethodId) => void }) {
+function MethodChips({ value, onChange, idBase }: { value: PaymentMethodId; onChange?: (method: PaymentMethodId) => void; idBase: string }) {
   const ref = React.useRef<HTMLDivElement>(null)
 
   // Keep the selected chip in view, e.g. reopening on Revolut, past the edge. Scrolls
@@ -95,9 +102,10 @@ function MethodChips({ value, onChange }: { value: PaymentMethodId; onChange?: (
     }
   }, [value])
 
-  const move = (event: React.KeyboardEvent, step: number) => {
+  const move = (event: React.KeyboardEvent, step: number | 'first' | 'last') => {
     const index = PAYMENT_METHODS.findIndex((m) => m.id === value)
-    const next = PAYMENT_METHODS[(index + step + PAYMENT_METHODS.length) % PAYMENT_METHODS.length]
+    const target = step === 'first' ? 0 : step === 'last' ? PAYMENT_METHODS.length - 1 : index + step + PAYMENT_METHODS.length
+    const next = PAYMENT_METHODS[target % PAYMENT_METHODS.length]
     event.preventDefault()
     onChange?.(next.id)
     ref.current?.querySelector<HTMLElement>(`[data-method="${next.id}"]`)?.focus({ preventScroll: true })
@@ -115,11 +123,15 @@ function MethodChips({ value, onChange }: { value: PaymentMethodId; onChange?: (
           key={m.id}
           method={m}
           selected={m.id === value}
+          id={`${idBase}-tab-${m.id}`}
+          controls={`${idBase}-panel`}
           tabIndex={m.id === value ? 0 : -1}
           onClick={onChange && (() => onChange(m.id))}
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight') move(e, 1)
             else if (e.key === 'ArrowLeft') move(e, -1)
+            else if (e.key === 'Home') move(e, 'first')
+            else if (e.key === 'End') move(e, 'last')
           }}
         />
       ))}
@@ -137,7 +149,7 @@ function ProviderView({
   const selectedId = pay.kind === 'fiat' && pay.method === method ? pay.provider.id : undefined
   return (
     <div className="flex flex-col px-uni-8">
-      <div className="sticky top-0 z-10 bg-surface1">
+      <div className="sticky top-0 z-10 mb-uni-8 bg-surface1">
         <SectionHeading icon={<HandHoldingDollar />}>Providers</SectionHeading>
       </div>
       <div className="flex flex-col gap-uni-4">
@@ -218,9 +230,13 @@ function TokenView({
               onQueryChange?.('')
             }
           }}
-          className="h-uni-48 border-transparent"
+          className="h-uni-48 rounded-uni-24 border-transparent placeholder:text-neutral2"
         />
       </div>
+
+      <p role="status" className="sr-only">
+        {results ? (results.length > 0 ? `${results.length} ${results.length === 1 ? 'token' : 'tokens'}` : `No tokens match “${query.trim()}”`) : ''}
+      </p>
 
       {results ? (
         <div className="flex flex-col gap-uni-4 px-uni-8">
@@ -231,7 +247,7 @@ function TokenView({
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-uni-8 px-uni-8">
+        <div className="flex flex-col px-uni-8">
           {side === 'receive' && (
             <div className="grid grid-cols-5 gap-uni-4 px-uni-8 pt-uni-8 pb-uni-4">
               {SUGGESTED_TOKENS.map((t) => (
