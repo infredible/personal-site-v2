@@ -36,6 +36,11 @@ const showcases = [
     description: 'The Tokens and Pools tables from Explore: sorting, filters, search, and loading states.',
   },
   {
+    href: '/showcase/uniswap/buy',
+    title: 'Buy flow',
+    description: 'A mobile buy prototype: keypad entry, pay and receive cards, and a sheet of tokens and payment providers.',
+  },
+  {
     href: '/showcase/uniswap/system',
     title: 'Design system',
     description: 'The Uniswap tokens and components these are built from.',
