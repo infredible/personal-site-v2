@@ -279,7 +279,7 @@ function SwapDetails({
               )}
               <span className={cn(slippageHigh && 'text-statusWarning')}>{formatPercent(slippage.value)}</span>
             </DetailRow>
-            <DetailRow label="Order routing">{quote.route ?? 'Uniswap API'}</DetailRow>
+            <DetailRow label="Order routing">{quote.route ?? 'Uniswap v4'}</DetailRow>
             {priceImpactRow}
           </>
         )}

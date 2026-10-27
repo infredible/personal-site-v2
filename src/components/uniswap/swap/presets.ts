@@ -1,3 +1,4 @@
+import { DEFAULT_LIMIT, requoteLimit, withLimitPreset, withLimitPrice } from './limit'
 import { formatDerivedAmount } from './parts/amount'
 import { DEFAULT_SLIPPAGE, MOCK_WALLET, TOKENS } from './tokens'
 import type { SwapFormState, SwapQuote, Token } from './types'
@@ -26,7 +27,7 @@ export function mockRate(input: Token, output: Token, { priceImpact = 0.0005, fe
 
 /** A ready quote plus the derived output amount for `amount` of `input`. */
 export function mockQuote(input: Token, output: Token, amount: number, options: QuoteOptions = {}) {
-  const { priceImpact = 0.0005, networkFeeUsd = 1.24, feeRate = 0.0025, route = 'Uniswap API' } = options
+  const { priceImpact = 0.0005, networkFeeUsd = 1.24, feeRate = 0.0025, route = 'Uniswap v4' } = options
   const rate = mockRate(input, output, { priceImpact, feeRate })
   const quote: SwapQuote = { status: 'ready', rate, priceImpact, networkFeeUsd, feeRate, route }
   return { quote, outputAmount: formatDerivedAmount(amount * rate, output.decimals) }
@@ -42,6 +43,7 @@ const base: SwapFormState = {
   quote: { status: 'idle' },
   wallet: MOCK_WALLET,
   slippage: DEFAULT_SLIPPAGE,
+  limit: DEFAULT_LIMIT,
 }
 
 function swap(input: Token, output: Token, amount: string, options?: QuoteOptions): SwapFormState {
@@ -55,6 +57,28 @@ function swap(input: Token, output: Token, amount: string, options?: QuoteOption
 }
 
 const filled = swap(TOKENS.ETH, TOKENS.USDC, '1')
+
+/** A limit-tab state: the pair and amount, the price from a preset (fraction) or typed, amounts derived. */
+function limit(
+  input: Token,
+  output: Token,
+  amount: string,
+  price: { preset: number } | { typed: (market: number) => number },
+): SwapFormState {
+  const oriented = requoteLimit({
+    ...base,
+    mode: 'limit',
+    input: { token: input, amount },
+    output: { token: output, amount: '' },
+    limit: DEFAULT_LIMIT,
+  })
+  const priced =
+    'preset' in price
+      ? withLimitPreset(oriented, price.preset)
+      : withLimitPrice(oriented, String(Number(price.typed(Number(oriented.limit.price)).toPrecision(6))))
+  return requoteLimit(priced)
+}
+
 
 export const SWAP_PRESETS: SwapPreset[] = [
   {
@@ -167,6 +191,42 @@ export const SWAP_PRESETS: SwapPreset[] = [
       output: { token: TOKENS.DAI, amount: '' },
       quote: { status: 'error' },
     },
+  },
+  {
+    id: 'limit',
+    label: 'Limit · Empty',
+    description: 'The Limit tab with a pair chosen: the price starts at market.',
+    state: limit(TOKENS.ETH, TOKENS.USDC, '', { preset: 0 }),
+  },
+  {
+    id: 'limit-ready',
+    label: 'Limit · Ready',
+    description: 'Sell 1 ETH when it reaches 5% above market.',
+    state: limit(TOKENS.ETH, TOKENS.USDC, '1', { preset: 0.05 }),
+  },
+  {
+    id: 'limit-buy',
+    label: 'Limit · Buy the dip',
+    description: 'Selling USDC for ETH: the price still reads per ETH, so better is lower.',
+    state: limit(TOKENS.USDC, TOKENS.ETH, '1000', { preset: 0.1 }),
+  },
+  {
+    id: 'limit-custom',
+    label: 'Limit · Typed price',
+    description: 'A price typed by hand: no preset selected.',
+    state: { ...limit(TOKENS.ETH, TOKENS.USDC, '0.5', { typed: () => 3750 }), focusedField: 'price' },
+  },
+  {
+    id: 'limit-below-market',
+    label: 'Limit · Below market',
+    description: 'Asking less than a swap gets right now: flagged, and the button won’t place it.',
+    state: limit(TOKENS.ETH, TOKENS.USDC, '1', { typed: (market) => market * 0.92 }),
+  },
+  {
+    id: 'limit-far',
+    label: 'Limit · Far from market',
+    description: 'Over 2× market: allowed, with a warning that it may never fill.',
+    state: limit(TOKENS.UNI, TOKENS.USDC, '100', { typed: (market) => market * 2.5 }),
   },
 ]
 

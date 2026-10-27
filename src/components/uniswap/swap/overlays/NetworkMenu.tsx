@@ -110,6 +110,8 @@ export interface NetworkMenuProps {
   menuId: string
   /** Called when the menu closes from its own keys (↵, esc, tab), to hand focus back. */
   onDismiss?: () => void
+  /** Restyles the trigger (merged with cn), e.g. the Explore filter bar's 40px control. */
+  triggerClassName?: string
 }
 
 type Option = { id: TokenSelectorChain; label: string; icon: React.ReactNode }
@@ -134,6 +136,7 @@ export function NetworkMenu({
   animate = false,
   menuId,
   onDismiss,
+  triggerClassName,
 }: NetworkMenuProps) {
   const rootRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -245,6 +248,7 @@ export function NetworkMenu({
           'text-buttonLabel3 text-neutral1 outline-none select-none hover:bg-surface2 active:scale-[0.98]',
           'transition-[scale] duration-100 ease-out',
           open && 'bg-surface2',
+          triggerClassName,
         )}
       >
         {current ? <ChainLogo chain={current} size={20} /> : <AllNetworksIcon size={20} />}

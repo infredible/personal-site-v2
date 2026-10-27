@@ -58,6 +58,8 @@ interface SegmentedControlOption<T extends string> {
   value: T
   label: React.ReactNode
   disabled?: boolean
+  /** Restyles the sliding pill while this option is selected (e.g. a tinted Live option) */
+  indicatorClassName?: string
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -104,7 +106,10 @@ function SegmentedControl<T extends string>({
           {opt.value === value && (
             <motion.span
               layoutId={indicatorId}
-              className="absolute inset-0 rounded-uni-full bg-surface3 group-hover/option:bg-surface3Hovered"
+              className={cn(
+                'absolute inset-0 rounded-uni-full bg-surface3 group-hover/option:bg-surface3Hovered',
+                opt.indicatorClassName,
+              )}
               transition={reduceMotion ? { duration: 0 } : { type: 'spring', bounce: 0.15, duration: 0.3 }}
             />
           )}

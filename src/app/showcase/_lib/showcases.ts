@@ -1,3 +1,4 @@
+import { EXPLORE_PRESETS } from '@/components/uniswap/explore'
 import { SWAP_PRESETS } from '@/components/uniswap/swap/presets'
 import { REVIEW_PRESETS } from '@/components/uniswap/swap/review/presets'
 import { colorGroups } from '../uniswap/_lib/tokens'
@@ -7,7 +8,7 @@ import { TOKEN_SELECTOR_PRESETS } from '../uniswap/token-selector/presets'
 // The showcases on the /showcase index, in orbit order. Add new ones here and
 // give them a preview in ../_components/previews.tsx.
 
-export type ShowcaseId = 'swap' | 'token-selector' | 'review' | 'sparkline' | 'system'
+export type ShowcaseId = 'swap' | 'token-selector' | 'review' | 'sparkline' | 'explore' | 'system'
 
 export interface Showcase {
   id: ShowcaseId
@@ -38,7 +39,7 @@ export const SHOWCASES: Showcase[] = [
     stack: ['React', 'Radix', 'Tailwind'],
     highlights: [
       'Exploded-view transition between the box and its parts',
-      'Mock quotes, token selector, settings, and review',
+      'Swap and Limit tabs, with a draggable limit line on the chart',
       'One function decides the main button',
     ],
   },
@@ -83,8 +84,23 @@ export const SHOWCASES: Showcase[] = [
     stack: ['SVG', 'Framer Motion', 'React'],
     highlights: [
       'Scrub with hover or touch-drag',
-      'A placeholder wave that morphs into the line',
+      'Line or candles, plus a Live period that streams',
       'Color follows the direction of the change',
+    ],
+  },
+  {
+    id: 'explore',
+    href: '/showcase/uniswap/explore',
+    title: 'Explore tables',
+    description: 'The Tokens and Pools tables from Explore: sorting, filters, search, and loading states.',
+    kind: 'Data table',
+    count: { value: EXPLORE_PRESETS.length, label: 'states' },
+    views: ['Component', 'Canvas'],
+    stack: ['React', 'Radix', 'Tailwind'],
+    highlights: [
+      'Sort, filter by network, and search both tables',
+      'Under 640px, rows fold to two cells: no sideways scroll',
+      'Loading, refetching, and error states',
     ],
   },
   {

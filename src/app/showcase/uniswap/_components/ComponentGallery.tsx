@@ -15,6 +15,8 @@ import {
   UniModalTrigger,
   UniTooltip,
 } from '@/components/uniswap'
+import { PoolLogos, PriceChangeCell, TokenSparklineCell } from '@/components/uniswap/explore'
+import { TOKENS } from '@/components/uniswap/swap/tokens'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
 import { Command as CommandPrimitive } from 'cmdk'
 
@@ -23,7 +25,7 @@ const emphases = ['primary', 'secondary', 'tertiary', 'text-only'] as const
 const sizes = ['xxsmall', 'xsmall', 'small', 'medium', 'large'] as const
 
 const periods = [
-  { value: '1H', label: '1H' },
+  { value: 'LIVE', label: 'Live' },
   { value: '1D', label: '1D' },
   { value: '1W', label: '1W' },
   { value: '1M', label: '1M' },
@@ -201,6 +203,17 @@ export function ComponentGallery() {
               <TextSkeleton placeholder="$1,699.24" className="text-body3" />
             </Shimmer>
             <TokenListSkeleton rows={3} withValue className="-mx-uni-8" />
+          </div>
+        </Demo>
+
+        <Demo title="Explore cells" description="Price change, 1D sparkline, and split pool logos from the Explore tables.">
+          <div className="flex flex-wrap items-center gap-x-uni-24 gap-y-uni-12 text-body2 text-neutral1 [font-variant-numeric:tabular-nums]">
+            <PriceChangeCell change={0.0423} />
+            <PriceChangeCell change={-0.0187} />
+            <PriceChangeCell change={0} />
+            <TokenSparklineCell token={TOKENS.ETH} change={0.02} />
+            <TokenSparklineCell token={TOKENS.UNI} change={-0.03} />
+            <PoolLogos token0={TOKENS.ETH} token1={TOKENS.USDC} />
           </div>
         </Demo>
       </div>

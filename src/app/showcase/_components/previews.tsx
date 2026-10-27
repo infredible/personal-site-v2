@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { PaletteSurface, Pill, SegmentedControl, UniButton, UniswapScope } from '@/components/uniswap'
 import { TokenPriceSparkline } from '@/components/uniswap/chart'
+import { ExploreTables, getExplorePreset } from '@/components/uniswap/explore'
 import { TokenSelectorPanel } from '@/components/uniswap/swap/overlays/TokenSelectorPanel'
 import { getPreset } from '@/components/uniswap/swap/presets'
 import { ReviewSurface, getReviewPreset } from '@/components/uniswap/swap/review'
@@ -42,7 +43,7 @@ interface PreviewProps {
   frame: (state: string, body: React.ReactNode) => React.ReactNode
 }
 
-const SWAP_STATES = ['filled', 'loading-quote', 'high-price-impact', 'insufficient-balance', 'select-output']
+const SWAP_STATES = ['filled', 'loading-quote', 'limit-ready', 'high-price-impact', 'insufficient-balance']
 
 function SwapPreview({ playing, frame }: PreviewProps) {
   const preset = getPreset(useCycle(SWAP_STATES, playing))!
@@ -88,11 +89,22 @@ function ReviewPreview({ playing, frame }: PreviewProps) {
   return frame(preset.label, <ReviewSurface trade={preset.trade} state={preset.state} onAction={noop} onClose={noop} />)
 }
 
-const SPARKLINE_STATES = ['eth-1d', 'eth-1w', 'down', 'eth-1y']
+const SPARKLINE_STATES = ['eth-1d', 'eth-1d-candles', 'down', 'eth-1y']
 
 function SparklinePreview({ playing, frame }: PreviewProps) {
   const preset = getSparklinePreset(useCycle(SPARKLINE_STATES, playing))
-  return frame(preset.label, <TokenPriceSparkline token={preset.token} period={preset.period} chartHeight={220} />)
+  return frame(
+    preset.label,
+    <TokenPriceSparkline token={preset.token} period={preset.period} chartType={preset.chartType} chartHeight={220} />,
+  )
+}
+
+const EXPLORE_STATES = ['tokens', 'pools', 'search-eth', 'refetching']
+
+function ExplorePreview({ playing, frame }: PreviewProps) {
+  const preset = getExplorePreset(useCycle(EXPLORE_STATES, playing))
+  // Remounted per preset: ExploreTables reads its initial state only on mount
+  return frame(preset.label, <ExploreTables key={preset.id} initialState={preset.state} searchShortcut={false} />)
 }
 
 const SWATCHES = [
@@ -166,6 +178,7 @@ const PREVIEWS: Record<ShowcaseId, React.ComponentType<PreviewProps>> = {
   'token-selector': TokenSelectorPreview,
   review: ReviewPreview,
   sparkline: SparklinePreview,
+  explore: ExplorePreview,
   system: SystemPreview,
 }
 

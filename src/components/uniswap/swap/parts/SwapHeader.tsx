@@ -11,7 +11,8 @@ import type { SwapMode } from '../types'
 /*
  * Swap page header row. Ported from Uniswap web's SwapHeaderTabRow
  * (apps/web/src/pages/Swap/SwapHeaderTabRow.tsx): a large, non-outlined
- * SegmentedControl of Swap / Limit / Buy / Sell, and on the Swap tab the
+ * SegmentedControl of Swap / Limit (Uniswap's Buy / Sell fiat tabs are left
+ * out: this recreation only trades token for token), and on both tabs the
  * settings gear (TransactionSettingsButton + TransactionSettingsButtonWithSlippage
  * in packages/uniswap/src/features/transactions/components/settings/).
  *
@@ -24,8 +25,6 @@ import type { SwapMode } from '../types'
 const MODE_OPTIONS = [
   { value: 'swap', label: 'Swap' },
   { value: 'limit', label: 'Limit' },
-  { value: 'buy', label: 'Buy' },
-  { value: 'sell', label: 'Sell' },
 ] as const satisfies readonly { value: SwapMode; label: string }[]
 
 /** Uniswap's SLIPPAGE_CRITICAL_TOLERANCE (20%), as a fraction */
@@ -93,14 +92,17 @@ function SwapSettingsButton({
   )
 
   // Uniswap warns on hover when the custom value is above auto
-  if (hasCustom && tone !== 'neutral') {
-    return (
-      <UniTooltip content="This may result in an unfavorable trade. Try lowering your slippage setting." side="top">
-        {button}
-      </UniTooltip>
-    )
-  }
-  return button
+  const tooltip =
+    hasCustom && tone !== 'neutral'
+      ? 'This may result in an unfavorable trade. Try lowering your slippage setting.'
+      : hasCustom
+        ? `Max slippage ${formatPercent(customSlippage, 4)}`
+        : 'Settings'
+  return (
+    <UniTooltip content={tooltip} side="top">
+      {button}
+    </UniTooltip>
+  )
 }
 
 interface SwapHeaderProps {
@@ -135,29 +137,29 @@ function SwapHeader({
         options={MODE_OPTIONS}
         value={mode}
         onValueChange={(next) => onModeChange?.(next)}
-        className="max-[450px]:gap-uni-8"
+        className="gap-uni-4"
       />
       <div className="flex items-center gap-uni-8">
         {onChartToggle && (
-          <button
-            type="button"
-            data-slot="swap-chart-toggle"
-            aria-label={chartVisible ? 'Hide chart' : 'Show chart'}
-            aria-pressed={chartVisible}
-            onClick={onChartToggle}
-            className={cn(
-              'flex size-uni-32 shrink-0 cursor-pointer items-center justify-center rounded-uni-full outline-none',
-              'transition-colors duration-[80ms] ease-out hover:text-neutral2Hovered',
-              'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
-              chartVisible ? 'text-neutral1' : 'text-neutral2',
-            )}
-          >
-            <LineChartDots className="size-uni-20" />
-          </button>
+          <UniTooltip content={chartVisible ? 'Hide chart' : 'Show chart'} side="top">
+            <button
+              type="button"
+              data-slot="swap-chart-toggle"
+              aria-label={chartVisible ? 'Hide chart' : 'Show chart'}
+              aria-pressed={chartVisible}
+              onClick={onChartToggle}
+              className={cn(
+                'flex size-uni-32 shrink-0 cursor-pointer items-center justify-center rounded-uni-full outline-none',
+                'transition-colors duration-[80ms] ease-out hover:text-neutral2Hovered',
+                'focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-neutral3Hovered',
+                chartVisible ? 'text-neutral1' : 'text-neutral2',
+              )}
+            >
+              <LineChartDots className="size-uni-20" />
+            </button>
+          </UniTooltip>
         )}
-        {mode === 'swap' && (
-          <SwapSettingsButton customSlippage={customSlippage} autoSlippage={autoSlippage} onClick={onSettingsClick} />
-        )}
+        <SwapSettingsButton customSlippage={customSlippage} autoSlippage={autoSlippage} onClick={onSettingsClick} />
       </div>
     </div>
   )

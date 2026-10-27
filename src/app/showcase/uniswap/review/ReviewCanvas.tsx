@@ -1,5 +1,6 @@
 'use client'
 
+import { AnimatePresence } from 'framer-motion'
 import { Canvas, CanvasFrame, CanvasSection, type CanvasController } from '@/components/showcase/canvas'
 import { ModalSurface, UniswapScope } from '@/components/uniswap'
 import { SwapReviewPanel, type SwapReviewStatus } from '@/components/uniswap/swap/overlays'
@@ -9,6 +10,7 @@ import {
   ReviewButton,
   ReviewDetails,
   ReviewHeader,
+  ReviewReceipt,
   ReviewSteps,
   ReviewSurface,
   getReviewPreset,
@@ -60,24 +62,25 @@ function Stage({
   )
 }
 
-function Surface({ id, theme }: { id: string; theme?: 'light' | 'dark' }) {
+function Surface({ id, theme, receiptOpen }: { id: string; theme?: 'light' | 'dark'; receiptOpen?: boolean }) {
   const s = scenario(id)
   return (
     <Stage theme={theme} bare>
-      <ReviewSurface trade={s.trade} state={s.state} onClose={() => {}} onAction={() => {}} />
+      <ReviewSurface trade={s.trade} state={s.state} onClose={() => {}} onAction={() => {}} defaultReceiptOpen={receiptOpen} />
     </Stage>
   )
 }
 
 /* Anatomy ----------------------------------------------------------------- */
 
-type PartId = 'header' | 'amounts' | 'details' | 'steps' | 'action'
+type PartId = 'header' | 'amounts' | 'details' | 'steps' | 'receipt' | 'action'
 
 const PARTS: { id: PartId; label: string; note: string }[] = [
   { id: 'header', label: 'Header', note: 'Title follows the phase (swapping → swapped) in a fixed-height row, so it can’t nudge what’s below.' },
-  { id: 'amounts', label: 'Amounts', note: 'The anchor. Mounted once and never re-keyed: the same nodes in the same place in every state.' },
+  { id: 'amounts', label: 'Amounts', note: 'Sell over Buy while reviewing. Once you commit they turn side by side, smaller, with Sell flowing into Buy along the track.' },
   { id: 'details', label: 'Details', note: 'While reviewing. Collapses away when you commit: you’ve already read it.' },
   { id: 'steps', label: 'Steps', note: 'Replaces the details once you commit. Only the steps this trade needs, progressing in place.' },
+  { id: 'receipt', label: 'Receipt', note: 'Takes over the card on success: the token you got, and the transaction (what you gave, rate, costs) folded behind one row.' },
   { id: 'action', label: 'Action', note: 'One button for the whole flow, relabelled in place. It never unmounts.' },
 ]
 
@@ -87,13 +90,19 @@ function ReviewAnatomy({ trade, state }: ReviewScenario) {
     amounts: <ReviewAmounts trade={trade} state={state} />,
     details: <ReviewDetails trade={trade} state={state} />,
     steps: <ReviewSteps trade={trade} state={state} />,
+    // Shown at its success state whatever the live flow is on: it's what the flow ends in
+    receipt: (
+      <AnimatePresence initial={false}>
+        <ReviewReceipt key="receipt" trade={trade} state={{ ...state, phase: 'success', approved: state.needsApproval }} />
+      </AnimatePresence>
+    ),
     action: <ReviewButton trade={trade} state={state} />,
   }
   return (
     <CanvasSection
       id="anatomy"
       title="Anatomy"
-      description="The live surface, taken apart, in the state you left it. Details and steps share one region: only one is ever on the card."
+      description="The live surface, taken apart, in the state you left it. Details and steps share one region, and the receipt replaces both: only one is ever on the card."
       direction="column"
     >
       {PARTS.map((part) => (
@@ -110,14 +119,15 @@ function ReviewAnatomy({ trade, state }: ReviewScenario) {
 
 /* States ------------------------------------------------------------------ */
 
-const STATES: { id: string; title: string; note: string }[] = [
+const STATES: { id: string; title: string; note: string; receiptOpen?: boolean }[] = [
   { id: 'review', title: 'Review', note: 'Amounts lead, details sit under one hairline, one button. This layout survives every state that follows.' },
   { id: 'review-approval', title: 'Review · needs approval', note: 'The approval is a detail row and a word on the button, not an extra screen to discover later.' },
   { id: 'price-updated', title: 'Price updated', note: 'The amounts keep the price you accepted; the main button asks for the new one. No second button to miss.' },
-  { id: 'approve', title: 'Approve in wallet', note: 'Details collapse, steps grow in under the same amounts. Approval is step one of three.' },
+  { id: 'approve', title: 'Approve in wallet', note: 'The amounts turn side by side, Sell flowing into Buy; details give way to the steps. Approval is step one of three.' },
   { id: 'wallet', title: 'Confirm in wallet', note: 'The button is where you were looking; it says what to do and spins while the wallet is open.' },
   { id: 'pending', title: 'Pending', note: 'The track fills as each step lands. Rows have fixed heights, so waiting never resizes the card.' },
-  { id: 'success', title: 'Success', note: 'Resolves in place: the arrow becomes the check, Buy gets a badge, the receipt slides in under the steps.' },
+  { id: 'success', title: 'Success', note: 'The whole card becomes the receipt: Buy grows to the middle, the connector lands on it as the check; what you sold moves into the details.' },
+  { id: 'success', title: 'Success · details open', note: 'The transaction, one tap away: rate, what you sold, costs, timing and the explorer link, folded under the receipt.', receiptOpen: true },
   { id: 'rejected', title: 'Rejected', note: 'Recoverable: the declined step turns red, one line says nothing was sent, Try again resumes that step.' },
 ]
 
@@ -150,7 +160,7 @@ const PAIRS: { id: string; title: string; note: string; production: SwapReviewSt
   {
     id: 'success',
     title: 'Success',
-    note: 'Production replaces everything with a new screen, a big check and Close. The redesign keeps the trade you just made on screen and marks it done.',
+    note: 'Both hand the card to a success screen. Production cuts to a new one; the redesign gets there by moving what was already on it: Buy grows into the hero, the arrow becomes the check, the details fold away.',
     production: 'success',
     after: 'success',
   },
@@ -195,12 +205,14 @@ function ProductionPanel({ status, stage = 'wallet' }: { status: SwapReviewStatu
 
 const MOTION_SPEC: [string, string, string, string][] = [
   ['Height morph', '300ms', 'cubic-bezier(0.32, 0.72, 0, 1)', 'Measured. Only the bottom edge moves; retargets mid-morph'],
+  ['Layout morph', '300ms', 'cubic-bezier(0.32, 0.72, 0, 1)', 'Logos and connector travel as shared elements, with the height; text fades out, settles in after 80-200ms'],
+  ['Conversion', '2.1s loop', 'linear', 'Track draws in; three Sell tokens ride it, pass under the connector and leave as Buy. Stops on decline'],
   ['Details out', '150ms', 'ease-out (0.23, 1, 0.32, 1)', 'Fade + 4px blur. Exits beat entries'],
   ['Steps in', '220ms, +50ms each', 'ease-out', '6px rise + 3px blur, after a 60ms beat'],
   ['Label / title swap', '180ms in, 120ms out', 'ease-out', 'Crossfade in place with 2px blur'],
   ['Step lands', '200ms + 300ms track', 'ease-out', 'Glyph pops from 0.8; the track fills after it'],
-  ['Success', '~600ms', 'ease-in-out draw, ease-out ring', 'Check draws, one ring pulses, Buy badge pops'],
-  ['Reduced motion', 'same', 'n/a', 'Opacity only: no blur, rise or ring; heights jump'],
+  ['Success', '~600ms', 'ease-in-out draw, ease-out ring', 'Connector lands on Buy as the badge, check draws, one ring pulses'],
+  ['Reduced motion', 'same', 'n/a', 'Opacity only: no blur, rise, ring or flow; layouts and heights jump'],
 ]
 
 const TIMINGS: [string, string][] = [
@@ -250,8 +262,8 @@ export function ReviewCanvas({ controller, anatomy }: { controller: CanvasContro
         description="One surface, eight states, in flow order. The card is top-anchored, so between any two of these only the bottom edge moves; the amounts are the same pixels in all of them."
       >
         {STATES.map((s) => (
-          <CanvasFrame key={s.id} id={`state-${s.id}`} title={s.title} note={s.note}>
-            <Surface id={s.id} />
+          <CanvasFrame key={s.title} id={`state-${s.id}${s.receiptOpen ? '-details' : ''}`} title={s.title} note={s.note}>
+            <Surface id={s.id} receiptOpen={s.receiptOpen} />
           </CanvasFrame>
         ))}
       </CanvasSection>

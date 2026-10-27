@@ -4,8 +4,11 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { parseAmount } from './format'
 import { getSwapAction, type SwapAction } from './getSwapAction'
+import { getLimitPrice } from './limit'
 import {
   CurrencyPanel,
+  LimitFooter,
+  LimitPricePanel,
   SwapActionButton,
   SwapDetails,
   SwapDetailsSkeleton,
@@ -14,7 +17,7 @@ import {
   SwitchButtonSeam,
 } from './parts'
 import { COMMON_TOKENS, DEFAULT_SLIPPAGE } from './tokens'
-import type { SwapField, SwapFormState, SwapMode, Token } from './types'
+import type { LimitExpiry, SwapField, SwapFocusField, SwapFormState, SwapMode, Token } from './types'
 
 /*
  * The Uniswap web swap form, composed from the parts. Mirrors
@@ -25,6 +28,13 @@ import type { SwapField, SwapFormState, SwapMode, Token } from './types'
  *   [Sell panel] 2px [zero-height switch row] 2px [Buy panel]   ← 4px seam, arrow centered on it
  *   4px
  *   Review button, footer (rate · gas · toggle), expandable rows
+ *
+ * The Limit tab keeps Sell / switch / Buy exactly where Swap has them (so
+ * changing tabs doesn't move what you've typed) and adds the price under Buy:
+ *
+ *   [Sell] [switch] [Buy]  4px  [Limit price]
+ *   4px
+ *   Place order button, footer (expiry · no network cost)
  *
  * Purely presentational: renders from a SwapFormState and reports events. With
  * no callbacks it's a static snapshot (inputs read-only). The only internal
@@ -41,7 +51,7 @@ interface SwapFormViewProps {
   chartVisible?: boolean
   onAmountChange?: (field: SwapField, amount: string) => void
   /** Uniswap keeps the last-focused field highlighted, so this only reports focus, never blur. */
-  onFocusField?: (field: SwapField) => void
+  onFocusField?: (field: SwapFocusField) => void
   onTokenClick?: (field: SwapField) => void
   onMax?: () => void
   /** Sell-panel 25 / 50 / 75% presets, as a fraction of balance */
@@ -50,6 +60,13 @@ interface SwapFormViewProps {
   onQuickSelect?: (token: Token) => void
   onSwitch?: () => void
   onAction?: (action: SwapAction) => void
+  /** Replaces the derived button state, e.g. while a limit order waits on the wallet */
+  actionOverride?: SwapAction
+  /** Limit tab: typed price, preset chip, unit flip, expiry */
+  onLimitPriceChange?: (price: string) => void
+  onLimitPreset?: (preset: number) => void
+  onLimitInvert?: () => void
+  onLimitExpiryChange?: (expiry: LimitExpiry) => void
   detailsExpanded?: boolean
   onDetailsExpandedChange?: (expanded: boolean) => void
   rateInverted?: boolean
@@ -59,7 +76,7 @@ interface SwapFormViewProps {
   className?: string
 }
 
-export type SwapPartId = 'header' | 'sell' | 'switch' | 'buy' | 'action' | 'details'
+export type SwapPartId = 'header' | 'sell' | 'switch' | 'buy' | 'price' | 'action' | 'details' | 'footer'
 
 export interface SwapFormPart {
   id: SwapPartId
@@ -87,14 +104,20 @@ function useSwapFormParts({
   onQuickSelect,
   onSwitch,
   onAction,
+  actionOverride,
+  onLimitPriceChange,
+  onLimitPreset,
+  onLimitInvert,
+  onLimitExpiryChange,
   detailsExpanded,
   onDetailsExpandedChange,
   rateInverted,
   onRateInvertedChange,
   autoSlippage = DEFAULT_SLIPPAGE.value,
 }: SwapFormViewProps): SwapFormPart[] {
-  const { input, output, quote, wallet, slippage } = state
-  const action = getSwapAction(state)
+  const { input, output, quote, wallet, slippage, limit } = state
+  const isLimit = state.mode === 'limit'
+  const action = actionOverride ?? getSwapAction(state)
 
   const balanceOf = (token?: Token) => (token && wallet.connected ? (wallet.balances[token.symbol] ?? 0) : undefined)
   const usdOf = (token: Token | undefined, amount: string) => {
@@ -114,7 +137,7 @@ function useSwapFormParts({
 
   // Controlled focus when the state says so (presets) or a parent tracks it; otherwise the panels track their own.
   const focusControlled = state.focusedField !== undefined || Boolean(onFocusField)
-  const focusedFor = (field: SwapField) => (focusControlled ? state.focusedField === field : undefined)
+  const focusedFor = (field: SwapFocusField) => (focusControlled ? state.focusedField === field : undefined)
 
   const hasPair = Boolean(input.token && output.token)
   // Keep the details through a refetch (dimmed) instead of collapsing and jumping;
@@ -178,6 +201,7 @@ function useSwapFormParts({
           token={output.token}
           amount={output.amount}
           usdValue={usdOf(output.token, output.amount)}
+          priceDifference={hasPair && !isLimit ? quote.priceImpact : undefined}
           balance={balanceOf(output.token)}
           focused={focusedFor('output')}
           loading={quoting && derivedField === 'output'}
@@ -190,10 +214,36 @@ function useSwapFormParts({
         />
       ),
     },
-    { id: 'action', label: 'Action button', node: <SwapActionButton action={action} onClick={onAction} /> },
   ]
 
-  if (showDetails) {
+  if (isLimit) {
+    parts.push({
+      id: 'price',
+      label: 'Limit price',
+      node: (
+        <LimitPricePanel
+          price={getLimitPrice(state)}
+          value={limit.price}
+          preset={limit.preset}
+          focused={focusedFor('price')}
+          onValueChange={onLimitPriceChange}
+          onPresetSelect={onLimitPreset}
+          onInvert={onLimitInvert}
+          onFocus={onFocusField && (() => onFocusField('price'))}
+        />
+      ),
+    })
+  }
+
+  parts.push({ id: 'action', label: 'Action button', node: <SwapActionButton action={action} onClick={onAction} /> })
+
+  if (isLimit) {
+    parts.push({
+      id: 'footer',
+      label: 'Footer',
+      node: <LimitFooter expiry={limit.expiry} onExpiryChange={onLimitExpiryChange} />,
+    })
+  } else if (showDetails) {
     parts.push({
       id: 'details',
       label: 'Details',
@@ -242,10 +292,12 @@ function SwapFormView({ className, ...props }: SwapFormViewProps) {
           <SwitchButtonSeam>{part('switch')}</SwitchButtonSeam>
           {part('buy')}
         </div>
+        {part('price')}
 
         <div className="flex flex-col">
           {part('action')}
           {part('details')}
+          {part('footer')}
         </div>
       </div>
     </div>
