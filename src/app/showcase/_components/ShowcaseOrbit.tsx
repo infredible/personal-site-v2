@@ -37,7 +37,7 @@ import { PREVIEW_WIDTH, ShowcasePreview } from './previews'
  *
  * One rAF loop owns the motion. React state holds only what the panels show
  * (current, focused); per-frame values live in a ref and are written straight
- * to the cards' style and the canvas. See orbit.ts for the geometry.
+ * to the cards' style. See orbit.ts for the geometry.
  */
 
 const COUNT = SHOWCASES.length
@@ -112,7 +112,6 @@ export function ShowcaseOrbit() {
   const [launching, setLaunching] = React.useState(false)
 
   const stageRef = React.useRef<HTMLDivElement>(null)
-  const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const cardRefs = React.useRef<(HTMLDivElement | null)[]>([])
   const metricsRef = React.useRef<SceneMetrics | null>(null)
   const motion = React.useRef<Motion>({
@@ -209,44 +208,21 @@ export function ShowcaseOrbit() {
     return () => query.removeEventListener('change', apply)
   }, [])
 
-  // The loop: physics, then cards and canvas
+  // The loop: physics, then cards
   React.useEffect(() => {
     const stage = stageRef.current
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!stage || !canvas || !ctx) return
+    if (!stage) return
 
-    let dpr = 1
     const resize = () => {
       const { width, height } = stage.getBoundingClientRect()
       metricsRef.current = sceneMetrics(width, height)
-      dpr = Math.min(window.devicePixelRatio || 1, 2)
-      canvas.width = Math.round(width * dpr)
-      canvas.height = Math.round(height * dpr)
       stage.style.perspective = `${metricsRef.current.perspective}px`
     }
     resize()
     const resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(stage)
 
-    // Theme colors for the canvas, re-read when the site theme flips
-    const colors = { fg: '#000' }
-    const readColors = () => {
-      colors.fg = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim() || colors.fg
-    }
-    readColors()
-    const themeObserver = new MutationObserver(readColors)
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-
-    const RING_DOTS = 200
-    const ring = {
-      x: new Float32Array(RING_DOTS),
-      y: new Float32Array(RING_DOTS),
-      r: new Float32Array(RING_DOTS),
-      front: new Uint8Array(RING_DOTS),
-    }
-
-    // Below lg the page scrolls: skip drawing while the stage is off screen
+    // Below lg the page scrolls: skip the style writes while the stage is off screen
     let visible = true
     const visibilityObserver = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting))
     visibilityObserver.observe(stage)
@@ -337,45 +313,12 @@ export function ShowcaseOrbit() {
         el.style.zIndex = String(Math.round(z + 100000))
         el.style.pointerEvents = opacity < 0.05 ? 'none' : ''
       }
-
-      // Canvas: the orbit's dotted path, layered between the cards behind the ring's center and those in front
-      canvas.style.zIndex = String(Math.round(offset.z + 100000))
-      canvas.style.opacity = String(1 - launch)
-      ctx.setTransform(dpr, 0, 0, dpr, canvas.width / 2, canvas.height / 2)
-      ctx.clearRect(-geo.width, -geo.height, geo.width * 2, geo.height * 2)
-
-      const dotSize = geo.unit * 0.0052
-      for (let i = 0; i < RING_DOTS; i++) {
-        const a = m.yaw + (i / RING_DOTS) * Math.PI * 2
-        const p = tilt(orbit * Math.sin(a), 0, orbit * Math.cos(a), geo.pitch)
-        const s = project({ x: p.x + offset.x, y: p.y + offset.y, z: p.z + offset.z }, geo.perspective)
-        ring.x[i] = s.x
-        ring.y[i] = s.y
-        ring.r[i] = dotSize * s.scale
-        ring.front[i] = Math.cos(a) > 0 ? 1 : 0
-      }
-
-      // Far half fainter than the near half, for depth
-      const ringAlpha = (1 - 0.75 * zoom) * intro
-      ctx.fillStyle = colors.fg
-      for (const front of [0, 1]) {
-        ctx.globalAlpha = (front ? 0.3 : 0.16) * ringAlpha
-        ctx.beginPath()
-        for (let i = 0; i < RING_DOTS; i++) {
-          if (ring.front[i] !== front) continue
-          ctx.moveTo(ring.x[i] + ring.r[i], ring.y[i])
-          ctx.arc(ring.x[i], ring.y[i], ring.r[i], 0, Math.PI * 2)
-        }
-        ctx.fill()
-      }
-      ctx.globalAlpha = 1
     }
     raf = requestAnimationFrame(tick)
 
     return () => {
       cancelAnimationFrame(raf)
       resizeObserver.disconnect()
-      themeObserver.disconnect()
       visibilityObserver.disconnect()
     }
   }, [router])
@@ -533,7 +476,6 @@ export function ShowcaseOrbit() {
         )}
         style={{ perspectiveOrigin: '50% 50%' }}
       >
-        <canvas ref={canvasRef} aria-hidden className="pointer-events-none absolute inset-0 size-full" />
         {SHOWCASES.map((s, i) => (
           <OrbitCard
             key={s.id}

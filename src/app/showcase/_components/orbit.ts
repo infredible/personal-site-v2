@@ -5,8 +5,8 @@
  * Space is CSS's: x right, y down, z toward the viewer, in px. The stage has
  * `perspective: P` with its origin at the center, so a point at camera-space
  * (x, y, z) lands at center + (x, y) · P / (P − z). Cards get that projection
- * from the browser (translate3d inside the perspective stage); the canvas
- * ring path uses project() to match them exactly.
+ * from the browser (translate3d inside the perspective stage); project()
+ * computes the same thing in JS (drag uses it to track the pointer).
  *
  * The camera never moves: the world is offset instead. Overview puts the
  * ring's center at (0, 0, −D); focusing dollies the world partway in
@@ -32,7 +32,7 @@ export interface SceneMetrics {
   perspective: number
   /** Overview distance from the camera plane to the ring's center */
   distance: number
-  /** Scene unit: the ring, perspective, and dots are sized from it */
+  /** Scene unit: the ring and perspective are sized from it */
   unit: number
   orbitRadius: number
   /** Ring tilt: positive drops the front of the ring toward the viewer */
