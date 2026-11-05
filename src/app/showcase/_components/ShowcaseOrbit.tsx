@@ -17,18 +17,16 @@ import {
   lerp,
   project,
   sceneMetrics,
-  spherePoints,
   springStep,
   tilt,
   worldOffset,
   type SceneMetrics,
-  type Vec3,
 } from './orbit'
 import { PREVIEW_WIDTH, ShowcasePreview } from './previews'
 
 /*
- * The /showcase index: live previews of each showcase orbiting a dotted
- * sphere, with the 2D details along the sides.
+ * The /showcase index: live previews of each showcase on a tilted orbit,
+ * with the 2D details along the sides.
  *
  *   Overview  the ring drifts; hover a card to stop it and read its details,
  *             drag or scroll to spin it (with momentum)
@@ -47,15 +45,13 @@ const STEP = (Math.PI * 2) / COUNT
 
 /** Overview drift, rad/s */
 const AUTO_SPEED = 0.09
-/** Entrance: the ring spins up and opens out from the sphere */
+/** Entrance: the ring spins up and opens out from the center */
 const INTRO_S = 1.4
 const INTRO_SPIN = 1.6
 /** Card push-through before navigating */
 const LAUNCH_S = 0.42
 /** Pointer travel before a press becomes a drag */
 const DRAG_SLOP = 6
-
-const ACCENT = '#ff37c7'
 
 const sideColumn = cn(
   'contents',
@@ -242,14 +238,6 @@ export function ShowcaseOrbit() {
     const themeObserver = new MutationObserver(readColors)
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
 
-    const dots = spherePoints(stage.clientWidth < 640 ? 520 : 820)
-    const screen = {
-      x: new Float32Array(dots.length),
-      y: new Float32Array(dots.length),
-      r: new Float32Array(dots.length),
-      facing: new Float32Array(dots.length),
-      spot: new Float32Array(dots.length),
-    }
     const RING_DOTS = 200
     const ring = {
       x: new Float32Array(RING_DOTS),
@@ -265,7 +253,6 @@ export function ShowcaseOrbit() {
 
     let raf = 0
     let last = performance.now()
-    let elapsed = 0
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick)
@@ -274,7 +261,6 @@ export function ShowcaseOrbit() {
       const geo = metricsRef.current
       if (!geo) return
       const m = motion.current
-      if (!m.reduced) elapsed += dt
 
       // Ring angle
       if (m.drag?.moved) {
@@ -325,7 +311,6 @@ export function ShowcaseOrbit() {
       const orbit = geo.orbitRadius * lerp(0.5, 1, intro)
 
       // Cards
-      let lit: Vec3 = { x: 0, y: 0, z: 1 }
       for (let i = 0; i < COUNT; i++) {
         const el = cardRefs.current[i]
         if (!el) continue
@@ -339,7 +324,6 @@ export function ShowcaseOrbit() {
         // Zoomed in, the others fall back into the distance behind the focused card
         const recede = isCurrent ? 0 : zoom * geo.perspective * FOCUS_RECEDE
         const z = lerp(p.z + offset.z - recede, launch * geo.perspective * LAUNCH_PUSH, lift)
-        if (isCurrent) lit = { x: p.x, y: p.y, z: p.z }
 
         // Nearer is brighter; focus dims the others; entrance staggers them in
         const nearness = (Math.cos(theta) + 1) / 2
@@ -354,57 +338,28 @@ export function ShowcaseOrbit() {
         el.style.pointerEvents = opacity < 0.05 ? 'none' : ''
       }
 
-      // Canvas: sphere and ring dots, layered between the cards behind the sphere's center and those in front
+      // Canvas: the orbit's dotted path, layered between the cards behind the ring's center and those in front
       canvas.style.zIndex = String(Math.round(offset.z + 100000))
       canvas.style.opacity = String(1 - launch)
       ctx.setTransform(dpr, 0, 0, dpr, canvas.width / 2, canvas.height / 2)
       ctx.clearRect(-geo.width, -geo.height, geo.width * 2, geo.height * 2)
 
-      const dotSize = geo.sphereRadius * 0.0065
-
-      // Light: from the sphere toward the current card, brighter when zoomed in
-      // Raised above the card, so the lit patch shows over it rather than hiding behind it
-      lit.y -= Math.hypot(lit.x, lit.z) * 0.9
-      const litLength = Math.hypot(lit.x, lit.y, lit.z) || 1
-      const lx = lit.x / litLength
-      const ly = lit.y / litLength
-      const lz = lit.z / litLength
-      const spotStrength = lerp(0.6, 0.8, zoom) * intro
-
-      const spin = m.yaw * 0.5 + elapsed * 0.03
-      const cs = Math.cos(spin)
-      const sn = Math.sin(spin)
-      for (let i = 0; i < dots.length; i++) {
-        const d = dots[i]
-        const n = tilt(d.x * cs + d.z * sn, d.y, d.z * cs - d.x * sn, geo.pitch)
-        const s = project(
-          {
-            x: n.x * geo.sphereRadius + offset.x,
-            y: n.y * geo.sphereRadius + offset.y,
-            z: n.z * geo.sphereRadius + offset.z,
-          },
-          geo.perspective,
-        )
-        screen.x[i] = s.x
-        screen.y[i] = s.y
-        screen.r[i] = dotSize * s.scale
-        screen.facing[i] = n.z
-        screen.spot[i] = Math.max(0, n.x * lx + n.y * ly + n.z * lz) ** 14 * spotStrength
-      }
+      const dotSize = geo.unit * 0.0052
       for (let i = 0; i < RING_DOTS; i++) {
         const a = m.yaw + (i / RING_DOTS) * Math.PI * 2
         const p = tilt(orbit * Math.sin(a), 0, orbit * Math.cos(a), geo.pitch)
         const s = project({ x: p.x + offset.x, y: p.y + offset.y, z: p.z + offset.z }, geo.perspective)
         ring.x[i] = s.x
         ring.y[i] = s.y
-        ring.r[i] = dotSize * 0.8 * s.scale
+        ring.r[i] = dotSize * s.scale
         ring.front[i] = Math.cos(a) > 0 ? 1 : 0
       }
 
+      // Far half fainter than the near half, for depth
       const ringAlpha = (1 - 0.75 * zoom) * intro
-      const drawRing = (front: 0 | 1, alpha: number) => {
-        ctx.fillStyle = colors.fg
-        ctx.globalAlpha = alpha * ringAlpha
+      ctx.fillStyle = colors.fg
+      for (const front of [0, 1]) {
+        ctx.globalAlpha = (front ? 0.3 : 0.16) * ringAlpha
         ctx.beginPath()
         for (let i = 0; i < RING_DOTS; i++) {
           if (ring.front[i] !== front) continue
@@ -413,50 +368,6 @@ export function ShowcaseOrbit() {
         }
         ctx.fill()
       }
-
-      drawRing(0, 0.16)
-
-      // The sphere is only its dots (no fill): the far hemisphere fainter and smaller, for depth
-      ctx.fillStyle = colors.fg
-      ctx.globalAlpha = 0.12 * intro
-      ctx.beginPath()
-      for (let i = 0; i < dots.length; i++) {
-        if (screen.facing[i] >= 0) continue
-        const r = screen.r[i] * 0.85
-        ctx.moveTo(screen.x[i] + r, screen.y[i])
-        ctx.arc(screen.x[i], screen.y[i], r, 0, Math.PI * 2)
-      }
-      ctx.fill()
-
-      // Near hemisphere, brighter toward the viewer
-      ctx.fillStyle = colors.fg
-      for (const band of [0, 1, 2, 3]) {
-        const lo = band / 4
-        const hi = (band + 1) / 4
-        ctx.globalAlpha = (0.16 + 0.5 * ((lo + hi) / 2) ** 1.3) * intro
-        ctx.beginPath()
-        for (let i = 0; i < dots.length; i++) {
-          const f = screen.facing[i]
-          if (f < lo || f >= hi || (band === 3 && f > 1)) continue
-          ctx.moveTo(screen.x[i] + screen.r[i], screen.y[i])
-          ctx.arc(screen.x[i], screen.y[i], screen.r[i], 0, Math.PI * 2)
-        }
-        ctx.fill()
-      }
-
-      // Spotlight facing the current card
-      ctx.fillStyle = ACCENT
-      for (let i = 0; i < dots.length; i++) {
-        const spot = screen.spot[i]
-        if (spot < 0.03 || screen.facing[i] < -0.1) continue
-        ctx.globalAlpha = Math.min(1, spot * 1.1)
-        const r = screen.r[i] * (1 + 0.5 * spot)
-        ctx.beginPath()
-        ctx.arc(screen.x[i], screen.y[i], r, 0, Math.PI * 2)
-        ctx.fill()
-      }
-
-      drawRing(1, 0.3)
       ctx.globalAlpha = 1
     }
     raf = requestAnimationFrame(tick)
